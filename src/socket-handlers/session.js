@@ -24,6 +24,10 @@ const bindSessionSocketHandler = (socket) => {
   socket.on(SocketEvents.SUCCESS, (successMessage) => {
     sessionActions.onApiSuccess(successMessage);
   });
+
+  socket.on(SocketEvents.AUTHENTICATION_FAILED, (successMessage) => {
+    sessionActions.onAuthenticationFailed();
+  });
 };
 
 export default bindSessionSocketHandler;

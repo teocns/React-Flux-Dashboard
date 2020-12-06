@@ -12,6 +12,7 @@ const Errors = {
   ERR_INVALID_PICTURE: "Please try with another picture.",
   ERR_USER_NOT_FOUND: "Invalid credentials",
   ERR_CREDENTIALS_INVALID: "Invalid credentials",
+  ERR_INVALID_URL: "The URL appears to be invalid",
 };
 
 module.exports = Errors;

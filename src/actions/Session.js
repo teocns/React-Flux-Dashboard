@@ -51,6 +51,10 @@ function onAuthenticationFailed() {
   dispatcher.dispatch({
     actionType: ActionTypes.Session.AUTHENTICATION_FAILED,
   });
+  dispatcher.dispatch({
+    actionType: ActionTypes.Session.IS_AUTHENTICATING,
+    data: { isAuthenticating: false },
+  });
 }
 
 function setAuthenticationToken(authenticationToken) {
@@ -155,5 +159,6 @@ export default {
   onSessionIdReceived,
   tryAuthentication,
   onUserDataReceived,
+  onAuthenticationFailed,
   logout,
 };

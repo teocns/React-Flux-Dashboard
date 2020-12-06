@@ -3,26 +3,25 @@ import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 import ScrapingThread from "../models/ScrapingThread";
 
-const Errors = require("../constants/errors");
+const Errors = require("../constants/Errors");
 
 class ScrapingThreadsStore extends EventEmitter {
   /**
    * @type {Object.<string,ScrapingThread[]>} threads
    */
   #threads;
+  /**
+   * Generally set to true whenever the client is waiting for thread creation feedback from the server
+   * @type {boolean}
+   */
+  #add_track_url_is_busy;
   constructor(params) {
     super(params);
-    this.dispatchToken = undefined;
+    this.#add_track_url_is_busy = true;
+  }
 
-    this.connectionInitiatedTimestamp = undefined; // When
-    this._isAuthenticated = false;
-    this.user = {
-      authentication_token: localStorage.authentication_token,
-      email: undefined,
-      username: undefined,
-    };
-    this.authentication_token_sent_timestamp = false;
-    this.sessionId = undefined;
+  canAddUrl() {
+    return this.#add_track_url_is_busy;
   }
   addChangeListener(event, callback) {
     this.on(event, callback);

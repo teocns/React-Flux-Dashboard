@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
@@ -15,7 +15,7 @@ import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
 import LinkIcon from "@material-ui/icons/Link";
-
+import scrapingThreadsActions from "../actions/ScrapingThread";
 import { useHistory } from "react-router-dom";
 
 import {
@@ -136,10 +136,10 @@ const useStyles2 = makeStyles({
 });
 
 export default function CustomPaginationActionsTable() {
-  const classes = useStyles2();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
+  const [UrlInputValue, setUrlInputValue] = useState("");
+  const classes = useStyles2();
   const emptyRows =
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
@@ -162,6 +162,10 @@ export default function CustomPaginationActionsTable() {
   // useEffect(() => {
 
   // });
+
+  const createThread = () => {
+    scrapingThreadsActions.create(UrlInputValue);
+  };
 
   return (
     <TableContainer component={Paper}>
@@ -187,6 +191,15 @@ export default function CustomPaginationActionsTable() {
             id="standard-adornment-amount"
             size="small"
             placeholder="URL to track"
+            value={UrlInputValue}
+            onChange={(evt) => {
+              setUrlInputValue(evt.target.value);
+            }}
+            onKeyPress={(evt) => {
+              if (evt.key === "Enter") {
+                createThread();
+              }
+            }}
             startAdornment={
               <InputAdornment position="start">
                 <LinkIcon />
@@ -199,6 +212,7 @@ export default function CustomPaginationActionsTable() {
           color="secondary"
           disableElevation
           startIcon={<AddIcon />}
+          onClick={createThread}
           style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
         >
           Add URL
