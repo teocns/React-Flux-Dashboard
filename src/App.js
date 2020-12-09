@@ -5,11 +5,12 @@ import sessionActions from "./actions/Session";
 import sessionStore from "./actions/Session";
 import AppPreload from "./components/AppPreload";
 
-var AUTHENTICATION_TOKEN = sessionStore.getAuthenticationToken();
+
 export default function App() {
   const [ShowPreload, setShowPreload] = useState(true);
+  const authToken = sessionStore.needsToAuthenticate();
   const willTryToAuthenticate =
-    AUTHENTICATION_TOKEN !== undefined && !!AUTHENTICATION_TOKEN;
+    authToken !== undefined && !!authToken;
 
   return (
     <BrowserRouter>
