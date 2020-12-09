@@ -36,6 +36,14 @@ class SessionStore extends EventEmitter {
     return this.user;
   }
 
+  needsToAuthenticate() {
+    return (
+      !this.isAuthenticated() &&
+      !this.isAuthenticating &&
+      this.getAuthenticationToken()
+    );
+  }
+
   /**
    *
    * @param {User} user

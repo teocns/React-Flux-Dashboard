@@ -2,12 +2,12 @@ import { EventEmitter } from "events";
 import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 import ScrapingThread from "../models/ScrapingThread";
-
+import TableData from "../models/TableData";
 const Errors = require("../constants/Errors");
 
 class ScrapingThreadsStore extends EventEmitter {
   /**
-   * @type {Object.<string,ScrapingThread[]>} threads
+   * @type {ScrapingThread[]} threads
    */
   #threads;
   /**
@@ -15,8 +15,20 @@ class ScrapingThreadsStore extends EventEmitter {
    * @type {boolean}
    */
   #add_track_url_is_busy;
+
+  /**
+   * @type {number}
+   */
+  #is_waiting_for_results;
+
+  /**
+   * @type {Object.<string,TableData>}
+   */
+  #tables;
   constructor(params) {
     super(params);
+    this.#tables = {};
+
     this.#add_track_url_is_busy = true;
   }
 
@@ -36,7 +48,7 @@ class ScrapingThreadsStore extends EventEmitter {
   }
 
   /**
-   * @param {Object.<string,ScrapingThread[]>} threads
+   * @param {ScrapingThread[]} threads
    */
   storeThreads(threads) {
     this.#threads = threads;
@@ -47,20 +59,82 @@ class ScrapingThreadsStore extends EventEmitter {
   storeSingleThread(thread) {
     this.#threads[thread.threadId] = thread;
   }
+
+  getThreads() {
+    return this.#threads;
+  }
+
+  hasTableData(tableName) {
+    return Object.keys(this.#tables).includes(tableName);
+  }
+
+  /**
+   * @returns {TableData}
+   * @param {string} tableName
+   */
+  getTableData(tableName) {
+    if (!Object.keys(this.#tables).includes(tableName)) {
+      // Prepare table data object
+      return undefined;
+    }
+    return this.#tables[tableName];
+  }
+
+  setLoadingResults(isWaiting) {
+    this.#is_waiting_for_results = isWaiting;
+  }
+
+  isLoadingTableData(tableName) {
+    const td = this.getTableData(tableName);
+    if (td instanceof TableData && td.isLoading) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   *
+   * @param {TableData} tableData
+   */
+  setTableLoading(tableData) {
+    if (!this.hasTableData(tableData)) {
+      this.#tables[tableData.tableName] = tableData;
+    } else {
+      this.#tables[tableData.tableName].isLoading = true;
+    }
+  }
+  /**
+   *
+   * @param {TableData} tableData
+   */
+  setTableData(tableData) {
+    console.log(tableData.rows);
+    if (this.hasTableData(tableData.tableName)) {
+      this.#tables[tableData.tableName].rows = tableData.rows;
+      this.#tables[tableData.tableName].totalRowsCount =
+        tableData.totalRowsCount;
+      this.#tables[tableData.tableName].isLoading = false;
+    }
+  }
 }
 
 const scrapingThreadsStore = new ScrapingThreadsStore();
 
 scrapingThreadsStore.dispatchToken = dispatcher.register((event) => {
+  let willEmitChange = true;
   switch (event.actionType) {
-    case ActionTypes.SCRAPING_THREAD_ADDED:
-      scrapingThreadsStore.storeSingleThread(event.data.thread);
+    case ActionTypes.ScrapingThread.THREAD_CREATED:
       break;
+    case ActionTypes.ScrapingThread.THREADS_RECEIVED:
+      break;
+
     default:
       // Do nothing.
+      willEmitChange = false;
       break;
   }
-  scrapingThreadsStore.emitChange(event.actionType, event.data);
+  willEmitChange &&
+    scrapingThreadsStore.emitChange(event.actionType, event.data);
 });
 
 export default scrapingThreadsStore;

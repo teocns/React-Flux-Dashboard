@@ -7,7 +7,6 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import {
   Drawer,
   Avatar,
-  Link,
   ListItemText,
   ListItemIcon,
   ListItem,
@@ -20,6 +19,8 @@ import {
   List,
 } from "@material-ui/core";
 
+import { Link } from "react-router-dom";
+
 import AppSnackbar from "./AppSnackbar";
 
 import sessionActions from "../actions/Session";
@@ -31,6 +32,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import EditIcon from "@material-ui/icons/Edit";
 import { deepOrange, deepPurple } from "@material-ui/core/colors";
+import { useLocation } from "react-router-dom";
 import {
   Link as LinkIcon,
   Code as CodeIcon,
@@ -153,6 +155,9 @@ export default function AppContents() {
     setOpen(false);
   };
 
+  const location = useLocation();
+  console.log(location.pathname);
+
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -177,6 +182,8 @@ export default function AppContents() {
               variant="text"
               style={{ color: "white" }}
               startIcon={<AddCircleOutlineIcon />}
+              component={Link}
+              to="/"
             >
               Crawl URLs
             </Button>
@@ -239,7 +246,13 @@ export default function AppContents() {
                 </ListItemIcon>
                 <ListItemText primary={"Statistics"} />
               </ListItem>
-              <ListItem button key={"FAQ"}>
+              <ListItem
+                button
+                key={"FAQ"}
+                component={Link}
+                to="/faq"
+                selected={location.pathname === "/faq"}
+              >
                 <ListItemIcon>
                   <HelpIcon />
                 </ListItemIcon>
@@ -268,7 +281,13 @@ export default function AppContents() {
                     </ListItemIcon>
                     <ListItemText primary={"XML"} />
                   </ListItem>
-                  <ListItem button key={"users"}>
+                  <ListItem
+                    button
+                    key={"users"}
+                    selected={location.pathname === "/manage-users"}
+                    component={Link}
+                    to="/manage-users"
+                  >
                     <ListItemIcon>
                       <AccountIcon />
                     </ListItemIcon>

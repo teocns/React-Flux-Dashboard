@@ -10,6 +10,7 @@ import LoginView from "../views/Login";
 import ManageUsersView from "../views/ManageUsers";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
+import FAQView from "../views/FAQ";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
@@ -54,6 +55,7 @@ const AppView = () => {
       <Switch>
         <Route exact path="/" component={AddTrackUrlsView} />
         <Route exact path="/login" component={LoginView} />
+        <Route exact path="/faq" component={FAQView} />
         <Route exact path="/manage-users" component={ManageUsersView} />
       </Switch>
     </div>

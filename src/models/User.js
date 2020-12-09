@@ -7,11 +7,7 @@ export default class User {
    * @type {string}
    */
   username;
-  /**
-   * Defaults to size 32
-   * @type {string}
-   */
-  avatarUrl;
+
   /**
    * @type {string}
    */
@@ -20,7 +16,22 @@ export default class User {
   /**
    * @type {string}
    */
+  name;
+
+  /**
+   * @type {string}
+   */
+  UUID;
+
+  /**
+   * @type {string}
+   */
   authentication_token;
+
+  /**
+   * @type {boolean}
+   */
+  isAdmin;
 
   static isValid(userData) {
     return [

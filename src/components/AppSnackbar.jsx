@@ -8,6 +8,7 @@ import MuiAlert from "@material-ui/lab/Alert";
 
 import uiStore from "../store/UI";
 import ActionTypes from "../constants/ActionTypes";
+import clsx from "clsx";
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -16,6 +17,10 @@ function Alert(props) {
 const useStyles = makeStyles((theme) => ({
   close: {
     padding: theme.spacing(0.5),
+  },
+  error: {
+    background: "red",
+    color: "white",
   },
 }));
 
@@ -74,13 +79,16 @@ export default function Snackbars() {
             horizontal: "right",
           }}
           open={open}
-          autoHideDuration={4000}
+          autoHideDuration={2750}
           onClose={handleClose}
           onExited={handleExited}
         >
           <Alert
             onClose={handleClose}
             severity={messageInfo && messageInfo.severity}
+            className={clsx({
+              [classes.error]: messageInfo && messageInfo.severity === "error",
+            })}
           >
             {messageInfo ? messageInfo.message : undefined}
           </Alert>
@@ -90,11 +98,11 @@ export default function Snackbars() {
         <Snackbar
           key={messageInfo ? messageInfo.key : undefined}
           anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "left",
+            vertical: "top",
+            horizontal: "right",
           }}
           open={open}
-          autoHideDuration={6000}
+          autoHideDuration={2750}
           onClose={handleClose}
           onExited={handleExited}
           message={messageInfo ? messageInfo.message : undefined}

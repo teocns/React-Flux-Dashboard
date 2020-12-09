@@ -4,6 +4,8 @@ import EnvironmentConstants from "./constants/Environment";
 
 import io from "socket.io-client";
 import bindSessionSocketHandler from "./socket-handlers/session";
+import bindScrapingThreadSocketHandler from "./socket-handlers/ScrapingThread";
+import bindTableSocketHandler from "./socket-handlers/Table";
 
 var socketInstance = initialize();
 
@@ -17,6 +19,8 @@ export function initialize() {
   });
 
   bindSessionSocketHandler(socket);
+  bindScrapingThreadSocketHandler(socket);
+  bindTableSocketHandler(socket);
 
   //bindEventHandlers(socket);
 

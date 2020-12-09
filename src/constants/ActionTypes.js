@@ -2,9 +2,13 @@
 import SessionActionTypes from "./ActionTypes/Session";
 import UIActionTypes from "./ActionTypes/UI";
 import ScrapingThreadActionTypes from "./ActionTypes/ScrapingThread";
+import TableActionTypes from "./ActionTypes/Table";
+import UserActionTypes from "./ActionTypes/Users";
 
 export default {
   Session: SessionActionTypes,
   UI: UIActionTypes,
-  ScrapingTHread: ScrapingThreadActionTypes,
+  ScrapingThread: ScrapingThreadActionTypes,
+  Table: TableActionTypes,
+  User: UserActionTypes,
 };

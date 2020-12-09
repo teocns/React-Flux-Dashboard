@@ -1,4 +1,4 @@
-const keyMirror = require("keymirror");
+import keyMirror from "keymirror";
 
 const SocketEvents = keyMirror({
   AUTHENTICATE: null, // Client sends authentication request
@@ -12,6 +12,8 @@ const SocketEvents = keyMirror({
   HANDSHAKE_SOCKET_ID: null,
   CREATE_SCRAPING_THREAD: null,
   SCRAPING_THREAD_CREATED: null,
+  TABLE_SYNC: null,
+  TABLE_DATA: null,
 });
 
-module.exports = SocketEvents;
+export default SocketEvents;

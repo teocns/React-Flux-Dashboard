@@ -84,7 +84,6 @@ function onInitialStatusReceived(status) {
 
 function onUserDataReceived(userData) {
   if (!User.isValid(userData)) {
-    debugger;
     return;
   }
   const user = new User(userData);
