@@ -63,7 +63,6 @@ class SessionStore extends EventEmitter {
     if (_ret === "undefined" || _ret.length < 64) {
       _ret = undefined;
     }
-    console.log("auth token", _ret);
     return _ret;
   }
   setAuthenticationToken(authentication_token) {
@@ -111,6 +110,9 @@ sessionStore.dispatchToken = dispatcher.register((event) => {
     case ActionTypes.Session.USER_LOGOUT:
       sessionStore.logout();
       break;
+    case ActionTypes.Session.IS_AUTHENTICATING:
+      sessionStore.setIsAuthenticating(event.data.isAuthenticating);
+      break;
     // case ActionTypes.Session.:
     //   let errorMessage = undefined;
     //   let errorHasToBeFormatted = Array.isArray(event.data);
@@ -135,9 +137,7 @@ sessionStore.dispatchToken = dispatcher.register((event) => {
     //     });
     //   });
     //   break;
-    case ActionTypes.Session.IS_AUTHENTICATING:
-      sessionStore.setIsAuthenticating(event.data.isAuthenticating);
-      break;
+
     // case ActionTypes.API_SUCCESS:
     //   // Snackbar component will subscribe to this
 

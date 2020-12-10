@@ -28,7 +28,6 @@ const bindSocketHandler = (socket) => {
     const dup = { ...tableData };
     delete dup.rows;
     delete dup.isLoading;
-
     sendMessage(SocketEvents.TABLE_SYNC, dup);
   };
 

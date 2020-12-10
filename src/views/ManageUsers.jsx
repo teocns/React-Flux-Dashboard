@@ -14,7 +14,8 @@ import FirstPageIcon from "@material-ui/icons/FirstPage";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
-import LinkIcon from "@material-ui/icons/Link";
+
+import SearchIcon from "@material-ui/icons/Search";
 import scrapingThreadsActions from "../actions/ScrapingThread";
 import { useHistory } from "react-router-dom";
 import ManageUsersTable from "../components/Tables/ManageUsers";
@@ -34,6 +35,7 @@ import AddIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
 import AddTrackUrlTable from "../components/Tables/AddTrackUrl";
 import dispatcher from "../dispatcher";
+import { Search } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   root: {
     flexShrink: 0,
@@ -51,18 +53,17 @@ const useStyles2 = makeStyles({
   },
 });
 
-export default function ManageUsers() {
-  const [UrlInputValue, setUrlInputValue] = useState("");
+export default function ManageUsersView() {
+  const [Filter, setFilter] = useState("");
   const classes = useStyles2();
 
   const history = useHistory();
 
   const theme = useTheme();
 
-  const createThread = () => {
-    scrapingThreadsActions.create(UrlInputValue);
+  const onFilterChanged = (f) => {
+    setFilter(f);
   };
-
   return (
     <TableContainer component={Paper}>
       <div
@@ -86,19 +87,17 @@ export default function ManageUsers() {
           <OutlinedInput
             id="standard-adornment-amount"
             size="small"
-            placeholder="URL to track"
-            value={UrlInputValue}
+            placeholder="Search users"
+            value={Filter}
             onChange={(evt) => {
-              setUrlInputValue(evt.target.value);
+              onFilterChanged(evt.target.value);
             }}
             onKeyPress={(evt) => {
-              if (evt.key === "Enter") {
-                createThread();
-              }
+              onFilterChanged(evt.target.value);
             }}
             startAdornment={
               <InputAdornment position="start">
-                <LinkIcon />
+                <SearchIcon />
               </InputAdornment>
             }
           />
@@ -107,15 +106,14 @@ export default function ManageUsers() {
           variant="contained"
           color="secondary"
           disableElevation
-          startIcon={<AddIcon />}
-          onClick={createThread}
+          startIcon={<Search />}
           style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
         >
-          Add URL
+          Search
         </Button>
       </div>
       <Divider />
-      <ManageUsersTable />
+      <ManageUsersTable filter={Filter} />
     </TableContainer>
   );
 }

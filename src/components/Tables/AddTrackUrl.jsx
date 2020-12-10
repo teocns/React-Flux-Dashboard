@@ -145,7 +145,9 @@ const AddTrackUrlTable = () => {
   useEffect(() => {
     // Means data has not yet loaded nor requested
     if (!HasTableData) {
-      syncTableData({});
+      setTimeout(() => {
+        syncTableData({});
+      });
     }
     if (!hasInheritedRows) {
       //TRIGGER_ROW_ADDED_ANIMATION = false;

@@ -18,21 +18,25 @@ function logout() {
   dispatcher.dispatch({
     actionType: ActionTypes.Session.USER_LOGOUT,
   });
-  setTimeout(() => {
-    window.location.reload();
-  });
+  window.location.reload();
 }
 
-async function userAuthenticate({ email, password }) {
+const setIsAuthenticating = (isIt) => {
   dispatcher.dispatch({
     actionType: ActionTypes.Session.IS_AUTHENTICATING,
-    data: { isAuthenticating: true },
+    data: { isAuthenticating: isIt },
   });
+};
+
+async function userAuthenticate({ email, password }) {
+  setIsAuthenticating(true);
   try {
     const { user } = await UserApi.Authenticate(email, password);
-
     if (user) {
-      onUserDataReceived(user);
+      sessionStore.setAuthenticationToken(user.authentication_token);
+      setTimeout(() => {
+        tryAuthentication();
+      });
     } else {
       onAuthenticationFailed();
     }
@@ -40,10 +44,7 @@ async function userAuthenticate({ email, password }) {
     console.log(e);
     onAuthenticationFailed();
   } finally {
-    dispatcher.dispatch({
-      actionType: ActionTypes.Session.IS_AUTHENTICATING,
-      data: { isAuthenticating: false },
-    });
+    setIsAuthenticating(false);
   }
 }
 
@@ -51,35 +52,7 @@ function onAuthenticationFailed() {
   dispatcher.dispatch({
     actionType: ActionTypes.Session.AUTHENTICATION_FAILED,
   });
-  dispatcher.dispatch({
-    actionType: ActionTypes.Session.IS_AUTHENTICATING,
-    data: { isAuthenticating: false },
-  });
-}
-
-function setAuthenticationToken(authenticationToken) {
-  dispatcher.dispatch({
-    actionType: ActionTypes.Session.AUTHENTICATION_TOKEN_RECEIVED,
-    data: authenticationToken,
-  });
-  sendMessage(SocketEvents.AUTHENTICATE, authenticationToken); // Send authentication token to socket
-}
-
-function onInitialStatusReceived(status) {
-  console.log(status);
-  dispatcher.dispatch({
-    actionType: ActionTypes.Session.INITIAL_STATUS_RECEIVED,
-    data: status,
-  });
-  // TODO: move in rates actions
-  if ("rates" in status) {
-    dispatcher.dispatch({
-      actionType: ActionTypes.Rates.UPDATED,
-      data: {
-        rates: status.rates,
-      },
-    });
-  }
+  setIsAuthenticating(false);
 }
 
 function onUserDataReceived(userData) {
@@ -114,34 +87,12 @@ function onApiSuccess(successMessage) {
 }
 function tryAuthentication() {
   const storedAuthenticationToken = sessionStore.getAuthenticationToken();
-  if (!storedAuthenticationToken) {
+  const isAuthenticating = sessionStore.isAuthenticating();
+  if (!storedAuthenticationToken || isAuthenticating) {
     return;
   }
-  dispatcher.dispatch({
-    actionType: ActionTypes.Session.IS_AUTHENTICATING,
-    data: { isAuthenticating: true },
-  });
+  setIsAuthenticating(true);
   sendMessage(SocketEvents.AUTHENTICATE, storedAuthenticationToken);
-}
-function sendClientData() {
-  const clientData = new ClientData();
-  // Gather browser info
-  if (window.navigator) {
-    clientData.userAgent = window.navigator.userAgent;
-    clientData.languages = window.navigator.languages;
-    clientData.language = window.navigator.language;
-  }
-  const authenticationToken = sessionStore.getAuthenticationToken();
-
-  if (
-    typeof authenticationToken === "string" &&
-    authenticationToken.length === 64
-  ) {
-    // Try to authenticate
-    clientData.authenticationToken = authenticationToken;
-  }
-  //data.appLanguage = languageStore.getLang();
-  sendMessage(SocketEvents.CLIENT_DATA, clientData);
 }
 
 const onSessionIdReceived = (sessionId) => {

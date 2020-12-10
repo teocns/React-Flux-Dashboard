@@ -19,4 +19,4 @@ const AppPreload = () => {
   );
 };
 
-export default AppPreload;
+export default React.memo(AppPreload);

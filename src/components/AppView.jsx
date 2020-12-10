@@ -29,25 +29,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AppView = () => {
-  const [IsAuthenticated, setIsAuthenticated] = useState(
-    sessionStore.isAuthenticated()
-  );
-
-  const onUserDataUpdated = () => {
-    setIsAuthenticated(sessionStore.isAuthenticated());
-  };
-  useEffect(() => {
-    sessionStore.addChangeListener(
-      ActionTypes.Session.USER_DATA_UPDATED,
-      onUserDataUpdated
-    );
-    return () => {
-      sessionStore.removeChangeListener(
-        ActionTypes.Session.USER_DATA_UPDATED,
-        onUserDataUpdated
-      );
-    };
-  });
   const classes = useStyles();
 
   return (

@@ -17,6 +17,7 @@ import {
   Button,
   IconButton,
   List,
+  Box,
 } from "@material-ui/core";
 
 import { Link } from "react-router-dom";
@@ -46,12 +47,18 @@ import {
 import AppView from "./AppView";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
-
+import logoIconSvg from "../assets/l4c.svg";
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
+  },
+  avatar: {
+    height: 32,
+    width: 32,
+    fontSize: theme.typography.body1.fontSize,
+    marginLeft: -3,
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -59,6 +66,11 @@ const useStyles = makeStyles((theme) => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
+    background: "white",
+    color: "rgb(127, 127, 127)",
+    "& *": {
+      color: "rgb(127, 127, 127)",
+    },
   },
   appBarShift: {
     marginLeft: drawerWidth,
@@ -71,6 +83,9 @@ const useStyles = makeStyles((theme) => ({
   menuButton: {
     marginRight: theme.spacing(2),
   },
+  drawerHeader: {
+    height: 64,
+  },
   hide: {
     display: "none",
   },
@@ -78,6 +93,7 @@ const useStyles = makeStyles((theme) => ({
     width: drawerWidth,
     flexShrink: 0,
     whiteSpace: "nowrap",
+    backgroundColor: "rgb(52, 58, 64)",
   },
   drawerOpen: {
     width: drawerWidth,
@@ -92,7 +108,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.leavingScreen,
     }),
     overflowX: "hidden",
-    width: theme.spacing(7) + 1,
+    width: "58px !important",
     [theme.breakpoints.up("sm")]: {
       width: theme.spacing(9) + 1,
     },
@@ -117,9 +133,20 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.getContrastText(deepPurple[500]),
     backgroundColor: deepPurple[500],
   },
+
+  drawerPaper: {
+    backgroundColor: "rgb(52, 58, 64)",
+    color: "#c2c7d0",
+    "& .MuiListItemIcon-root": {
+      color: "#c2c7d0",
+    },
+    "& .MuiDivider-root": {
+      backgroundColor: "#c2c7d02e",
+    },
+  },
 }));
 
-export default function AppContents() {
+function AppContents() {
   const classes = useStyles();
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
@@ -148,11 +175,7 @@ export default function AppContents() {
   });
 
   const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
+    setOpen(!open);
   };
 
   const location = useLocation();
@@ -174,7 +197,7 @@ export default function AppContents() {
               aria-label="open drawer"
               onClick={handleDrawerOpen}
               edge="start"
-              className={clsx(classes.menuButton, open && classes.hide)}
+              className={classes.menuButton}
             >
               <MenuIcon />
             </IconButton>
@@ -208,6 +231,7 @@ export default function AppContents() {
           paper: clsx({
             [classes.drawerOpen]: open,
             [classes.drawerClose]: !open,
+            [classes.drawerPaper]: true,
           }),
         }}
       >
@@ -221,24 +245,38 @@ export default function AppContents() {
         >
           <div>
             <div className={classes.drawerHeader}>
-              <IconButton onClick={handleDrawerClose}>
-                {theme.direction === "ltr" ? (
-                  <ChevronLeftIcon />
-                ) : (
-                  <ChevronRightIcon />
-                )}
-              </IconButton>
+              <List>
+                <ListItem button>
+                  <img style={{ width: 32 }} src={logoIconSvg} alt="yes" />
+                  <Typography
+                    variant="h6"
+                    style={{ marginLeft: theme.spacing(3) }}
+                  >
+                    Linksforcash
+                  </Typography>
+                </ListItem>
+              </List>
+              {/* <Box display="inline-flex" height="64px" alignItems="center">
+                <Typography
+                  variant="h6"
+                  style={{ marginLeft: theme.spacing(1) }}
+                >
+                  Linksforcash
+                </Typography>
+              </Box> */}
             </div>
             <Divider />
-            <List style={{ padding: 0 }}>
+            <List>
               <ListItem button key={"userId"}>
                 <ListItemIcon>
-                  <Avatar className={classes.orange}>JC</Avatar>
+                  <Avatar className={[classes.orange, classes.avatar]}>
+                    JC
+                  </Avatar>
                 </ListItemIcon>
                 <ListItemText primary={"Javier"} />
               </ListItem>
-              <Divider />
             </List>
+            <Divider />
             <List>
               <ListItem button key={"stats"}>
                 <ListItemIcon>
@@ -299,7 +337,7 @@ export default function AppContents() {
             )}
           </div>
           <List>
-            <div
+            {/* <div
               style={{
                 display: "block",
                 whiteSpace: "normal",
@@ -314,8 +352,8 @@ export default function AppContents() {
               <Typography variant="caption" style={{ display: "block" }}>
                 CIF B84471838 - <Link>Contact</Link>
               </Typography>
-            </div>
-            <Divider />
+            </div> */}
+            {/* <Divider /> */}
             <ListItem button key={"users"} onClick={sessionActions.logout}>
               <ListItemIcon>
                 <PowerSettingsNewIcon />
@@ -330,10 +368,10 @@ export default function AppContents() {
           [classes.contentShift]: open,
         })}
       >
-        <div className={classes.drawerHeader} />
         <AppView />
         <AppSnackbar />
       </main>
     </div>
   );
 }
+export default React.memo(AppContents);

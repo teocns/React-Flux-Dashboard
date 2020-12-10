@@ -1,6 +1,7 @@
 import ActionTypes from "../constants/ActionTypes";
 import dispatcher from "../dispatcher";
 import TableData from "../models/TableData";
+import sessionStore from "../store/session";
 import tableStore from "../store/Tables";
 
 /**
@@ -23,6 +24,7 @@ const createTableData = ({
     totalRowsCount: previousRowCount !== undefined ? previousRowCount : -1,
     rows: [],
   });
+
   console.log("createdTableData", createdTableData);
   dispatcher.dispatch({
     actionType: ActionTypes.Table.DATA_CREATED,
