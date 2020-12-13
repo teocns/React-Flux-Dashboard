@@ -12,4 +12,15 @@ export default class UrlTracking {
   static async Authenticate(email, password) {
     return await MakeRequest.post("/authenticate", { email, password });
   }
+
+  static async AddUser(userData) {
+    return await MakeRequest.post("/add-user", userData);
+  }
+  /**
+   *
+   * @param {number[]} userIds
+   */
+  static async DeleteUsers(userIds) {
+    return await MakeRequest.post("/delete-users", userIds);
+  }
 }

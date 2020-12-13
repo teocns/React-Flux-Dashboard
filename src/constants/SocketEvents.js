@@ -13,6 +13,7 @@ const SocketEvents = keyMirror({
   CREATE_SCRAPING_THREAD: null,
   SCRAPING_THREAD_CREATED: null,
   TABLE_SYNC: null,
+  ADD_USER: null,
   TABLE_DATA: null,
 });
 

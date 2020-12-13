@@ -40,12 +40,12 @@ export default class MakeRequest {
             try {
               if (ApiError.isError(json)) {
                 sessionActions.onApiError(new ApiError(json));
-                return resolve(false);
+                return resolve(json);
               }
               resolve(json);
             } catch (error) {
               sessionActions.onApiError(new ApiError(Errors.ERR_UNKNOWN));
-              resolve(false);
+              resolve(error);
             }
           });
         })

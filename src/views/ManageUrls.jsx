@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+
 import PropTypes from "prop-types";
-import { useConfirm } from "material-ui-confirm";
+
+import SearchIcon from "@material-ui/icons/Search";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -15,11 +17,10 @@ import FirstPageIcon from "@material-ui/icons/FirstPage";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
-
-import SearchIcon from "@material-ui/icons/Search";
+import LinkIcon from "@material-ui/icons/Link";
 import scrapingThreadsActions from "../actions/ScrapingThread";
 import { useHistory } from "react-router-dom";
-import ManageUsersTable from "../components/Tables/ManageUsers";
+
 import {
   Divider,
   Input,
@@ -34,9 +35,8 @@ import {
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
-import AddTrackUrlTable from "../components/Tables/AddTrackUrl";
+import ManagaUrlsTable from "../components/Tables/ManageUrls";
 import dispatcher from "../dispatcher";
-import { Search } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   root: {
     flexShrink: 0,
@@ -54,7 +54,7 @@ const useStyles2 = makeStyles({
   },
 });
 
-export default function ManageUsersView() {
+export default function CustomPaginationActionsTable() {
   const [Filter, setFilter] = useState("");
   const classes = useStyles2();
 
@@ -64,6 +64,7 @@ export default function ManageUsersView() {
   const onFilterChanged = (f) => {
     setFilter(f);
   };
+
   return (
     <TableContainer component={Paper}>
       <div
@@ -75,19 +76,11 @@ export default function ManageUsersView() {
           flexWrap: "nowrap",
         }}
       >
-        {/* <ButtonGroup>
-            <TextField
-              size="small"
-              variant="outlined"
-              placeholder="URL to track"
-            ></TextField>
-            <Button>Track</Button>
-          </ButtonGroup> */}
         <FormControl fullWidth size="small" className={classes.margin}>
           <OutlinedInput
             id="standard-adornment-amount"
             size="small"
-            placeholder="Search users"
+            placeholder="Search URLs"
             value={Filter}
             onChange={(evt) => {
               onFilterChanged(evt.target.value);
@@ -106,14 +99,14 @@ export default function ManageUsersView() {
           variant="contained"
           color="secondary"
           disableElevation
-          startIcon={<Search />}
+          startIcon={<SearchIcon />}
           style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
         >
           Search
         </Button>
       </div>
       <Divider />
-      <ManageUsersTable filter={Filter} />
+      <ManagaUrlsTable />
     </TableContainer>
   );
 }

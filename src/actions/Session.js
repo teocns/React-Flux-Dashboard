@@ -13,6 +13,7 @@ import User from "../models/User";
 import ClientData from "../models/ClientData.js";
 import UserApi from "../api/User";
 import { SettingsRemote } from "@material-ui/icons";
+import ApiError from "../models/ApiError";
 
 function logout() {
   dispatcher.dispatch({
@@ -71,7 +72,12 @@ function onUserDataReceived(userData) {
  * @param {ApiError} apiError
  */
 function onApiError(apiError) {
-  const err = apiError.toString();
+  let err = "";
+  if (typeof apiError === "object") {
+    err = new ApiError(apiError).toString();
+  } else {
+    err = apiError;
+  }
 
   dispatcher.dispatch({
     actionType: ActionTypes.UI.SHOW_SNACKBAR,

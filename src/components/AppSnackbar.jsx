@@ -75,8 +75,8 @@ export default function Snackbars() {
         <Snackbar
           key={messageInfo ? messageInfo.key : undefined}
           anchorOrigin={{
-            vertical: "top",
-            horizontal: "right",
+            vertical: "bottom",
+            horizontal: "center",
           }}
           open={open}
           autoHideDuration={2750}
@@ -98,8 +98,8 @@ export default function Snackbars() {
         <Snackbar
           key={messageInfo ? messageInfo.key : undefined}
           anchorOrigin={{
-            vertical: "top",
-            horizontal: "right",
+            vertical: "bottom",
+            horizontal: "center",
           }}
           open={open}
           autoHideDuration={2750}

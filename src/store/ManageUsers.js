@@ -65,11 +65,15 @@ class ManageUsersStore extends EventEmitter {
 const manageUsersStore = new ManageUsersStore();
 
 manageUsersStore.dispatchToken = dispatcher.register((event) => {
+  let willEmit = true;
   switch (event.actionType) {
+    case ActionTypes.User.USER_ADDED:
+      break;
     default:
+      willEmit = false;
       break;
   }
-  manageUsersStore.emitChange(event.actionType, event.data);
+  willEmit && manageUsersStore.emitChange(event.actionType, event.data);
 });
 
 export default manageUsersStore;

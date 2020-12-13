@@ -20,7 +20,7 @@ import {
   Box,
 } from "@material-ui/core";
 
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 import AppSnackbar from "./AppSnackbar";
 
@@ -68,9 +68,6 @@ const useStyles = makeStyles((theme) => ({
     }),
     background: "white",
     color: "rgb(127, 127, 127)",
-    "& *": {
-      color: "rgb(127, 127, 127)",
-    },
   },
   appBarShift: {
     marginLeft: drawerWidth,
@@ -203,8 +200,20 @@ function AppContents() {
             </IconButton>
             <Button
               variant="text"
-              style={{ color: "white" }}
-              startIcon={<AddCircleOutlineIcon />}
+              color={
+                location.pathname === "/" || location.pathname === ""
+                  ? "secondary"
+                  : "rgb(127, 127, 127)"
+              }
+              startIcon={
+                <AddCircleOutlineIcon
+                  color={
+                    location.pathname === "/" || location.pathname === ""
+                      ? "secondary"
+                      : "rgb(127, 127, 127)"
+                  }
+                />
+              }
               component={Link}
               to="/"
             >
@@ -212,8 +221,23 @@ function AppContents() {
             </Button>
             <Button
               variant="text"
-              style={{ color: "white", marginLeft: theme.spacing(1) }}
-              startIcon={<EditIcon />}
+              style={{ marginLeft: theme.spacing(1) }}
+              component={Link}
+              to="/manage-urls"
+              startIcon={
+                <EditIcon
+                  color={
+                    location.pathname === "/manage-urls"
+                      ? "secondary"
+                      : "rgb(127, 127, 127)"
+                  }
+                />
+              }
+              color={
+                location.pathname === "/manage-urls"
+                  ? "secondary"
+                  : theme.palette.text.hint
+              }
             >
               Manage URLs
             </Button>

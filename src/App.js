@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import AppContents from "./components/AppContents";
-
+import { ConfirmProvider } from "material-ui-confirm";
 import sessionActions from "./actions/Session";
 import sessionStore from "./store/session";
 import AppPreload from "./components/AppPreload";
 import ActionTypes from "./constants/ActionTypes";
-
+import { CssBaseline, ThemeProvider } from "@material-ui/core";
+import defaultTheme from "./theme";
 export default function App() {
   const [ShowPreload, setShowPreload] = useState(true);
   const history = useHistory();
@@ -50,5 +51,11 @@ export default function App() {
       );
     };
   });
-  return ShowPreload ? <AppPreload /> : <AppContents />;
+  return (
+    <ThemeProvider theme={defaultTheme}>
+      <ConfirmProvider>
+        {ShowPreload ? <AppPreload /> : <AppContents />}
+      </ConfirmProvider>
+    </ThemeProvider>
+  );
 }

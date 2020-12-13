@@ -8,6 +8,8 @@ import { Backdrop } from "@material-ui/core";
 import AddTrackUrlsView from "../views/AddTrackUrls";
 import LoginView from "../views/Login";
 import ManageUsersView from "../views/ManageUsers";
+import AddUsersView from "../views/AddUser";
+import ManageUrlsView from "../views/ManageUrls";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
 import FAQView from "../views/FAQ";
@@ -38,6 +40,8 @@ const AppView = () => {
         <Route exact path="/login" component={LoginView} />
         <Route exact path="/faq" component={FAQView} />
         <Route exact path="/manage-users" component={ManageUsersView} />
+        <Route exact path="/manage-urls" component={ManageUrlsView} />
+        <Route exact path="/add-user" component={AddUsersView} />
       </Switch>
     </div>
   );

@@ -36,11 +36,16 @@ import TableData from "../../models/TableData";
 import ImportExportIcon from "@material-ui/icons/ImportExport";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import FindInPageIcon from "@material-ui/icons/FindInPage";
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
   },
-});
+  tableRow: {
+    "&:nth-of-type(odd)": {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+}));
 
 const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
 var TRIGGER_ROW_ADDED_ANIMATION = false;
@@ -207,9 +212,14 @@ const AddTrackUrlTable = () => {
                       display="inline-flex"
                       alignItems="center"
                       justifyContent="start"
-                      style={{ color: theme.palette.text.hint }}
                     >
-                      <Today style={{ width: 18, height: 18 }} />
+                      <Today
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                      />
                       <Typography
                         variant="body2"
                         noWrap={true}
@@ -221,32 +231,32 @@ const AddTrackUrlTable = () => {
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="right">
                     <Box alignItems="center" flexWrap="nowrap" display="flex">
-                      {row.scrapingFinished ? (
-                        <AssignmentTurnedInIcon
-                          style={{
-                            width: 18,
-                            height: 18,
-                            color: theme.palette.primary,
-                          }}
-                        />
-                      ) : (
-                        <CircularProgress style={{ width: 14, height: 14 }} />
-                      )}
+                      <AssignmentTurnedInIcon
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                      />
 
                       <Typography
-                        variant="body1"
+                        variant="body2"
                         noWrap={true}
-                        style={{ marginLeft: theme.spacing(1) }}
+                        style={{
+                          marginLeft: theme.spacing(1),
+                          whiteSpace: "nowrap",
+                        }}
                       >
-                        <code>{row.scrapedJobs}</code>{" "}
-                        <Typography variant="caption">Inserted jobs</Typography>
+                        {row.scrapedJobs} Inserted jobs
                       </Typography>
                     </Box>
                   </TableCell>
                 </React.Fragment>
               );
               const wrapComponent = (
-                <TableRow key={row.uuid}>{innerRow}</TableRow>
+                <TableRow className={classes.tableRow} key={row.uuid}>
+                  {innerRow}
+                </TableRow>
               );
               return wrapComponent;
             })}

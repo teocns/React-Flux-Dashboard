@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import DateRangeIcon from "@material-ui/icons/DateRange";
+import { DateRangePicker, DateRange } from "materialui-daterange-picker";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useConfirm } from "material-ui-confirm";
+import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
 import {
   Badge,
@@ -15,6 +18,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  CircularProgress,
   TableContainer,
   TableFooter,
   TableHead,
@@ -22,7 +26,10 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  ButtonGroup,
 } from "@material-ui/core";
+
+import FilterListIcon from "@material-ui/icons/FilterList";
 import uiActions from "../../actions/UI";
 import UserApi from "../../api/User";
 import { motion } from "framer-motion";
@@ -30,44 +37,54 @@ import { Link as RouterLink } from "react-router-dom";
 import sessionStore from "../../store/session";
 import tableStore from "../../store/Tables";
 import scrapingThreadsStore from "../../store/ScrapingThreads";
+import CountryFilter from "../Filters/CountryFilter";
 import TablePaginationActions from "./Pagination";
 import EmptyTablePlaceholder from "./EmptyPlaceholder";
 
 import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
 import scrapingThreadsActions from "../../actions/ScrapingThread";
-import { Add, AddCircle, Delete, Today } from "@material-ui/icons";
+import {
+  Add,
+  AddCircle,
+  Delete,
+  Today,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  Public,
+} from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
+import DateCountryFilter from "../Filters/DateCountryFilter";
 
 const useStyles = makeStyles((theme) => ({
+  table: {
+    minWidth: 500,
+  },
   tableRow: {
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
     },
   },
-  table: {
-    minWidth: 500,
-  },
 }));
 
-const THIS_TABLE_NAME = TableNames.USERS_ADMIN;
+const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
 
-var TRIGGER_ROW_ADDED_ANIMATION = false;
-const ManageUsersTable = ({ filter }) => {
+const ManageUrlsTable = () => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
-
   const [SelectedRows, setSelectedRows] = useState([]);
+  const [DateRange, setDateRange] = useState(null);
 
+  const [SelectedCountriesFilter, setSelectedCountriesFilter] = useState();
   const HasTableData = tableData !== undefined;
 
   if (!HasTableData) {
     tableData = TableData.defaults(THIS_TABLE_NAME);
   }
+  const confirm = useConfirm();
   const rowsPerPage = tableData.rowsPerPage;
   const page = tableData.page;
   let rows = tableData.rows;
@@ -84,44 +101,58 @@ const ManageUsersTable = ({ filter }) => {
   const classes = useStyles();
   // const emptyRows =
   //   rowsPerPage - Math.min(rowsPerPage, rowsLength - page * rowsPerPage);
-  const confirm = useConfirm();
-  const deleteUser = async (userId, username) => {
-    confirm({
-      description: `Are you sure you want to delete "${username}" (ID: ${userId})?`,
-      title: `Delete user "${username}"`,
-    })
-      .then(async () => {
-        const res = await UserApi.DeleteUsers([userId]);
-        if (res && res.success) {
-          uiActions.showSnackbar(`User "${username}" deleted`, "success");
-          syncTableData({});
-        }
+  const deleteSelectedRows = () => {
+    if (SelectedRows.length) {
+      confirm({
+        description: `Are you sure you want to delete ${SelectedRows.length} users?`,
+        title: `Delete ${SelectedRows.length} users`,
       })
-      .catch();
+        .then(async () => {
+          const res = await UserApi.DeleteUsers(SelectedRows);
+          if (res && res.success) {
+            uiActions.showSnackbar(`Users deleted successfully`, "success");
+            setSelectedRows([]);
+            setTimeout(() => {
+              syncTableData({});
+            });
+          }
+        })
+        .catch();
+    }
   };
-
-  const syncTableData = ({ newPage, newRowsPerPage, newFilter }) => {
+  const selectAllRows = (evt) => {
+    const checked = evt.target.checked;
+    if (!checked) {
+      setSelectedRows([]);
+    } else if (checked) {
+      if (Array.isArray(rows)) {
+        setSelectedRows(rows.map((row) => row.threadId));
+      }
+    }
+  };
+  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
     tableActions.createTableData({
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: newFilter !== undefined ? newFilter : tableData.filter,
+      filter: "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
         tableData && tableData.totalRowsCount
           ? tableData.totalRowsCount
           : undefined,
+      dateRange:
+        newDateRange !== undefined ? newDateRange : tableData.dateRange,
     });
   };
-
   const handleChangePage = (event, newPage) => {
     console.log("handleChangePage.newPage", newPage);
-    syncTableData({ newPage, newFilter: filter });
+    syncTableData({ newPage });
   };
 
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
-    syncTableData({ newRowsPerPage, newPage: 0, newFilter: filter });
+    syncTableData({ newRowsPerPage, newPage: 0 });
   };
 
   /**
@@ -137,18 +168,7 @@ const ManageUsersTable = ({ filter }) => {
   };
   console.log("rendering", tableData);
 
-  const selectAllRows = (evt) => {
-    const checked = evt.target.checked;
-    if (!checked) {
-      setSelectedRows([]);
-    } else if (checked) {
-      if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.id));
-      }
-    }
-  };
   const onScrapingThreadCreated = () => {
-    TRIGGER_ROW_ADDED_ANIMATION = true;
     setTimeout(() => {
       syncTableData({ newPage: 0 });
     });
@@ -181,21 +201,6 @@ const ManageUsersTable = ({ filter }) => {
       );
     };
   };
-  if (!HasTableData || tableData.filter !== filter) {
-    setTimeout(() => {
-      syncTableData({ newFilter: filter });
-    });
-  }
-  useEffect(() => {
-    // Means data has not yet loaded nor requested
-
-    return bindListeners();
-  });
-  // if (rows.length <= 0) {
-  //   return <EmptyTablePlaceholder />;
-  // }
-
-  const theme = useTheme();
   const onRowSelectionChanged = (id) => {
     console.log(SelectedRows);
     const alreadySelectedIndex = SelectedRows.findIndex((c) => c === id);
@@ -208,40 +213,24 @@ const ManageUsersTable = ({ filter }) => {
       setSelectedRows([id, ...SelectedRows]);
     }
   };
-  const deleteSelectedUsers = () => {
-    if (SelectedRows.length) {
-      confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} users?`,
-        title: `Delete ${SelectedRows.length} users`,
-      })
-        .then(async () => {
-          const res = await UserApi.DeleteUsers(SelectedRows);
-          if (res && res.success) {
-            uiActions.showSnackbar(`Users deleted successfully`, "success");
-            setSelectedRows([]);
-            setTimeout(() => {
-              syncTableData({});
-            });
-          }
-        })
-        .catch();
+
+  useEffect(() => {
+    // Means data has not yet loaded nor requested
+    if (!HasTableData) {
+      setTimeout(() => {
+        syncTableData({});
+      });
     }
-  };
-  const renderName = (row) => {
-    let toWrap = undefined;
-    if (row.name) {
-      toWrap = (
-        <React.Fragment>
-          {row.name}
-          <Typography variant="caption">{row.username}</Typography>
-        </React.Fragment>
-      );
-    }
-    toWrap = row.username;
-    return <TableCell>{toWrap}</TableCell>;
-  };
+
+    return bindListeners();
+  });
+  // if (rows.length <= 0) {
+  //   return <EmptyTablePlaceholder />;
+  // }
+
+  const theme = useTheme();
   return (
-    <Table className={classes.table} stickyHeader>
+    <Table className={classes.table} aria-label="custom pagination table">
       {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
@@ -250,7 +239,7 @@ const ManageUsersTable = ({ filter }) => {
       <TableHead>
         <TableRow>
           <TableCell component="th" colspan="6">
-            <Box display="flex" width="100%">
+            <Box display="flex" width="100%" position="relative">
               <div style={{ display: "flex", alignItems: "center" }}>
                 <Checkbox
                   size="small"
@@ -270,9 +259,9 @@ const ManageUsersTable = ({ filter }) => {
                   title={`Permanently delete ${SelectedRows.length} users`}
                 >
                   <IconButton
-                    size="small"
                     disabled={SelectedRows.length < 1}
-                    onClick={deleteSelectedUsers}
+                    size="small"
+                    onClick={deleteSelectedRows}
                   >
                     <Badge badgeContent={SelectedRows.length} color="secondary">
                       <Delete />
@@ -287,16 +276,7 @@ const ManageUsersTable = ({ filter }) => {
                   marginLeft: theme.spacing(1),
                 }}
               >
-                <Tooltip title="Register new user">
-                  <Button
-                    style={{ marginLeft: theme.spacing(1) }}
-                    startIcon={<AddCircle color="primary" />}
-                    component={RouterLink}
-                    to="/add-user"
-                  >
-                    Add user
-                  </Button>
-                </Tooltip>
+                <DateCountryFilter />
               </div>
             </Box>
           </TableCell>
@@ -330,22 +310,21 @@ const ManageUsersTable = ({ filter }) => {
                 </TableRow>
               )
             )
-          : rows.map((row) => {
+          : rows.map((row, index) => {
               const innerRow = (
                 <React.Fragment>
                   <TableCell width="64px">
                     <Checkbox
                       size="small"
-                      checked={SelectedRows.includes(row.id)}
+                      checked={SelectedRows.includes(row.threadId)}
                       onChange={(evt) => {
-                        onRowSelectionChanged(row.id);
+                        onRowSelectionChanged(row.threadId);
                       }}
                     />
                   </TableCell>
-                  {renderName(row)}
-                  <TableCell>
+                  <TableCell component="th" scope="row">
                     <Link href={row.url} target="_blank">
-                      {row.email}
+                      {row.url}
                     </Link>
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="left">
@@ -353,9 +332,15 @@ const ManageUsersTable = ({ filter }) => {
                       display="inline-flex"
                       alignItems="center"
                       justifyContent="start"
-                      style={{ color: theme.palette.text.hint }}
                     >
-                      <Today style={{ width: 18, height: 18 }} />
+                      <Today
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                        //style={{ color: theme.palette.text.hint }}
+                      />
                       <Typography
                         variant="body2"
                         noWrap={true}
@@ -366,17 +351,26 @@ const ManageUsersTable = ({ filter }) => {
                     </Box>
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="right">
-                    {row.insertedJobs || 0} Inserted jobs
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        deleteUser(row.id, row.username);
-                      }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
+                    <Box alignItems="center" flexWrap="nowrap" display="flex">
+                      <AssignmentTurnedInIcon
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                      />
+
+                      <Typography
+                        variant="body2"
+                        noWrap={true}
+                        style={{
+                          marginLeft: theme.spacing(1),
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.scrapedJobs} Inserted jobs
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </React.Fragment>
               );
@@ -393,7 +387,7 @@ const ManageUsersTable = ({ filter }) => {
           {rowsLength > 0 && (
             <TablePagination
               rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-              colSpan={6}
+              colSpan={3}
               count={tableData.totalRowsCount}
               rowsPerPage={rowsPerPage}
               page={page}
@@ -412,4 +406,4 @@ const ManageUsersTable = ({ filter }) => {
   );
 };
 
-export default ManageUsersTable;
+export default ManageUrlsTable;

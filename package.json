@@ -11,14 +11,18 @@
     "@testing-library/user-event": "^12.3.0",
     "clsx": "^1.1.1",
     "flux": "^3.1.3",
+    "fontsource-roboto": "^3.1.5",
     "framer-motion": "^2.9.5",
     "keymirror": "^0.1.1",
+    "material-ui-confirm": "^2.1.1",
+    "materialui-daterange-picker": "^1.1.92",
     "moment": "^2.29.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
     "socket.io-client": "^2.3.1",
+    "typeface-roboto": "^1.1.13",
     "web-vitals": "^0.2.4"
   },
   "scripts": {

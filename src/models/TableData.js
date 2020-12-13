@@ -1,3 +1,8 @@
+/**
+ * @typedef {Object} DateRange
+ * @property {number} dateStart
+ * @property {number} dateEnd
+ */
 export default class TableData {
   /**
    * @type {Object[]}
@@ -20,6 +25,17 @@ export default class TableData {
    * @type {string}
    */
   tableName;
+
+  /**
+   * @type {DateRange}
+   */
+  dateRange;
+
+  /**
+   * Appliable to specific tables only
+   * @type {string}
+   */
+  countryName;
 
   ///////////////////////////////////
   /**
@@ -51,6 +67,7 @@ export default class TableData {
    * @type {number}
    */
   scrapedJobs;
+
   // Uniquely identify each TableData representation by a hash
   createHash() {
     const hashable = [
