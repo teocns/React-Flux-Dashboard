@@ -33,9 +33,9 @@ export default class TableData {
 
   /**
    * Appliable to specific tables only
-   * @type {string}
+   * @type {string[]}
    */
-  countryName;
+  countryFilter;
 
   ///////////////////////////////////
   /**
@@ -47,6 +47,11 @@ export default class TableData {
    * @type {number}
    */
   totalRowsCount;
+
+  /**
+   * @type {number}
+   */
+  unfilteredRowsCount;
 
   /**
    * @type {string}
@@ -75,6 +80,8 @@ export default class TableData {
       this.rowsPerPage,
       this.filter,
       this.page,
+      this.countryFilter.join(),
+      Object.values(this.dateRange).join(),
     ].reduce((a, b) => {
       return (a || "").toString() + (b || "").toString();
     });
@@ -90,6 +97,9 @@ export default class TableData {
       isLoading: true,
       totalRowsCount: -1,
       rows: [],
+      dateRange: {},
+      countryFilter: [],
+      unfilteredRowsCount: 0,
     });
   }
 
@@ -101,6 +111,9 @@ export default class TableData {
     filter,
     isLoading,
     totalRowsCount,
+    dateRange,
+    countryFilter,
+    unfilteredRowsCount,
   }) {
     this.rows = rows;
     this.rowsPerPage = rowsPerPage !== undefined ? rowsPerPage : 5;
@@ -109,6 +122,12 @@ export default class TableData {
     this.tableName = tableName;
     this.totalRowsCount = totalRowsCount;
     this.isLoading = isLoading || true;
+    this.countryFilter = Array.isArray(countryFilter) ? countryFilter : [];
+    this.dateRange =
+      typeof dateRange === "object" && Object.values(dateRange).length > 0
+        ? dateRange
+        : {};
+    this.unfilteredRowsCount = unfilteredRowsCount || 0;
     this.hash = this.createHash();
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import clsx from "clsx";
 import DateRangeIcon from "@material-ui/icons/DateRange";
 import { DateRangePicker, DateRange } from "materialui-daterange-picker";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -51,20 +52,29 @@ import {
   Today,
   AssignmentTurnedIn as AssignmentTurnedInIcon,
   Public,
+  RssFeedTwoTone,
 } from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
 import DateCountryFilter from "../Filters/DateCountryFilter";
+import LinkIcon from "@material-ui/icons/Link";
 
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
   },
   tableRow: {
+    height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
+    },
+  },
+  emptyRow: {
+    height: 70,
+    "&:first-child": {
+      height: 60,
     },
   },
 }));
@@ -87,6 +97,8 @@ const ManageUrlsTable = () => {
   const confirm = useConfirm();
   const rowsPerPage = tableData.rowsPerPage;
   const page = tableData.page;
+  const countryFilter = tableData.countryFilter;
+  const dateRange = tableData.dateRange;
   let rows = tableData.rows;
 
   const IsLoadingResults = tableData.isLoading;
@@ -99,8 +111,10 @@ const ManageUrlsTable = () => {
   const isLoadingResults = tableData ? tableData.isLoading : true;
   const rowsLength = Array.isArray(rows) ? rows.length : 0;
   const classes = useStyles();
-  // const emptyRows =
-  //   rowsPerPage - Math.min(rowsPerPage, rowsLength - page * rowsPerPage);
+  const emptyRows =
+    rowsPerPage -
+    Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
+    (rowsLength > 1 ? 0 : 1);
   const deleteSelectedRows = () => {
     if (SelectedRows.length) {
       confirm({
@@ -130,7 +144,12 @@ const ManageUrlsTable = () => {
       }
     }
   };
-  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
+  const syncTableData = ({
+    newPage,
+    newRowsPerPage,
+    newDateRange,
+    newCountryFilter,
+  }) => {
     tableActions.createTableData({
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
@@ -141,8 +160,9 @@ const ManageUrlsTable = () => {
         tableData && tableData.totalRowsCount
           ? tableData.totalRowsCount
           : undefined,
-      dateRange:
-        newDateRange !== undefined ? newDateRange : tableData.dateRange,
+      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
+      countryFilter:
+        newCountryFilter !== undefined ? newCountryFilter : countryFilter,
     });
   };
   const handleChangePage = (event, newPage) => {
@@ -228,7 +248,71 @@ const ManageUrlsTable = () => {
   //   return <EmptyTablePlaceholder />;
   // }
 
+  const handleCountryFilterChanged = (_countryFilter) => {
+    syncTableData({ newCountryFilter: _countryFilter });
+  };
+  const handleDateFilterChanged = (_dateRange) => {
+    syncTableData({ newDateRange: _dateRange });
+  };
+
   const theme = useTheme();
+
+  const renderNoRows = () => {
+    const _hintRowContent = () => (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+      >
+        <Box display="flex" justifyContent="center" alignItems="center">
+          {/* <LinkIcon
+        style={{
+          color: theme.palette.text.disabled,
+          marginRight: theme.spacing(1),
+        }}
+      /> */}
+          <Typography variant="h5">No links found</Typography>
+        </Box>
+        {tableData.unfilteredRowsCount > tableData.totalRowsCount && (
+          <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+            Try changing the filter
+          </Typography>
+        )}
+      </Box>
+    );
+    const _emptyRowContent = (
+      <TableCell colspan="6">
+        <Typography
+          align="center"
+          style={{ color: theme.palette.text.disabled }}
+        >
+          −
+        </Typography>
+      </TableCell>
+    );
+
+    if (tableData.unfilteredRowsCount > tableData.totalRowsCount) {
+    }
+    const _rowWrapper = (
+      <TableRow
+        className={clsx({
+          [classes.tableRow]: true,
+          [classes.emptyRow]: true,
+        })}
+        key={Math.random()}
+      >
+        {_rowContent}
+      </TableRow>
+    );
+    const _createRow = (index)=> {
+      
+    }
+    
+    return [...Array(emptyRows).keys()].map((_, index) => {
+
+    };
+  };
   return (
     <Table className={classes.table} aria-label="custom pagination table">
       {/* <LinearProgress
@@ -276,7 +360,10 @@ const ManageUrlsTable = () => {
                   marginLeft: theme.spacing(1),
                 }}
               >
-                <DateCountryFilter />
+                <DateCountryFilter
+                  onCountriesChanged={handleCountryFilterChanged}
+                  onDateRangeChanged={handleDateFilterChanged}
+                />
               </div>
             </Box>
           </TableCell>

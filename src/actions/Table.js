@@ -14,6 +14,8 @@ const createTableData = ({
   page,
   rowsPerPage,
   previousRowCount,
+  countryFilter,
+  dateRange,
 }) => {
   const createdTableData = new TableData({
     tableName,
@@ -23,6 +25,8 @@ const createTableData = ({
     isLoading: true,
     totalRowsCount: previousRowCount !== undefined ? previousRowCount : -1,
     rows: [],
+    dateRange,
+    countryFilter,
   });
 
   console.log("createdTableData", createdTableData);
