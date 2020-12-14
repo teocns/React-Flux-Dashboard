@@ -53,6 +53,7 @@ import {
   AssignmentTurnedIn as AssignmentTurnedInIcon,
   Public,
   RssFeedTwoTone,
+  Search,
 } from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
@@ -257,30 +258,38 @@ const ManageUrlsTable = () => {
 
   const theme = useTheme();
 
-  const renderNoRows = () => {
-    const _hintRowContent = () => (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        flexDirection="column"
-      >
-        <Box display="flex" justifyContent="center" alignItems="center">
-          {/* <LinkIcon
-        style={{
-          color: theme.palette.text.disabled,
-          marginRight: theme.spacing(1),
-        }}
-      /> */}
-          <Typography variant="h5">No links found</Typography>
+  const renderEmptyRows = () => {
+    const isJustFilling = tableData.totalRowsCount > 0;
+
+    const _hintRowContent = (index) =>
+      index === 1 && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flexDirection="column"
+        >
+          <Search
+            style={{
+              color: theme.palette.text.disabled,
+              width: 48,
+              height: 48,
+            }}
+          />
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <Typography variant="h4">No links found</Typography>
+          </Box>
+          {tableData.unfilteredRowsCount > tableData.totalRowsCount ? (
+            <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+              Try changing filter options
+            </Typography>
+          ) : (
+            <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+              Add some links to get started
+            </Typography>
+          )}
         </Box>
-        {tableData.unfilteredRowsCount > tableData.totalRowsCount && (
-          <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Try changing the filter
-          </Typography>
-        )}
-      </Box>
-    );
+      );
     const _emptyRowContent = (
       <TableCell colspan="6">
         <Typography
@@ -292,9 +301,7 @@ const ManageUrlsTable = () => {
       </TableCell>
     );
 
-    if (tableData.unfilteredRowsCount > tableData.totalRowsCount) {
-    }
-    const _rowWrapper = (
+    const _createRow = (index) => (
       <TableRow
         className={clsx({
           [classes.tableRow]: true,
@@ -302,16 +309,15 @@ const ManageUrlsTable = () => {
         })}
         key={Math.random()}
       >
-        {_rowContent}
+        {tableData.unfilteredRowsCount > tableData.totalRowsCount
+          ? _hintRowContent(index)
+          : _emptyRowContent(index)}
       </TableRow>
     );
-    const _createRow = (index)=> {
-      
-    }
-    
-    return [...Array(emptyRows).keys()].map((_, index) => {
 
-    };
+    return [...Array(isJustFilling ? emptyRows : 5).keys()].map((_, index) =>
+      _createRow(index)
+    );
   };
   return (
     <Table className={classes.table} aria-label="custom pagination table">
@@ -468,6 +474,7 @@ const ManageUrlsTable = () => {
               );
               return wrapComponent;
             })}
+        {!IsLoadingResults && renderEmptyRows()}
       </TableBody>
       <TableFooter>
         <TableRow>

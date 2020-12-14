@@ -53,16 +53,21 @@ const useStyles2 = makeStyles({
     minWidth: 500,
   },
 });
-
-export default function CustomPaginationActionsTable() {
+let filterTimeout = undefined;
+export default function ManageUrlsView() {
   const [Filter, setFilter] = useState("");
   const classes = useStyles2();
 
   const history = useHistory();
 
   const theme = useTheme();
+
   const onFilterChanged = (f) => {
-    setFilter(f);
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+      console.log("Setting filter");
+      setFilter(f);
+    }, 500);
   };
 
   return (
@@ -81,7 +86,6 @@ export default function CustomPaginationActionsTable() {
             id="standard-adornment-amount"
             size="small"
             placeholder="Search URLs"
-            value={Filter}
             onChange={(evt) => {
               onFilterChanged(evt.target.value);
             }}
@@ -106,7 +110,7 @@ export default function CustomPaginationActionsTable() {
         </Button>
       </div>
       <Divider />
-      <ManagaUrlsTable />
+      <ManagaUrlsTable filter={Filter} />
     </TableContainer>
   );
 }

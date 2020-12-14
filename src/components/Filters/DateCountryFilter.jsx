@@ -248,6 +248,7 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
           keepMounted
           onClose={closeMenu}
           anchorEl={anchorRef.current}
+          style={{ paddingTop: 0 }}
         >
           <MenuItem
             button
