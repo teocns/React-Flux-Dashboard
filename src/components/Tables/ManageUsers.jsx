@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useConfirm } from "material-ui-confirm";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
+import clsx from "clsx";
 import {
   Badge,
   Box,
@@ -36,26 +37,41 @@ import EmptyTablePlaceholder from "./EmptyPlaceholder";
 import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
 import scrapingThreadsActions from "../../actions/ScrapingThread";
-import { Add, AddCircle, Delete, Today } from "@material-ui/icons";
+import {
+  Add,
+  AddCircle,
+  Delete,
+  Today,
+  Search,
+  AssignmentTurnedIn,
+} from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
 
 const useStyles = makeStyles((theme) => ({
+  table: {
+    minWidth: 500,
+  },
   tableRow: {
+    height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
     },
   },
-  table: {
-    minWidth: 500,
+  emptyRow: {
+    height: 70,
+    backgroundColor: "white!important",
+    "&:first-child td": {
+      paddingTop: "8rem",
+      paddingBottom: "8rem",
+    },
   },
 }));
 
 const THIS_TABLE_NAME = TableNames.USERS_ADMIN;
 
-var TRIGGER_ROW_ADDED_ANIMATION = false;
 const ManageUsersTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
@@ -79,8 +95,13 @@ const ManageUsersTable = ({ filter }) => {
     hasInheritedRows = true;
   }
 
-  const isLoadingResults = tableData ? tableData.isLoading : true;
   const rowsLength = Array.isArray(rows) ? rows.length : 0;
+  const emptyRows =
+    rowsPerPage -
+    Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
+    (rowsLength > 1 ? 0 : 1);
+
+  const isLoadingResults = tableData ? tableData.isLoading : true;
   const classes = useStyles();
   // const emptyRows =
   //   rowsPerPage - Math.min(rowsPerPage, rowsLength - page * rowsPerPage);
@@ -100,12 +121,12 @@ const ManageUsersTable = ({ filter }) => {
       .catch();
   };
 
-  const syncTableData = ({ newPage, newRowsPerPage, newFilter }) => {
+  const syncTableData = ({ newPage, newRowsPerPage }) => {
     tableActions.createTableData({
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: newFilter !== undefined ? newFilter : tableData.filter,
+      filter: filter || "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
         tableData && tableData.totalRowsCount
@@ -148,7 +169,6 @@ const ManageUsersTable = ({ filter }) => {
     }
   };
   const onScrapingThreadCreated = () => {
-    TRIGGER_ROW_ADDED_ANIMATION = true;
     setTimeout(() => {
       syncTableData({ newPage: 0 });
     });
@@ -181,14 +201,14 @@ const ManageUsersTable = ({ filter }) => {
       );
     };
   };
-  if (!HasTableData || tableData.filter !== filter) {
-    setTimeout(() => {
-      syncTableData({ newFilter: filter });
-    });
-  }
+
   useEffect(() => {
     // Means data has not yet loaded nor requested
-
+    if (!HasTableData || filter !== tableData.filter) {
+      setTimeout(() => {
+        syncTableData({});
+      });
+    }
     return bindListeners();
   });
   // if (rows.length <= 0) {
@@ -239,6 +259,71 @@ const ManageUsersTable = ({ filter }) => {
     }
     toWrap = row.username;
     return <TableCell>{toWrap}</TableCell>;
+  };
+  const renderEmptyRows = () => {
+    if (rowsPerPage === rowsLength) {
+      return "";
+    }
+    const isJustFilling = rowsLength > 0;
+    const hasFilterApplied =
+      tableData.totalRowsCount < tableData.unfilteredRowsCount;
+    const _renderHint = () => {
+      if (hasFilterApplied) {
+        return (
+          <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+            Try changing filter options
+          </Typography>
+        );
+      }
+    };
+    const _emptyRowContent = () => (
+      <TableCell colspan="6">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flexDirection="column"
+        >
+          {!isJustFilling && (
+            <Search
+              style={{
+                color: theme.palette.text.disabled,
+                width: 48,
+                height: 48,
+              }}
+            />
+          )}
+
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <Typography
+              variant={isJustFilling ? "h6" : "h4"}
+              style={{
+                color: isJustFilling
+                  ? theme.palette.text.hint
+                  : theme.palette.text.primary,
+              }}
+            >
+              No{rowsLength > 0 ? " more" : ""} users found
+            </Typography>
+          </Box>
+          {_renderHint()}
+        </Box>
+      </TableCell>
+    );
+
+    const _createRow = () => (
+      <TableRow
+        className={clsx({
+          [classes.tableRow]: true,
+          [classes.emptyRow]: true,
+        })}
+        key={Math.random()}
+      >
+        {_emptyRowContent()}
+      </TableRow>
+    );
+
+    return _createRow();
   };
   return (
     <Table className={classes.table} stickyHeader>
@@ -348,14 +433,19 @@ const ManageUsersTable = ({ filter }) => {
                       {row.email}
                     </Link>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="left">
+                  <TableCell style={{ width: 160 }} align="right">
                     <Box
                       display="inline-flex"
                       alignItems="center"
                       justifyContent="start"
-                      style={{ color: theme.palette.text.hint }}
                     >
-                      <Today style={{ width: 18, height: 18 }} />
+                      <Today
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                      />
                       <Typography
                         variant="body2"
                         noWrap={true}
@@ -365,8 +455,27 @@ const ManageUsersTable = ({ filter }) => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="right">
-                    {row.insertedJobs || 0} Inserted jobs
+                  <TableCell style={{ width: 48 }} align="right">
+                    <Box alignItems="center" flexWrap="nowrap" display="flex">
+                      <AssignmentTurnedIn
+                        style={{
+                          width: 18,
+                          height: 18,
+                          color: theme.palette.text.hint,
+                        }}
+                      />
+
+                      <Typography
+                        variant="body2"
+                        noWrap={true}
+                        style={{
+                          marginLeft: theme.spacing(1),
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {row.scrapedJobs || 0} Inserted jobs
+                      </Typography>
+                    </Box>
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
@@ -387,6 +496,7 @@ const ManageUsersTable = ({ filter }) => {
               );
               return wrapComponent;
             })}
+        {!IsLoadingResults && renderEmptyRows()}
       </TableBody>
       <TableFooter>
         <TableRow>

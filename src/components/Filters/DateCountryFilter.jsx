@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import { isFunction } from "../../helpers/utils";
-import { DateRangePicker, DateRange } from "materialui-daterange-picker";
+import {
+  DateRangePicker,
+  DateRange,
+  DefinedRange,
+} from "materialui-daterange-picker";
 import ClearAllIcon from "@material-ui/icons/ClearAll";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Input from "@material-ui/core/Input";
@@ -18,14 +22,16 @@ import {
   IconButton,
   ButtonGroup,
   Divider,
+  Typography,
 } from "@material-ui/core";
 import {
   Close,
   Public,
   FilterList as FilterListIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  FastForward,
 } from "@material-ui/icons";
-
+import DateRanges from "../../constants/DateRanges";
 const useStyles = makeStyles((theme) => ({
   select: {
     "&:before": {
@@ -185,8 +191,12 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
     });
   };
   const handleChangeDateRange = (dateRange) => {
-    console.log(dateRange);
-    setDateRange(dateRange);
+    if (!dateRange.startDate && !dateRange.endDate) {
+      setDateRange(null);
+    } else {
+      setDateRange(dateRange);
+    }
+
     if (isFunction(onDateRangeChanged)) {
       onDateRangeChanged(dateRange);
     }
@@ -199,12 +209,50 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
     }
   };
 
+  const renderFilteringDateValue = () => {
+    const def = "Filter by date";
+    if (DateRange) {
+      const { startDate, endDate, label } = DateRange;
+
+      if (label) {
+        return label;
+      }
+      let _startDateText = "";
+      if (startDate) {
+        _startDateText = new Intl.DateTimeFormat("en").format(startDate);
+      }
+      let _endDateText = "";
+      if (endDate) {
+        _endDateText = new Intl.DateTimeFormat("en").format(endDate);
+      }
+      return (
+        <React.Fragment>
+          {_startDateText}
+          {_endDateText && (
+            <FastForward
+              style={{
+                width: 14,
+                height: 14,
+                color: theme.palette.text.disabled,
+                marginLeft: 4,
+                marginRight: 4,
+              }}
+            />
+          )}
+          {_endDateText}
+        </React.Fragment>
+      );
+    }
+
+    return def;
+  };
   return (
     <div style={{ display: "inline-flex", alignItems: "center" }}>
       <div style={{ postiion: "relative" }}>
-        <div style={{ position: "absolute" }}>
+        <div style={{ position: "fixed", zIndex: 129831298319 }}>
           <DateRangePicker
             open={DateFilterOpen}
+            definedRanges={DateRanges}
             toggle={toggleDateRangeFilter}
             onChange={handleChangeDateRange}
           />
@@ -218,7 +266,7 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
           endIcon={<KeyboardArrowDownIcon fontSize="small" />}
           onClick={toggleDateRangeFilter}
         >
-          Filter by date
+          {renderFilteringDateValue()}
         </Button>
 
         <Button

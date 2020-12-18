@@ -149,7 +149,7 @@ function AppContents() {
   const [open, setOpen] = React.useState(true);
 
   const [IsAdmin, setIsAdmin] = useState(true);
-  const [User, setUser] = useState(undefined);
+  const [User, setUser] = useState(sessionStore.getUser());
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStore.isAuthenticated()
@@ -176,8 +176,20 @@ function AppContents() {
   };
 
   const location = useLocation();
-  console.log(location.pathname);
 
+  const renderShortLetters = () => {
+    const fullName = User.name;
+    let shortLetters = "";
+    const nameParts = fullName.split(" ");
+    if (nameParts.length >= 2) {
+      shortLetters =
+        nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
+    } else {
+      shortLetters = nameParts[0].substring(0, 2);
+    }
+    // alert(fullName);
+    return shortLetters;
+  };
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -294,10 +306,10 @@ function AppContents() {
               <ListItem button key={"userId"}>
                 <ListItemIcon>
                   <Avatar className={[classes.orange, classes.avatar]}>
-                    JC
+                    {renderShortLetters()}
                   </Avatar>
                 </ListItemIcon>
-                <ListItemText primary={"Javier"} />
+                <ListItemText primary={User.name || User.username} />
               </ListItem>
             </List>
             <Divider />

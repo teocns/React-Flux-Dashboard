@@ -53,7 +53,7 @@ const useStyles2 = makeStyles({
     minWidth: 500,
   },
 });
-
+let filterTimeout = undefined;
 export default function ManageUsersView() {
   const [Filter, setFilter] = useState("");
   const classes = useStyles2();
@@ -61,8 +61,13 @@ export default function ManageUsersView() {
   const history = useHistory();
 
   const theme = useTheme();
+
   const onFilterChanged = (f) => {
-    setFilter(f);
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+      console.log("Setting filter");
+      setFilter(f);
+    }, 500);
   };
   return (
     <TableContainer component={Paper}>
@@ -88,11 +93,7 @@ export default function ManageUsersView() {
             id="standard-adornment-amount"
             size="small"
             placeholder="Search users"
-            value={Filter}
             onChange={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            onKeyPress={(evt) => {
               onFilterChanged(evt.target.value);
             }}
             startAdornment={

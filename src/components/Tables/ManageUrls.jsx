@@ -32,7 +32,7 @@ import {
 
 import FilterListIcon from "@material-ui/icons/FilterList";
 import uiActions from "../../actions/UI";
-import UserApi from "../../api/User";
+import ScrapingThreadApi from "../../api/ScrapingThread";
 import { motion } from "framer-motion";
 import { Link as RouterLink } from "react-router-dom";
 import sessionStore from "../../store/session";
@@ -74,15 +74,17 @@ const useStyles = makeStyles((theme) => ({
   },
   emptyRow: {
     height: 70,
-    "&:first-child": {
-      height: 60,
+    backgroundColor: "white!important",
+    "&:first-child td": {
+      paddingTop: "8rem",
+      paddingBottom: "8rem",
     },
   },
 }));
 
 const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
 
-const ManageUrlsTable = () => {
+const ManageUrlsTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -119,13 +121,13 @@ const ManageUrlsTable = () => {
   const deleteSelectedRows = () => {
     if (SelectedRows.length) {
       confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} users?`,
-        title: `Delete ${SelectedRows.length} users`,
+        description: `Are you sure you want to delete ${SelectedRows.length} links?`,
+        title: `Delete ${SelectedRows.length} links`,
       })
         .then(async () => {
-          const res = await UserApi.DeleteUsers(SelectedRows);
+          const res = await ScrapingThreadApi.Delete(SelectedRows);
           if (res && res.success) {
-            uiActions.showSnackbar(`Users deleted successfully`, "success");
+            uiActions.showSnackbar(`Links deleted successfully`, "success");
             setSelectedRows([]);
             setTimeout(() => {
               syncTableData({});
@@ -155,7 +157,7 @@ const ManageUrlsTable = () => {
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: "",
+      filter: filter || "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
         tableData && tableData.totalRowsCount
@@ -237,11 +239,11 @@ const ManageUrlsTable = () => {
 
   useEffect(() => {
     // Means data has not yet loaded nor requested
-    if (!HasTableData) {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (!HasTableData || filter !== tableData.filter) {
         syncTableData({});
-      });
-    }
+      }
+    });
 
     return bindListeners();
   });
@@ -259,49 +261,66 @@ const ManageUrlsTable = () => {
   const theme = useTheme();
 
   const renderEmptyRows = () => {
-    const isJustFilling = tableData.totalRowsCount > 0;
-
-    const _hintRowContent = (index) =>
-      index === 1 && (
+    if (rowsPerPage === rowsLength) {
+      return "";
+    }
+    const isJustFilling = rowsLength > 0;
+    const hasFilterApplied =
+      tableData.totalRowsCount < tableData.unfilteredRowsCount;
+    const _renderHint = () => {
+      if (hasFilterApplied) {
+        return (
+          <Typography
+            variant={isJustFilling ? "body2" : "h6"}
+            style={{ color: theme.palette.text.hint }}
+          >
+            Try changing filter options
+          </Typography>
+        );
+      }
+      if (!isJustFilling)
+        return (
+          <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+            Add some links to get started
+          </Typography>
+        );
+    };
+    const _emptyRowContent = () => (
+      <TableCell colspan="6">
         <Box
           display="flex"
           justifyContent="center"
           alignItems="center"
           flexDirection="column"
         >
-          <Search
-            style={{
-              color: theme.palette.text.disabled,
-              width: 48,
-              height: 48,
-            }}
-          />
-          <Box display="flex" justifyContent="center" alignItems="center">
-            <Typography variant="h4">No links found</Typography>
-          </Box>
-          {tableData.unfilteredRowsCount > tableData.totalRowsCount ? (
-            <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-              Try changing filter options
-            </Typography>
-          ) : (
-            <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-              Add some links to get started
-            </Typography>
+          {!isJustFilling && (
+            <Search
+              style={{
+                color: theme.palette.text.disabled,
+                width: 48,
+                height: 48,
+              }}
+            />
           )}
+
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <Typography
+              variant={isJustFilling ? "h6" : "h4"}
+              style={{
+                color: isJustFilling
+                  ? theme.palette.text.hint
+                  : theme.palette.text.primary,
+              }}
+            >
+              No{rowsLength > 0 ? " more" : ""} links found
+            </Typography>
+          </Box>
+          {_renderHint()}
         </Box>
-      );
-    const _emptyRowContent = (
-      <TableCell colspan="6">
-        <Typography
-          align="center"
-          style={{ color: theme.palette.text.disabled }}
-        >
-          −
-        </Typography>
       </TableCell>
     );
 
-    const _createRow = (index) => (
+    const _createRow = () => (
       <TableRow
         className={clsx({
           [classes.tableRow]: true,
@@ -309,15 +328,11 @@ const ManageUrlsTable = () => {
         })}
         key={Math.random()}
       >
-        {tableData.unfilteredRowsCount > tableData.totalRowsCount
-          ? _hintRowContent(index)
-          : _emptyRowContent(index)}
+        {_emptyRowContent()}
       </TableRow>
     );
 
-    return [...Array(isJustFilling ? emptyRows : 5).keys()].map((_, index) =>
-      _createRow(index)
-    );
+    return _createRow();
   };
   return (
     <Table className={classes.table} aria-label="custom pagination table">
@@ -346,7 +361,7 @@ const ManageUrlsTable = () => {
                 }}
               >
                 <Tooltip
-                  title={`Permanently delete ${SelectedRows.length} users`}
+                  title={`Permanently delete ${SelectedRows.length} links?`}
                 >
                   <IconButton
                     disabled={SelectedRows.length < 1}

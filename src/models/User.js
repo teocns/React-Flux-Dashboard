@@ -26,7 +26,8 @@ export default class User {
   /**
    * @type {string}
    */
-  authentication_token;z
+  authentication_token;
+  z;
 
   /**
    * @type {boolean}

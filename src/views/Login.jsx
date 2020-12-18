@@ -19,7 +19,7 @@ import ActionTypes from "../constants/ActionTypes";
 
 import sessionActions from "../actions/Session";
 import sessionStore from "../store/session";
-
+import LinksForCashIcon from "../assets/l4c.svg";
 const useStyles = makeStyles((theme) => ({
   formPaper: {
     padding: theme.spacing(3),
@@ -82,72 +82,98 @@ const LoginView = () => {
   });
 
   return (
-    <Paper className={classes.formPaper}>
-      <Typography variant="h6">Sign in</Typography>
-
-      <FormControl fullWidth className={classes.inputField}>
-        <OutlinedInput
-          id="standard-adornment-amount"
-          disabled={!!IsAuthenticating}
-          value={Email}
-          placeholder="Email / Username"
-          onChange={(evt) => {
-            setEmail(evt.target.value);
-          }}
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon />
-            </InputAdornment>
-          }
+    <div
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        margin: "0 auto",
+        width: 420,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: theme.spacing(3),
+        }}
+      >
+        <img
+          src={LinksForCashIcon}
+          style={{ height: 32, marginRight: theme.spacing(2) }}
+          alt="Linksforcash"
         />
-      </FormControl>
+        <Typography variant="h5">Linksforcash</Typography>
+      </div>
+      <Paper className={classes.formPaper}>
+        <Typography variant="h6">Sign in</Typography>
 
-      <FormControl fullWidth className={classes.inputField}>
-        <OutlinedInput
-          id="standard-adornment-amount"
-          placeholder="Password"
-          type="password"
-          disabled={!!IsAuthenticating}
-          onChange={(evt) => {
-            setPassword(evt.target.value);
-          }}
-          onKeyPress={(evt) => {
-            if (evt.key === "Enter") {
-              performAuthentication();
+        <FormControl fullWidth className={classes.inputField}>
+          <OutlinedInput
+            id="standard-adornment-amount"
+            disabled={!!IsAuthenticating}
+            value={Email}
+            placeholder="Email / Username"
+            onChange={(evt) => {
+              setEmail(evt.target.value);
+            }}
+            startAdornment={
+              <InputAdornment position="start">
+                <EmailIcon />
+              </InputAdornment>
             }
-          }}
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon />
-            </InputAdornment>
-          }
-        />
-      </FormControl>
+          />
+        </FormControl>
 
-      <Button
-        variant="contained"
-        fullWidth
-        disableElevation
-        color="secondary"
-        style={{ marginTop: theme.spacing(2) }}
-        onClick={performAuthentication}
-        disabled={!!IsAuthenticating}
-      >
-        {IsAuthenticating ? (
-          <CircularProgress style={{ color: "white", width: 24, height: 24 }} />
-        ) : (
-          "Login"
-        )}
-      </Button>
+        <FormControl fullWidth className={classes.inputField}>
+          <OutlinedInput
+            id="standard-adornment-amount"
+            placeholder="Password"
+            type="password"
+            disabled={!!IsAuthenticating}
+            onChange={(evt) => {
+              setPassword(evt.target.value);
+            }}
+            onKeyPress={(evt) => {
+              if (evt.key === "Enter") {
+                performAuthentication();
+              }
+            }}
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon />
+              </InputAdornment>
+            }
+          />
+        </FormControl>
 
-      <Link
-        to="reset-password"
-        fullWidth
-        style={{ textAlign: "center", marginTop: theme.spacing(1) }}
-      >
-        Forgot your password?
-      </Link>
-    </Paper>
+        <Button
+          variant="contained"
+          fullWidth
+          disableElevation
+          color="secondary"
+          style={{ marginTop: theme.spacing(2) }}
+          onClick={performAuthentication}
+          disabled={!!IsAuthenticating}
+        >
+          {IsAuthenticating ? (
+            <CircularProgress
+              style={{ color: "white", width: 24, height: 24 }}
+            />
+          ) : (
+            "Login"
+          )}
+        </Button>
+
+        <Link
+          to="reset-password"
+          fullWidth
+          style={{ textAlign: "center", marginTop: theme.spacing(1) }}
+        >
+          Forgot your password?
+        </Link>
+      </Paper>
+    </div>
   );
 };
 

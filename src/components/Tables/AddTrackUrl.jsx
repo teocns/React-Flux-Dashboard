@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
+import clsx from "clsx";
 import {
   Box,
   CircularProgress,
@@ -36,13 +37,23 @@ import TableData from "../../models/TableData";
 import ImportExportIcon from "@material-ui/icons/ImportExport";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import FindInPageIcon from "@material-ui/icons/FindInPage";
+import Search from "@material-ui/icons/Search";
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
   },
   tableRow: {
+    height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
+    },
+  },
+  emptyRow: {
+    height: 70,
+    backgroundColor: "white!important",
+    "&:first-child td": {
+      paddingTop: "8rem",
+      paddingBottom: "8rem",
     },
   },
 }));
@@ -146,7 +157,80 @@ const AddTrackUrlTable = () => {
       );
     };
   };
+  const renderEmptyRows = () => {
+    if (rowsPerPage === rowsLength) {
+      return "";
+    }
+    const isJustFilling = rowsLength > 0;
+    const hasFilterApplied =
+      tableData.totalRowsCount < tableData.unfilteredRowsCount;
+    const _renderHint = () => {
+      if (hasFilterApplied) {
+        return (
+          <Typography
+            variant={isJustFilling ? "body2" : "h6"}
+            style={{ color: theme.palette.text.hint }}
+          >
+            Try changing filter options
+          </Typography>
+        );
+      }
+      if (!isJustFilling)
+        return (
+          <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
+            Add some links to get started
+          </Typography>
+        );
+    };
+    const _emptyRowContent = () => (
+      <TableCell colspan="6">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flexDirection="column"
+        >
+          {!isJustFilling && (
+            <Search
+              style={{
+                color: theme.palette.text.disabled,
+                width: 48,
+                height: 48,
+              }}
+            />
+          )}
 
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <Typography
+              variant={isJustFilling ? "h6" : "h4"}
+              style={{
+                color: isJustFilling
+                  ? theme.palette.text.hint
+                  : theme.palette.text.primary,
+              }}
+            >
+              No{rowsLength > 0 ? " more" : ""} links found
+            </Typography>
+          </Box>
+          {_renderHint()}
+        </Box>
+      </TableCell>
+    );
+
+    const _createRow = () => (
+      <TableRow
+        className={clsx({
+          [classes.tableRow]: true,
+          [classes.emptyRow]: true,
+        })}
+        key={Math.random()}
+      >
+        {_emptyRowContent()}
+      </TableRow>
+    );
+
+    return _createRow();
+  };
   useEffect(() => {
     // Means data has not yet loaded nor requested
     if (!HasTableData) {
@@ -260,6 +344,7 @@ const AddTrackUrlTable = () => {
               );
               return wrapComponent;
             })}
+        {!IsLoadingResults && renderEmptyRows()}
       </TableBody>
       <TableFooter>
         <TableRow>

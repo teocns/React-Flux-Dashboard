@@ -45,5 +45,5 @@ export function getTimeRemaining(endtime) {
 }
 
 export function timeSince(date) {
-  return moment(date * 1000).fromNow();
+  return moment((date - 10) * 1000).fromNow();
 }

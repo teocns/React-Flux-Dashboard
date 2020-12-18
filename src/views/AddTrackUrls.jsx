@@ -30,10 +30,12 @@ import {
   ButtonGroup,
   OutlinedInput,
 } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
+
+import AddCircleIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
 import AddTrackUrlTable from "../components/Tables/AddTrackUrl";
 import dispatcher from "../dispatcher";
+import SpinnerGrow from "../components/SpinnerGrow";
 const useStyles = makeStyles((theme) => ({
   root: {
     flexShrink: 0,
@@ -107,7 +109,8 @@ export default function CustomPaginationActionsTable() {
           variant="contained"
           color="secondary"
           disableElevation
-          startIcon={<AddIcon />}
+          startIcon={<AddCircleIcon />}
+          endIcon={<SpinnerGrow />}
           onClick={createThread}
           style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
         >
