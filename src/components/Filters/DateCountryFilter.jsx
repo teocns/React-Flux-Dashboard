@@ -78,18 +78,6 @@ const MenuProps = {
   },
 };
 
-const names = [
-  "United States",
-  "Germany",
-  "United Kingdom",
-  "s",
-  "sdas,",
-  "asdfasdf",
-  "asdasd",
-  "asdxczvcxv",
-  "sidf9iw9",
-];
-
 function getStyles(name, personName, theme) {
   return {
     fontWeight:
@@ -99,10 +87,14 @@ function getStyles(name, personName, theme) {
   };
 }
 
-function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
+function DateCountryFilter({
+  Countries,
+  onCountriesChanged,
+  onDateRangeChanged,
+}) {
   const [DateFilterOpen, setDateFilterOpen] = useState(false);
   const [SelectedCountries, setSelectedCountries] = useState([]);
-  const [Countries, setCountries] = useState(names);
+
   const [DateRange, setDateRange] = useState(null);
   const anchorRef = React.useRef(null);
   const [MenuOpen, setMenuOpen] = React.useState(false);
@@ -274,6 +266,9 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
           aria-haspopup="true"
           onClick={toggleMenu}
           ref={anchorRef}
+          disabled={
+            !Countries || !Array.isArray(Countries) || !Countries.length
+          }
           startIcon={
             <Public
               style={{ color: theme.palette.text.disabled }}
@@ -308,25 +303,26 @@ function DateCountryFilter({ onCountriesChanged, onDateRangeChanged }) {
           </MenuItem>
           <Divider />
 
-          {Countries.map((name) => (
-            <MenuItem
-              alignItems="center"
-              key={name}
-              onClick={() => {
-                toggleCountry(name);
-              }}
-              value={name}
-              style={getStyles(name, personName, theme)}
-            >
-              <Checkbox
-                color="secondary"
-                checked={countryIsSelected(name)}
-                size="small"
-                disableRipple
-              />
-              {name}
-            </MenuItem>
-          ))}
+          {Array.isArray(Countries) &&
+            Countries.map((name) => (
+              <MenuItem
+                alignItems="center"
+                key={name}
+                onClick={() => {
+                  toggleCountry(name);
+                }}
+                value={name}
+                style={getStyles(name, personName, theme)}
+              >
+                <Checkbox
+                  color="secondary"
+                  checked={countryIsSelected(name)}
+                  size="small"
+                  disableRipple
+                />
+                {name}
+              </MenuItem>
+            ))}
         </Menu>
       </div>
     </div>

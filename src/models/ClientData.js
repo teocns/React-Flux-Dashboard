@@ -26,4 +26,4 @@ class ClientData {
   }
 }
 
-module.exports = ClientData;
+export default ClientData;

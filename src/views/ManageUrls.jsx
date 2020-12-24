@@ -18,7 +18,6 @@ import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
 import LinkIcon from "@material-ui/icons/Link";
-import scrapingThreadsActions from "../actions/ScrapingThread";
 import { useHistory } from "react-router-dom";
 
 import {

@@ -33,6 +33,10 @@ export default class ScrapingThread {
   scrapedJobsAmount;
 
   /**
+   * @type {number}
+   */
+  status;
+  /**
    * @param {ScrapingThreadObject} obj
    */
   constructor(obj) {

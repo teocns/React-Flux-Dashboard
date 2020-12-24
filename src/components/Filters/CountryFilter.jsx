@@ -69,9 +69,8 @@ function getStyles(name, personName, theme) {
   };
 }
 
-function CountryFilter() {
+function CountryFilter({ Countries }) {
   const [SelectedCountries, setSelectedCountries] = useState([]);
-  const [Countries, setCountries] = useState(names);
   const anchorRef = React.useRef(null);
   const [MenuOpen, setMenuOpen] = React.useState(false);
 

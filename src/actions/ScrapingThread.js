@@ -52,6 +52,18 @@ const onThreadCreated = (scrapingThread) => {
   });
 };
 
+const onThreadModified = (scrapingThread) => {
+  //uiActions.showSnackbar("URL successfuly registered for tracking", "success");
+  dispatcher.dispatch({
+    actionType: ActionTypes.Table.DATA_MODIFIED,
+    data: {
+      key: "threadId",
+      tableName: TableConstants.ADD_TRACK_URL,
+      row: scrapingThread,
+    },
+  });
+};
+
 /**
  *
  * @param {TableData} tableData
@@ -73,4 +85,5 @@ export default {
   create,
   onThreadCreated,
   requestTableDataRows,
+  onThreadModified,
 };

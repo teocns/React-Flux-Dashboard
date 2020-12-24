@@ -15,6 +15,7 @@ const SocketEvents = keyMirror({
   TABLE_SYNC: null,
   ADD_USER: null,
   TABLE_DATA: null,
+  SCRAPING_THREAD_SYNC: null,
 });
 
 export default SocketEvents;

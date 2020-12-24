@@ -14,6 +14,10 @@ const bindSessionSocketHandler = (socket) => {
     scrapingThreadActions.onThreadCreated(scrapingThread);
   });
 
+  socket.on(SocketEvents.SCRAPING_THREAD_SYNC, (scrapingThread) => {
+    scrapingThreadActions.onThreadModified(scrapingThread);
+  });
+
   // socket.on(SocketEvents.SCRAPING_THREADS_TABLE_DATA, (tableData) => {
   //   console.log("SocketEvents.SCRAPING_THREADS_TABLE_DATA");
   //   scrapingThreadActions.onTableDataReceived(tableData);

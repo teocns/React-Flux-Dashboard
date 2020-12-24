@@ -91,7 +91,6 @@ const ManageUrlsTable = ({ filter }) => {
   const [SelectedRows, setSelectedRows] = useState([]);
   const [DateRange, setDateRange] = useState(null);
 
-  const [SelectedCountriesFilter, setSelectedCountriesFilter] = useState();
   const HasTableData = tableData !== undefined;
 
   if (!HasTableData) {
@@ -382,6 +381,7 @@ const ManageUrlsTable = ({ filter }) => {
                 }}
               >
                 <DateCountryFilter
+                  Countries={tableData.availableCountries}
                   onCountriesChanged={handleCountryFilterChanged}
                   onDateRangeChanged={handleDateFilterChanged}
                 />

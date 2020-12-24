@@ -117,6 +117,18 @@ class TableStore extends EventEmitter {
     tableData.totalRowsCount++;
     // That's it
   }
+
+  alterRow({ row, key, tableName }) {
+    const tableData = this.getByTableName(tableName);
+    if (!tableData) {
+      // Wtf
+      return;
+    }
+    const replaceable = tableData.rows.findIndex((c) => c[key] === row[key]);
+    if (replaceable !== -1) {
+      tableData.rows[replaceable] = row;
+    }
+  }
 }
 
 const tableStore = new TableStore();
@@ -128,6 +140,10 @@ tableStore.dispatchToken = dispatcher.register((event) => {
       break;
     case ActionTypes.Table.DATA_UPDATED:
       tableStore.updateTableData(event.data.tableData);
+      break;
+    case ActionTypes.Table.DATA_MODIFIED:
+      //const { row, key, tableName } = event;
+      tableStore.alterRow(event.data);
       break;
     case ActionTypes.Table.ROW_ADDED:
       tableStore.addRow(event.data);

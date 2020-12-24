@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
+import { Statuses } from "../../constants/ScrapingThread";
 import clsx from "clsx";
 import {
   Box,
@@ -10,6 +11,7 @@ import {
   Link,
   Table,
   TableBody,
+  Tooltip,
   TableCell,
   TableContainer,
   TableFooter,
@@ -29,7 +31,18 @@ import EmptyTablePlaceholder from "./EmptyPlaceholder";
 import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
 import scrapingThreadsActions from "../../actions/ScrapingThread";
-import { Today } from "@material-ui/icons";
+import {
+  BrandingWatermark,
+  Cancel,
+  HourglassFull,
+  Today,
+  HourglassEmpty,
+  DoneAll,
+  BrandingWatermarkOutlined,
+  Check,
+  ErrorOutline,
+  BugReport,
+} from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
@@ -38,6 +51,7 @@ import ImportExportIcon from "@material-ui/icons/ImportExport";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import FindInPageIcon from "@material-ui/icons/FindInPage";
 import Search from "@material-ui/icons/Search";
+import ScrapingThread from "../../models/ScrapingThread";
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
@@ -121,6 +135,19 @@ const AddTrackUrlTable = () => {
       setTableData(foundTable);
     }
   };
+
+  /**
+   * @type {Object} obj
+   * @type {TableData} obj.tableData
+   */
+  const onTableRowsDataModified = ({ tableName }) => {
+    console.log("data modified on table ", tableName);
+    if (tableName === THIS_TABLE_NAME) {
+      const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
+      console.log("foundTable", foundTable);
+      setTableData({ ...foundTable });
+    }
+  };
   console.log("rendering", tableData);
 
   const onScrapingThreadCreated = () => {
@@ -138,6 +165,10 @@ const AddTrackUrlTable = () => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
+    tableStore.addChangeListener(
+      ActionTypes.Table.DATA_MODIFIED,
+      onTableRowsDataModified
+    );
     scrapingThreadsStore.addChangeListener(
       ActionTypes.ScrapingThread.THREAD_CREATED,
       onScrapingThreadCreated
@@ -151,11 +182,138 @@ const AddTrackUrlTable = () => {
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
       );
+      tableStore.removeChangeListener(
+        ActionTypes.Table.DATA_MODIFIED,
+        onTableRowsDataModified
+      );
       scrapingThreadsStore.removeChangeListener(
         ActionTypes.Table.ROW_ADDED,
         onScrapingThreadCreated
       );
     };
+  };
+  /**
+   *
+   * @param {ScrapingThread} thread
+   */
+  const renderThreadStatus = (row) => {
+    let icon = undefined;
+    let innerText = undefined;
+    let caption = undefined;
+    switch (row.status) {
+      case Statuses.BAD_LINK:
+        innerText = "Bad link";
+        icon = (
+          <Tooltip title="Could not scrape link">
+            <ErrorOutline
+              style={{
+                width: 18,
+                height: 18,
+                color: "red",
+              }}
+            />
+          </Tooltip>
+        );
+        break;
+      case Statuses.SEARCHING_PAGE:
+        innerText = "SCANNING URL";
+        icon = (
+          <BugReport
+            color="primary"
+            style={{
+              width: 18,
+              height: 18,
+            }}
+          />
+        );
+        break;
+      case Statuses.QUEUED:
+        innerText = "in queue";
+        icon = (
+          <Tooltip title="Link queued for scraping">
+            <HourglassEmpty
+              style={{
+                width: 18,
+                height: 18,
+                color: theme.palette.text.hint,
+              }}
+            />
+          </Tooltip>
+        );
+        break;
+      case Statuses.COMPLETED:
+        innerText = `${
+          row.scrapedJobs > 0 ? row.scrapedJobs : "No"
+        } Jobs found`;
+        caption = `IN ${row.auditsCount} LINKS`;
+        icon =
+          row.scrapedJobs > 0 ? (
+            <Tooltip title="Scraping is completed">
+              <DoneAll
+                style={{
+                  width: 18,
+                  height: 18,
+                  color: "green",
+                }}
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="No jobs found">
+              <ErrorOutline
+                style={{
+                  width: 18,
+                  height: 18,
+                  color: "red",
+                }}
+              />
+            </Tooltip>
+          );
+        break;
+      case Statuses.SCRAPING_JOBS:
+        innerText = `${row.scrapedJobs} Jobs found`;
+        caption = `SUB LINK ${row.auditsCount}/${row.externalLinksFound}`;
+        icon = (
+          <BugReport
+            color="primary"
+            style={{
+              width: 18,
+              height: 18,
+            }}
+          />
+        );
+        break;
+    }
+    return (
+      <Box
+        alignItems="center"
+        flexWrap="nowrap"
+        display="flex"
+        justifyContent="flex-end"
+      >
+        <Box display="flex" flexDirection="column" mr={theme.spacing(1)}>
+          <Typography
+            variant="overline"
+            noWrap={true}
+            style={{
+              marginLeft: theme.spacing(1),
+              whiteSpace: "nowrap",
+              lineHeight: "1rem",
+            }}
+          >
+            {innerText}
+          </Typography>
+          {caption && (
+            <Typography
+              variant="caption"
+              style={{ color: theme.palette.text.hint }}
+            >
+              {caption}
+            </Typography>
+          )}
+        </Box>
+        {icon}
+      </Box>
+    );
   };
   const renderEmptyRows = () => {
     if (rowsPerPage === rowsLength) {
@@ -243,9 +401,6 @@ const AddTrackUrlTable = () => {
     }
     return bindListeners();
   });
-  // if (rows.length <= 0) {
-  //   return <EmptyTablePlaceholder />;
-  // }
 
   const theme = useTheme();
   return (
@@ -314,26 +469,7 @@ const AddTrackUrlTable = () => {
                     </Box>
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="right">
-                    <Box alignItems="center" flexWrap="nowrap" display="flex">
-                      <AssignmentTurnedInIcon
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
-                        }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{
-                          marginLeft: theme.spacing(1),
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {row.scrapedJobs} Inserted jobs
-                      </Typography>
-                    </Box>
+                    {renderThreadStatus(row)}
                   </TableCell>
                 </React.Fragment>
               );

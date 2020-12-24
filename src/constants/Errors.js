@@ -20,4 +20,4 @@ const Errors = {
   ERR_CANNOT_DELETE_YOURSELF: "Cannot delete yourself",
 };
 
-module.exports = Errors;
+export default Errors;
