@@ -60,7 +60,7 @@ class SessionStore extends EventEmitter {
 
   getAuthenticationToken() {
     let _ret = localStorage.getItem("authentication_token");
-    if (_ret === "undefined" || _ret.length < 64) {
+    if (_ret === undefined || ret === null || _ret.length < 64) {
       _ret = undefined;
     }
     return _ret;
