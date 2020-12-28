@@ -376,7 +376,12 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText primary={"User Statistics"} />
                       </ListItem>
-                      <ListItem button key={"tracked-urls"}>
+                      <ListItem
+                        button
+                        key={"tracked-urls"}
+                        component={Link}
+                        to={"/tracked-urls"}
+                      >
                         <ListItemIcon>
                           <LinkIcon />
                         </ListItemIcon>

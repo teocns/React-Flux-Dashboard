@@ -53,7 +53,7 @@ const useStyles2 = makeStyles({
   },
 });
 let filterTimeout = undefined;
-export default function ManageUrlsView() {
+export default function ManageUrlsAdminView() {
   const [Filter, setFilter] = useState("");
   const classes = useStyles2();
 

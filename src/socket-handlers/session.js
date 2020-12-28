@@ -9,10 +9,6 @@ const bindSessionSocketHandler = (socket) => {
     // Do nothing for now
   });
 
-  socket.on(SocketEvents.INITIAL_STATUS, (status) => {
-    sessionActions.onInitialStatusReceived(status);
-  });
-
   socket.on(SocketEvents.USER_DATA, ({ user }) => {
     sessionActions.onUserDataReceived(user);
   });

@@ -59,7 +59,7 @@ import {
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
-import DateCountryFilter from "../Filters/DateCountryFilter";
+import MultiFilter from "../Filters/MultiFilter";
 import LinkIcon from "@material-ui/icons/Link";
 
 const useStyles = makeStyles((theme) => ({
@@ -84,7 +84,7 @@ const useStyles = makeStyles((theme) => ({
 
 const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
 
-const ManageUrlsTable = ({ filter }) => {
+const ManageUrlsAdminTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -333,6 +333,7 @@ const ManageUrlsTable = ({ filter }) => {
 
     return _createRow();
   };
+
   return (
     <Table className={classes.table} aria-label="custom pagination table">
       {/* <LinearProgress
@@ -380,8 +381,8 @@ const ManageUrlsTable = ({ filter }) => {
                   marginLeft: theme.spacing(1),
                 }}
               >
-                <DateCountryFilter
-                  Countries={tableData.availableCountries}
+                <MultiFilter
+                  onUserFilterChanged={handleUserFilterChanged}
                   onCountriesChanged={handleCountryFilterChanged}
                   onDateRangeChanged={handleDateFilterChanged}
                 />

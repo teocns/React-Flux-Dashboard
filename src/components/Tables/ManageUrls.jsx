@@ -59,7 +59,7 @@ import {
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
-import DateCountryFilter from "../Filters/DateCountryFilter";
+import MultiFilter from "../Filters/MultiFilter";
 import LinkIcon from "@material-ui/icons/Link";
 
 const useStyles = makeStyles((theme) => ({
@@ -380,7 +380,7 @@ const ManageUrlsTable = ({ filter }) => {
                   marginLeft: theme.spacing(1),
                 }}
               >
-                <DateCountryFilter
+                <MultiFilter
                   Countries={tableData.availableCountries}
                   onCountriesChanged={handleCountryFilterChanged}
                   onDateRangeChanged={handleDateFilterChanged}

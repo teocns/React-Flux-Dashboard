@@ -35,7 +35,7 @@ import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import { Skeleton } from "@material-ui/lab";
-import DateCountryFilter from "../components/Filters/DateCountryFilter";
+import MultiFilter from "../components/Filters/MultiFilter";
 
 import Statistics from "../models/Statistics";
 import statisticsActions from "../actions/Statistics";
@@ -144,10 +144,11 @@ export default function StatisticsView() {
       <Paper
         style={{ padding: theme.spacing(2), marginBottom: theme.spacing(4) }}
       >
-        <DateCountryFilter
+        <MultiFilter
           //Users={FilterUsers}
-          Countries={FilterCountries}
+          //Countries={FilterCountries}
           ///onUserFilterChanged={handleUserFilterChanged}
+          disableUsers={true}
           onDateRangeChanged={handleDateFilterChanged}
           onCountriesChanged={handleCountryFilterChanged}
         />

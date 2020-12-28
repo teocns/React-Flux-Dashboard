@@ -8,6 +8,8 @@ import AppPreload from "./components/AppPreload";
 import ActionTypes from "./constants/ActionTypes";
 import { CssBaseline, ThemeProvider } from "@material-ui/core";
 import defaultTheme from "./theme";
+import StartServices from "./services/bundle";
+
 export default function App() {
   const [ShowPreload, setShowPreload] = useState(true);
   const history = useHistory();
@@ -28,7 +30,7 @@ export default function App() {
       if (ShowPreload) setShowPreload(false);
     }
   };
-
+  StartServices();
   onIsAuthenticatingChanged();
   useEffect(() => {
     sessionStore.addChangeListener(

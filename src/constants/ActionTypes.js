@@ -5,6 +5,8 @@ import ScrapingThreadActionTypes from "./ActionTypes/ScrapingThread";
 import TableActionTypes from "./ActionTypes/Table";
 import UserActionTypes from "./ActionTypes/Users";
 import StatisticsActionTypes from "./ActionTypes/Statistics";
+import UserFilterActionTypes from "./ActionTypes/UserFilter";
+import CountryFilterActionTypes from "./ActionTypes/CountryFilter";
 
 export default {
   Session: SessionActionTypes,
@@ -13,4 +15,6 @@ export default {
   Table: TableActionTypes,
   User: UserActionTypes,
   Statistics: StatisticsActionTypes,
+  UserFilter: UserFilterActionTypes,
+  CountryFilter: CountryFilterActionTypes,
 };

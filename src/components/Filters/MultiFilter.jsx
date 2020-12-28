@@ -17,6 +17,8 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Select from "@material-ui/core/Select";
 import Checkbox from "@material-ui/core/Checkbox";
 import Chip from "@material-ui/core/Chip";
+import userFilterStore from "../../store/UserFilter";
+import { Skeleton } from "@material-ui/lab";
 import {
   Menu,
   Button,
@@ -34,6 +36,8 @@ import {
   Search,
 } from "@material-ui/icons";
 import DateRanges from "../../constants/DateRanges";
+import countryFilterStore from "../../store/CountryFilter";
+import ActionTypes from "../../constants/ActionTypes";
 const useStyles = makeStyles((theme) => ({
   select: {
     "&:before": {
@@ -89,9 +93,10 @@ function getStyles(name, personName, theme) {
   };
 }
 
-function DateCountryFilter({
-  Countries,
-  Users,
+function MultiFilter({
+  disableCountries,
+  disableUsers,
+  disableDateRange,
   onCountriesChanged,
   onDateRangeChanged,
   onUserFilterChanged,
@@ -100,7 +105,13 @@ function DateCountryFilter({
   const [SelectedCountries, setSelectedCountries] = useState([]);
   const [SelectedUsers, setSelectedUsers] = useState([]);
 
+  const [Countries, setCountries] = useState(
+    !disableCountries && countryFilterStore.get()
+  );
+  const [Users, setUsers] = useState(!disableUsers && userFilterStore.get());
+
   const [DateRange, setDateRange] = useState(null);
+
   const anchorRef = React.useRef(null);
   const usersAnchorRef = React.useRef(null);
   const [CountryMenuOpen, setCountryMenuOpen] = React.useState(false);
@@ -178,6 +189,39 @@ function DateCountryFilter({
   //       );
   //     }
   //   };
+
+  const onCountryFilterSync = () => {
+    setCountries(countryFilterStore.get());
+  };
+  const onUserFilterSync = () => {
+    setUsers(userFilterStore.get());
+  };
+
+  const bindListeners = () => {
+    countryFilterStore.addChangeListener(
+      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+      onCountryFilterSync
+    );
+    userFilterStore.addChangeListener(
+      ActionTypes.UserFilter.USER_FILTER_SYNC,
+      onUserFilterSync
+    );
+
+    return () => {
+      countryFilterStore.removeChangeListener(
+        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+        onCountryFilterSync
+      );
+      userFilterStore.removeChangeListener(
+        ActionTypes.UserFilter.USER_FILTER_SYNC,
+        onUserFilterSync
+      );
+    };
+  };
+
+  useEffect(() => {
+    return bindListeners();
+  });
   const hasFilterForCountry = (country) => {
     return SelectedCountries.includes(country);
   };
@@ -279,6 +323,8 @@ function DateCountryFilter({
 
     return def;
   };
+
+  const renderUserButton = () => {};
   return (
     <div style={{ display: "inline-flex", alignItems: "center" }}>
       <div style={{ postiion: "relative" }}>
@@ -301,47 +347,63 @@ function DateCountryFilter({
         >
           {renderFilteringDateValue()}
         </Button>
-
-        <Button
-          aria-controls="simple-menu"
-          aria-haspopup="true"
-          onClick={toggleCountriesMenu}
-          ref={anchorRef}
-          disabled={
-            !Countries || !Array.isArray(Countries) || !Countries.length
-          }
-          startIcon={
-            <Public
-              style={{ color: theme.palette.text.disabled }}
-              fontSize="small"
-            />
-          }
-          endIcon={<KeyboardArrowDownIcon fontSize="small" />}
-        >
-          {SelectedCountries.length > 0
-            ? `Within ${SelectedCountries.length} countries`
-            : "Countries"}
-        </Button>
-
-        {Users && (
-          <Button
-            aria-controls="users-menu"
-            aria-haspopup="true"
-            onClick={toggleUsersMenu}
-            ref={usersAnchorRef}
-            startIcon={
-              <PersonIcon
-                style={{ color: theme.palette.text.disabled }}
-                fontSize="small"
+        {!disableCountries &&
+          (Countries ? (
+            <Button
+              aria-controls="simple-menu"
+              aria-haspopup="true"
+              onClick={toggleCountriesMenu}
+              ref={anchorRef}
+              startIcon={
+                <Public
+                  style={{ color: theme.palette.text.disabled }}
+                  fontSize="small"
+                />
+              }
+              endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+            >
+              {SelectedCountries.length > 0
+                ? `Within ${SelectedCountries.length} countries`
+                : "Countries"}
+            </Button>
+          ) : (
+            <Button variant="outlined">
+              <Skeleton
+                variant="rect"
+                style={{ padding: 4, width: 124 }}
+                animation="wave"
               />
-            }
-            endIcon={<Search fontSize="small" />}
-          >
-            {SelectedUsers.length > 0
-              ? `Within ${SelectedUsers.length} users`
-              : "Users"}
-          </Button>
-        )}
+            </Button>
+          ))}
+
+        {!disableUsers &&
+          (Users ? (
+            <Button
+              aria-controls="users-menu"
+              aria-haspopup="true"
+              onClick={toggleUsersMenu}
+              ref={usersAnchorRef}
+              startIcon={
+                <PersonIcon
+                  style={{ color: theme.palette.text.disabled }}
+                  fontSize="small"
+                />
+              }
+              endIcon={<Search fontSize="small" />}
+            >
+              {SelectedUsers.length > 0
+                ? `Within ${SelectedUsers.length} users`
+                : "Users"}
+            </Button>
+          ) : (
+            <Button variant="outlined">
+              <Skeleton
+                variant="rect"
+                style={{ padding: 4, width: 124 }}
+                animation="wave"
+              />
+            </Button>
+          ))}
       </ButtonGroup>
 
       <Menu
@@ -437,4 +499,4 @@ function DateCountryFilter({
     </div>
   );
 }
-export default React.memo(DateCountryFilter);
+export default React.memo(MultiFilter);
