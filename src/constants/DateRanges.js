@@ -14,8 +14,8 @@ export default [
   },
   {
     label: "Today",
-    startDate: new Date(),
-    endDate: new Date().setDate(new Date().getDate() + 1),
+    startDate: new Date().setDate(new Date().getDate() - 1),
+    endDate: new Date().setDate(new Date().getDate()),
   },
   {
     label: "Yesterday",

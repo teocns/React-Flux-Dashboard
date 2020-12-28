@@ -18,6 +18,7 @@ import {
   IconButton,
   List,
   Box,
+  Badge,
 } from "@material-ui/core";
 
 import { Link, useHistory } from "react-router-dom";
@@ -148,9 +149,8 @@ function AppContents() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
 
-  const [IsAdmin, setIsAdmin] = useState(true);
   const [User, setUser] = useState(sessionStore.getUser());
-
+  const IsAdmin = (User && User.isAdmin) || false;
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStore.isAuthenticated()
   );
@@ -178,6 +178,9 @@ function AppContents() {
   const location = useLocation();
 
   const renderShortLetters = () => {
+    if (!User || !User.name) {
+      return "";
+    }
     const fullName = User.name;
     let shortLetters = "";
     const nameParts = fullName.split(" ");
@@ -190,215 +193,231 @@ function AppContents() {
     // alert(fullName);
     return shortLetters;
   };
+  console.log("isAuthenticated", isAuthenticated);
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <AppBar
-        position="fixed"
-        className={clsx(classes.appBar, {
-          [classes.appBarShift]: isAuthenticated && open,
-        })}
-      >
-        {isAuthenticated && (
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              onClick={handleDrawerOpen}
-              edge="start"
-              className={classes.menuButton}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Button
-              variant="text"
-              color={
-                location.pathname === "/" || location.pathname === ""
-                  ? "secondary"
-                  : "rgb(127, 127, 127)"
-              }
-              startIcon={
-                <AddCircleOutlineIcon
-                  color={
-                    location.pathname === "/" || location.pathname === ""
-                      ? "secondary"
-                      : "rgb(127, 127, 127)"
-                  }
-                />
-              }
-              component={Link}
-              to="/"
-            >
-              Crawl URLs
-            </Button>
-            <Button
-              variant="text"
-              style={{ marginLeft: theme.spacing(1) }}
-              component={Link}
-              to="/manage-urls"
-              startIcon={
-                <EditIcon
-                  color={
-                    location.pathname === "/manage-urls"
-                      ? "secondary"
-                      : "rgb(127, 127, 127)"
-                  }
-                />
-              }
-              color={
-                location.pathname === "/manage-urls"
-                  ? "secondary"
-                  : theme.palette.text.hint
-              }
-            >
-              Manage URLs
-            </Button>
-          </Toolbar>
-        )}
-      </AppBar>
-      <Drawer
-        variant="permanent"
-        className={clsx(classes.drawer, {
-          [classes.drawerOpen]: open,
-          [classes.drawerClose]: !open,
-          [classes.hide]: !isAuthenticated,
-        })}
-        classes={{
-          paper: clsx({
-            [classes.drawerOpen]: open,
-            [classes.drawerClose]: !open,
-            [classes.drawerPaper]: true,
-          }),
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            flexDirection: "column",
-            flex: 1,
-          }}
-        >
-          <div>
-            <div className={classes.drawerHeader}>
-              <List>
-                <ListItem button>
-                  <img style={{ width: 32 }} src={logoIconSvg} alt="yes" />
-                  <Typography
-                    variant="h6"
-                    style={{ marginLeft: theme.spacing(3) }}
-                  >
-                    Linksforcash
-                  </Typography>
-                </ListItem>
-              </List>
-              {/* <Box display="inline-flex" height="64px" alignItems="center">
-                <Typography
-                  variant="h6"
-                  style={{ marginLeft: theme.spacing(1) }}
-                >
-                  Linksforcash
-                </Typography>
-              </Box> */}
-            </div>
-            <Divider />
-            <List>
-              <ListItem button key={"userId"}>
-                <ListItemIcon>
-                  <Avatar className={[classes.orange, classes.avatar]}>
-                    {renderShortLetters()}
-                  </Avatar>
-                </ListItemIcon>
-                <ListItemText primary={User.name || User.username} />
-              </ListItem>
-            </List>
-            <Divider />
-            <List>
-              <ListItem button key={"stats"}>
-                <ListItemIcon>
-                  <TimelineIcon />
-                </ListItemIcon>
-                <ListItemText primary={"Statistics"} />
-              </ListItem>
-              <ListItem
-                button
-                key={"FAQ"}
-                component={Link}
-                to="/faq"
-                selected={location.pathname === "/faq"}
+      {isAuthenticated && User && User.name && (
+        <React.Fragment>
+          <AppBar
+            position="fixed"
+            className={clsx(classes.appBar, {
+              [classes.appBarShift]: isAuthenticated && open,
+            })}
+          >
+            <Toolbar>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={handleDrawerOpen}
+                edge="start"
+                className={classes.menuButton}
               >
-                <ListItemIcon>
-                  <HelpIcon />
-                </ListItemIcon>
-                <ListItemText primary={"FAQ"} />
-              </ListItem>
-            </List>
-            <Divider />
-            {IsAdmin && (
-              <React.Fragment>
+                <MenuIcon />
+              </IconButton>
+              <Button
+                variant="text"
+                color={
+                  location.pathname === "/" || location.pathname === ""
+                    ? "secondary"
+                    : "rgb(127, 127, 127)"
+                }
+                startIcon={
+                  <AddCircleOutlineIcon
+                    color={
+                      location.pathname === "/" || location.pathname === ""
+                        ? "secondary"
+                        : "rgb(127, 127, 127)"
+                    }
+                  />
+                }
+                component={Link}
+                to="/"
+              >
+                Crawl URLs
+              </Button>
+              <Button
+                variant="text"
+                style={{ marginLeft: theme.spacing(1) }}
+                component={Link}
+                to="/manage-urls"
+                startIcon={
+                  <EditIcon
+                    color={
+                      location.pathname === "/manage-urls"
+                        ? "secondary"
+                        : "rgb(127, 127, 127)"
+                    }
+                  />
+                }
+                color={
+                  location.pathname === "/manage-urls"
+                    ? "secondary"
+                    : theme.palette.text.hint
+                }
+              >
+                Manage URLs
+              </Button>
+            </Toolbar>
+          </AppBar>
+
+          <Drawer
+            variant="permanent"
+            className={clsx(classes.drawer, {
+              [classes.drawerOpen]: open,
+              [classes.drawerClose]: !open,
+              [classes.hide]: !isAuthenticated,
+            })}
+            classes={{
+              paper: clsx({
+                [classes.drawerOpen]: open,
+                [classes.drawerClose]: !open,
+                [classes.drawerPaper]: true,
+              }),
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexDirection: "column",
+                flex: 1,
+              }}
+            >
+              <div>
+                <div className={classes.drawerHeader}>
+                  <List>
+                    <ListItem button>
+                      <img style={{ width: 32 }} src={logoIconSvg} alt="yes" />
+                      <Typography
+                        variant="h6"
+                        style={{ marginLeft: theme.spacing(3) }}
+                      >
+                        Linksforcash
+                      </Typography>
+                    </ListItem>
+                  </List>
+                </div>
+                <Divider />
                 <List>
-                  <ListItem button key={"user-stats"}>
+                  {IsAdmin && (
+                    <ListItem style={{ padding: 0 }}>
+                      <div
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          paddingRight: theme.spacing(2),
+                          transform: "scale(0.9)",
+                        }}
+                      >
+                        <Badge
+                          size="small"
+                          style={{ marginLeft: 24, marginBottom: -8 }}
+                          badgeContent={
+                            <div style={{ fontSize: 11 }}>ADMIN</div>
+                          }
+                          color="secondary"
+                          anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right",
+                          }}
+                        />
+                      </div>
+                    </ListItem>
+                  )}
+                  <ListItem button key={"userId"}>
                     <ListItemIcon>
-                      <SupervisedUserCircleIcon />
+                      <Avatar className={[classes.orange, classes.avatar]}>
+                        {renderShortLetters()}
+                      </Avatar>
                     </ListItemIcon>
-                    <ListItemText primary={"User Statistics"} />
-                  </ListItem>
-                  <ListItem button key={"tracked-urls"}>
-                    <ListItemIcon>
-                      <LinkIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={"Tracked URLs"} />
-                  </ListItem>
-                  <ListItem button key={"xml"}>
-                    <ListItemIcon>
-                      <CodeIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={"XML"} />
-                  </ListItem>
-                  <ListItem
-                    button
-                    key={"users"}
-                    selected={location.pathname === "/manage-users"}
-                    component={Link}
-                    to="/manage-users"
-                  >
-                    <ListItemIcon>
-                      <AccountIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={"Users"} />
+                    <ListItemText primary={User.name || User.username} />
                   </ListItem>
                 </List>
                 <Divider />
-              </React.Fragment>
-            )}
-          </div>
-          <List>
-            {/* <div
-              style={{
-                display: "block",
-                whiteSpace: "normal",
-                overflow: "hidden",
-                color: theme.palette.text.disabled,
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="caption" style={{ display: "block" }}>
-                @ 2020 beBee Affinity Social Network, S.L
-              </Typography>
-              <Typography variant="caption" style={{ display: "block" }}>
-                CIF B84471838 - <Link>Contact</Link>
-              </Typography>
-            </div> */}
-            {/* <Divider /> */}
-            <ListItem button key={"users"} onClick={sessionActions.logout}>
-              <ListItemIcon>
-                <PowerSettingsNewIcon />
-              </ListItemIcon>
-              <ListItemText primary={"Disconnect"} />
-            </ListItem>
-          </List>
-        </div>
-      </Drawer>
+                <List>
+                  <ListItem
+                    button
+                    key={"stats"}
+                    component={Link}
+                    to="/statistics"
+                  >
+                    <ListItemIcon>
+                      <TimelineIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={"Statistics"} />
+                  </ListItem>
+                  <ListItem
+                    button
+                    key={"FAQ"}
+                    component={Link}
+                    to="/faq"
+                    selected={location.pathname === "/faq"}
+                  >
+                    <ListItemIcon>
+                      <HelpIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={"FAQ"} />
+                  </ListItem>
+                </List>
+                <Divider />
+                {IsAdmin && (
+                  <React.Fragment>
+                    <List>
+                      <ListItem
+                        button
+                        key={"user-stats"}
+                        component={Link}
+                        to="/user-statistics"
+                      >
+                        <ListItemIcon>
+                          <SupervisedUserCircleIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"User Statistics"} />
+                      </ListItem>
+                      <ListItem button key={"tracked-urls"}>
+                        <ListItemIcon>
+                          <LinkIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"Tracked URLs"} />
+                      </ListItem>
+                      <ListItem button key={"xml"}>
+                        <ListItemIcon>
+                          <CodeIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"XML"} />
+                      </ListItem>
+                      <ListItem
+                        button
+                        key={"users"}
+                        selected={location.pathname === "/manage-users"}
+                        component={Link}
+                        to="/manage-users"
+                      >
+                        <ListItemIcon>
+                          <AccountIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"Users"} />
+                      </ListItem>
+                    </List>
+                    <Divider />
+                  </React.Fragment>
+                )}
+              </div>
+              <List>
+                <ListItem button key={"users"} onClick={sessionActions.logout}>
+                  <ListItemIcon>
+                    <PowerSettingsNewIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={"Disconnect"} />
+                </ListItem>
+              </List>
+            </div>
+          </Drawer>
+        </React.Fragment>
+      )}
+
       <main
         className={clsx(classes.content, {
           [classes.contentShift]: open,

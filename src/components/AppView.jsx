@@ -13,6 +13,8 @@ import ManageUrlsView from "../views/ManageUrls";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
 import FAQView from "../views/FAQ";
+import StatisticsView from "../views/Statistics";
+import StatisticsAdminView from "../views/StatisticsAdmin";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
@@ -42,6 +44,8 @@ const AppView = () => {
         <Route exact path="/manage-users" component={ManageUsersView} />
         <Route exact path="/manage-urls" component={ManageUrlsView} />
         <Route exact path="/add-user" component={AddUsersView} />
+        <Route exact path="/statistics" component={StatisticsView} />
+        <Route exact path="/user-statistics" component={StatisticsAdminView} />
       </Switch>
     </div>
   );

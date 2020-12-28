@@ -6,6 +6,7 @@ import io from "socket.io-client";
 import bindSessionSocketHandler from "./socket-handlers/session";
 import bindScrapingThreadSocketHandler from "./socket-handlers/ScrapingThread";
 import bindTableSocketHandler from "./socket-handlers/Table";
+import bindStatisticsSocketHandler from "./socket-handlers/Statistics";
 
 var socketInstance = initialize();
 
@@ -21,9 +22,11 @@ export function initialize() {
   bindSessionSocketHandler(socket);
   bindScrapingThreadSocketHandler(socket);
   bindTableSocketHandler(socket);
+  bindStatisticsSocketHandler(socket);
 
-  //bindEventHandlers(socket);
-
+  socket.on("disconnect", async () => {
+    window.location.reload();
+  });
   return socket;
 }
 export function sendMessage(event, data) {

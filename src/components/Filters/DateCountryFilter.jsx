@@ -7,6 +7,7 @@ import {
   DefinedRange,
 } from "materialui-daterange-picker";
 import ClearAllIcon from "@material-ui/icons/ClearAll";
+import PersonIcon from "@material-ui/icons/Person";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Input from "@material-ui/core/Input";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -30,6 +31,7 @@ import {
   FilterList as FilterListIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   FastForward,
+  Search,
 } from "@material-ui/icons";
 import DateRanges from "../../constants/DateRanges";
 const useStyles = makeStyles((theme) => ({
@@ -89,28 +91,42 @@ function getStyles(name, personName, theme) {
 
 function DateCountryFilter({
   Countries,
+  Users,
   onCountriesChanged,
   onDateRangeChanged,
+  onUserFilterChanged,
 }) {
   const [DateFilterOpen, setDateFilterOpen] = useState(false);
   const [SelectedCountries, setSelectedCountries] = useState([]);
+  const [SelectedUsers, setSelectedUsers] = useState([]);
 
   const [DateRange, setDateRange] = useState(null);
   const anchorRef = React.useRef(null);
-  const [MenuOpen, setMenuOpen] = React.useState(false);
+  const usersAnchorRef = React.useRef(null);
+  const [CountryMenuOpen, setCountryMenuOpen] = React.useState(false);
+  const [UserMenuOpen, setUserMenuOpen] = React.useState(false);
 
   const classes = useStyles();
   const theme = useTheme();
   const [personName, setPersonName] = React.useState([]);
 
-  const closeMenu = (evt) => {
+  const closeCountriesMenu = (evt) => {
     if (anchorRef.current && anchorRef.current.contains(evt.target)) {
       return;
     }
-    return setMenuOpen(false);
+    return setCountryMenuOpen(false);
   };
-  const toggleMenu = (evt) => {
-    setMenuOpen(true);
+  const closeUserMenu = (evt) => {
+    if (usersAnchorRef.current && usersAnchorRef.current.contains(evt.target)) {
+      return;
+    }
+    return setUserMenuOpen(false);
+  };
+  const toggleCountriesMenu = (evt) => {
+    setCountryMenuOpen(true);
+  };
+  const toggleUsersMenu = (evt) => {
+    setUserMenuOpen(true);
   };
   const toggleDateRangeFilter = () => {
     setDateFilterOpen(!DateFilterOpen);
@@ -162,24 +178,43 @@ function DateCountryFilter({
   //       );
   //     }
   //   };
-  const countryIsSelected = (country) => {
+  const hasFilterForCountry = (country) => {
     return SelectedCountries.includes(country);
+  };
+  const hasFilterForUser = (userId) => {
+    return SelectedUsers.includes(userId);
   };
   const toggleCountry = (name) => {
     const countryIndex = SelectedCountries.indexOf(name);
     if (countryIndex !== -1) {
       const clone = [...SelectedCountries];
       clone.splice(countryIndex, 1);
-      handleCountriesChanged(clone);
+      handleCountryFilterChanged(clone);
     } else {
-      handleCountriesChanged([...SelectedCountries, name]);
+      handleCountryFilterChanged([...SelectedCountries, name]);
+    }
+  };
+  const toggleUserFilter = (name) => {
+    const userIdIndex = SelectedUsers.indexOf(name);
+    if (userIdIndex !== -1) {
+      const clone = [...SelectedUsers];
+      clone.splice(userIdIndex, 1);
+      handleUsersFilterChanged(clone);
+    } else {
+      handleUsersFilterChanged([...SelectedUsers, name]);
     }
   };
 
-  const clearCountries = () => {
-    handleCountriesChanged([]);
+  const clearCountriesFilter = () => {
+    handleCountryFilterChanged([]);
     setTimeout(() => {
-      setMenuOpen(false);
+      setCountryMenuOpen(false);
+    });
+  };
+  const clearUsersFilter = () => {
+    handleUsersFilterChanged([]);
+    setTimeout(() => {
+      setUserMenuOpen(false);
     });
   };
   const handleChangeDateRange = (dateRange) => {
@@ -194,10 +229,16 @@ function DateCountryFilter({
     }
   };
 
-  const handleCountriesChanged = (selectedCountries) => {
+  const handleCountryFilterChanged = (selectedCountries) => {
     setSelectedCountries(selectedCountries);
     if (isFunction(onCountriesChanged)) {
       onCountriesChanged(selectedCountries);
+    }
+  };
+  const handleUsersFilterChanged = (selectedUsers) => {
+    setSelectedUsers(selectedUsers);
+    if (isFunction(onUserFilterChanged)) {
+      onUserFilterChanged(selectedUsers);
     }
   };
 
@@ -264,7 +305,7 @@ function DateCountryFilter({
         <Button
           aria-controls="simple-menu"
           aria-haspopup="true"
-          onClick={toggleMenu}
+          onClick={toggleCountriesMenu}
           ref={anchorRef}
           disabled={
             !Countries || !Array.isArray(Countries) || !Countries.length
@@ -281,50 +322,118 @@ function DateCountryFilter({
             ? `Within ${SelectedCountries.length} countries`
             : "Countries"}
         </Button>
+
+        {Users && (
+          <Button
+            aria-controls="users-menu"
+            aria-haspopup="true"
+            onClick={toggleUsersMenu}
+            ref={usersAnchorRef}
+            startIcon={
+              <PersonIcon
+                style={{ color: theme.palette.text.disabled }}
+                fontSize="small"
+              />
+            }
+            endIcon={<Search fontSize="small" />}
+          >
+            {SelectedUsers.length > 0
+              ? `Within ${SelectedUsers.length} users`
+              : "Users"}
+          </Button>
+        )}
       </ButtonGroup>
 
-      <div style={{ position: "relative" }}>
-        <Menu
-          id="simple-menu"
-          open={MenuOpen}
-          PaperProps={MenuProps.PaperProps}
-          keepMounted
-          onClose={closeMenu}
-          anchorEl={anchorRef.current}
-          style={{ paddingTop: 0 }}
-        >
-          <MenuItem
-            button
-            onClick={clearCountries}
-            // disabled={SelectedCountries.length < 1}
+      <Menu
+        id="users-menu"
+        open={UserMenuOpen}
+        PaperProps={MenuProps.PaperProps}
+        keepMounted
+        onClose={closeUserMenu}
+        anchorEl={usersAnchorRef.current}
+        style={{ paddingTop: 0 }}
+      >
+        <MenuItem button onClick={clearUsersFilter}>
+          <Button
+            disableRipple={true}
+            disableFocusRipple={true}
+            disableTouchRipple={true}
+            variant="small"
+            startIcon={<ClearAllIcon />}
           >
-            <ClearAllIcon style={{ margin: theme.spacing(1) }} />
             Clear and show all
-          </MenuItem>
-          <Divider />
+          </Button>
+        </MenuItem>
+        <Divider />
 
-          {Array.isArray(Countries) &&
-            Countries.map((name) => (
-              <MenuItem
-                alignItems="center"
-                key={name}
-                onClick={() => {
-                  toggleCountry(name);
-                }}
-                value={name}
-                style={getStyles(name, personName, theme)}
-              >
-                <Checkbox
-                  color="secondary"
-                  checked={countryIsSelected(name)}
-                  size="small"
-                  disableRipple
-                />
-                {name}
-              </MenuItem>
-            ))}
-        </Menu>
-      </div>
+        {Users &&
+          Object.keys(Users).map((userId) => (
+            <MenuItem
+              alignItems="center"
+              key={userId}
+              onClick={() => {
+                toggleUserFilter(userId);
+              }}
+              value={userId}
+            >
+              <Checkbox
+                color="secondary"
+                checked={hasFilterForUser(userId)}
+                size="small"
+                disableRipple
+              />
+              {Users[userId]}
+            </MenuItem>
+          ))}
+      </Menu>
+
+      <Menu
+        id="simple-menu"
+        open={CountryMenuOpen}
+        PaperProps={MenuProps.PaperProps}
+        keepMounted
+        onClose={closeCountriesMenu}
+        anchorEl={anchorRef.current}
+        style={{ paddingTop: 0 }}
+      >
+        <MenuItem
+          button
+          onClick={clearCountriesFilter}
+          // disabled={SelectedCountries.length < 1}
+        >
+          <Button
+            disableRipple={true}
+            disableFocusRipple={true}
+            disableTouchRipple={true}
+            variant="small"
+            startIcon={<ClearAllIcon />}
+          >
+            Clear and show all
+          </Button>
+        </MenuItem>
+        <Divider />
+
+        {Array.isArray(Countries) &&
+          Countries.map((name) => (
+            <MenuItem
+              alignItems="center"
+              key={name}
+              onClick={() => {
+                toggleCountry(name);
+              }}
+              value={name}
+              style={getStyles(name, personName, theme)}
+            >
+              <Checkbox
+                color="secondary"
+                checked={hasFilterForCountry(name)}
+                size="small"
+                disableRipple
+              />
+              {name}
+            </MenuItem>
+          ))}
+      </Menu>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+
 import PropTypes from "prop-types";
-import { useConfirm } from "material-ui-confirm";
+
+import SearchIcon from "@material-ui/icons/Search";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -15,11 +17,9 @@ import FirstPageIcon from "@material-ui/icons/FirstPage";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
-
-import SearchIcon from "@material-ui/icons/Search";
-import scrapingThreadsActions from "../actions/ScrapingThread";
+import LinkIcon from "@material-ui/icons/Link";
 import { useHistory } from "react-router-dom";
-import ManageUsersTable from "../components/Tables/ManageUsers";
+
 import {
   Divider,
   Input,
@@ -34,9 +34,8 @@ import {
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
-import AddTrackUrlTable from "../components/Tables/AddTrackUrl";
+import ManagaUrlsTable from "../components/Tables/ManageUrls";
 import dispatcher from "../dispatcher";
-import { Search } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   root: {
     flexShrink: 0,
@@ -54,7 +53,7 @@ const useStyles2 = makeStyles({
   },
 });
 let filterTimeout = undefined;
-export default function ManageUsersView() {
+export default function ManageUrlsView() {
   const [Filter, setFilter] = useState("");
   const classes = useStyles2();
 
@@ -69,6 +68,7 @@ export default function ManageUsersView() {
       setFilter(f);
     }, 500);
   };
+
   return (
     <TableContainer component={Paper}>
       <div
@@ -84,8 +84,11 @@ export default function ManageUsersView() {
           <OutlinedInput
             id="standard-adornment-amount"
             size="small"
-            placeholder="Search users"
+            placeholder="Search URLs"
             onChange={(evt) => {
+              onFilterChanged(evt.target.value);
+            }}
+            onKeyPress={(evt) => {
               onFilterChanged(evt.target.value);
             }}
             startAdornment={
@@ -99,14 +102,14 @@ export default function ManageUsersView() {
           variant="contained"
           color="secondary"
           disableElevation
-          startIcon={<Search />}
+          startIcon={<SearchIcon />}
           style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
         >
           Search
         </Button>
       </div>
       <Divider />
-      <ManageUsersTable filter={Filter} />
+      <ManagaUrlsTable filter={Filter} />
     </TableContainer>
   );
 }

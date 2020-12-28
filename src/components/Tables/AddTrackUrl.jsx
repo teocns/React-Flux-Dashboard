@@ -187,7 +187,7 @@ const AddTrackUrlTable = () => {
         onTableRowsDataModified
       );
       scrapingThreadsStore.removeChangeListener(
-        ActionTypes.Table.ROW_ADDED,
+        ActionTypes.ScrapingThread.THREAD_CREATED,
         onScrapingThreadCreated
       );
     };
