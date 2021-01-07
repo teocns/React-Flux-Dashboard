@@ -91,7 +91,7 @@ export default class TableData {
   static defaults(tableName) {
     return new TableData({
       tableName,
-      rowsPerPage: 5,
+      rowsPerPage: 8,
       page: 0,
       filter: 0,
       isLoading: true,

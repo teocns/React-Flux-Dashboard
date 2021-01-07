@@ -29,7 +29,7 @@ import {
   Typography,
   ButtonGroup,
 } from "@material-ui/core";
-
+import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
@@ -82,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
+const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 
 const ManageUrlsTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
@@ -490,7 +490,7 @@ const ManageUrlsTable = ({ filter }) => {
         <TableRow>
           {rowsLength > 0 && (
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
+              rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
               colSpan={3}
               count={tableData.totalRowsCount}
               rowsPerPage={rowsPerPage}

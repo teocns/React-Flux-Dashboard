@@ -17,10 +17,14 @@ class TableStore extends EventEmitter {
    */
   #tables_name_hash_keypairs;
 
+  /**
+   * @type {string}
+   */
+  #current_table_name;
   constructor(params) {
     super(params);
     this.dispatchToken = undefined;
-
+    this.#current_table_name = undefined;
     this.#tables = {};
     this.#tables_name_hash_keypairs = {};
   }
@@ -71,6 +75,7 @@ class TableStore extends EventEmitter {
    * @param {TableData} tableData
    */
   storeTableData(tableData) {
+    this.#current_table_name = tableData.tableName;
     const previousTableData = this.getByTableName(tableData.tableName);
     if (previousTableData) {
       tableData.previousTableData = { ...previousTableData };
@@ -129,6 +134,10 @@ class TableStore extends EventEmitter {
       tableData.rows[replaceable] = row;
     }
   }
+
+  getCurrentTableName() {
+    return this.#current_table_name;
+  }
 }
 
 const tableStore = new TableStore();
@@ -142,8 +151,12 @@ tableStore.dispatchToken = dispatcher.register((event) => {
       tableStore.updateTableData(event.data.tableData);
       break;
     case ActionTypes.Table.DATA_MODIFIED:
-      //const { row, key, tableName } = event;
-      tableStore.alterRow(event.data);
+      const { row, key, tableNames } = event.data;
+      const currentTable = tableStore.getCurrentTableName();
+      if (tableNames.includes(currentTable)) {
+        event.data.tableName = currentTable;
+        tableStore.alterRow({ row, key, tableName: currentTable });
+      }
       break;
     case ActionTypes.Table.ROW_ADDED:
       tableStore.addRow(event.data);

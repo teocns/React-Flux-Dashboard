@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 
 import CssBaseline from "@material-ui/core/CssBaseline";
-
+import UserAvatar from "../components/User/Avatar/ShortLettersAvatar";
 import {
   Drawer,
   Avatar,
@@ -328,9 +328,7 @@ function AppContents() {
                   )}
                   <ListItem button key={"userId"}>
                     <ListItemIcon>
-                      <Avatar className={[classes.orange, classes.avatar]}>
-                        {renderShortLetters()}
-                      </Avatar>
+                      <UserAvatar username={User.name} fullname={User.name} />
                     </ListItemIcon>
                     <ListItemText primary={User.name || User.username} />
                   </ListItem>

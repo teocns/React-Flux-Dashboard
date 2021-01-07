@@ -34,7 +34,7 @@ import {
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
-import ManagaUrlsTable from "../components/Tables/ManageUrls";
+import ManagaUrlsTable from "../components/Tables/ManageUrlsAdmin";
 import dispatcher from "../dispatcher";
 const useStyles = makeStyles((theme) => ({
   root: {

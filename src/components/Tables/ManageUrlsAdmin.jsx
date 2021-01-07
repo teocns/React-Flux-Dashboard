@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import ScrapingThreadStatus from "../ScrapingThread/TableStatus";
+
 import PropTypes from "prop-types";
 import clsx from "clsx";
 import DateRangeIcon from "@material-ui/icons/DateRange";
@@ -7,6 +9,8 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useConfirm } from "material-ui-confirm";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
+import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
+
 import {
   Badge,
   Box,
@@ -82,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
+const THIS_TABLE_NAME = TableNames.TRACKED_URLS;
 
 const ManageUrlsAdminTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
@@ -136,6 +140,11 @@ const ManageUrlsAdminTable = ({ filter }) => {
         .catch();
     }
   };
+  const handleUserFilterChanged = (userFilter) => {
+    return;
+    //setUserFilter(userFilter);
+  };
+
   const selectAllRows = (evt) => {
     const checked = evt.target.checked;
     if (!checked) {
@@ -427,9 +436,27 @@ const ManageUrlsAdminTable = ({ filter }) => {
                     />
                   </TableCell>
                   <TableCell component="th" scope="row">
-                    <Link href={row.url} target="_blank">
-                      {row.url}
-                    </Link>
+                    <Box display="flex" alignItems="center">
+                      <UserAvatar
+                        username={row.username}
+                        fullname={row.fullname}
+                      />
+                      <Box
+                        display="flex"
+                        flexDirection="column"
+                        style={{ marginLeft: theme.spacing(1) }}
+                      >
+                        <Typography
+                          variant="caption"
+                          style={{ color: theme.palette.text.hint }}
+                        >
+                          {row.username}
+                        </Typography>
+                        <Link href={row.url} target="_blank">
+                          {row.url}
+                        </Link>
+                      </Box>
+                    </Box>
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="left">
                     <Box
@@ -455,26 +482,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
                     </Box>
                   </TableCell>
                   <TableCell style={{ width: 160 }} align="right">
-                    <Box alignItems="center" flexWrap="nowrap" display="flex">
-                      <AssignmentTurnedInIcon
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
-                        }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{
-                          marginLeft: theme.spacing(1),
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {row.scrapedJobs} Inserted jobs
-                      </Typography>
-                    </Box>
+                    <ScrapingThreadStatus row={row} />
                   </TableCell>
                 </React.Fragment>
               );
@@ -491,7 +499,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
         <TableRow>
           {rowsLength > 0 && (
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
+              rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
               colSpan={3}
               count={tableData.totalRowsCount}
               rowsPerPage={rowsPerPage}
@@ -511,4 +519,4 @@ const ManageUrlsAdminTable = ({ filter }) => {
   );
 };
 
-export default ManageUrlsTable;
+export default ManageUrlsAdminTable;

@@ -58,7 +58,11 @@ const onThreadModified = (scrapingThread) => {
     actionType: ActionTypes.Table.DATA_MODIFIED,
     data: {
       key: "threadId",
-      tableName: TableConstants.ADD_TRACK_URL,
+      tableNames: [
+        TableConstants.ADD_TRACK_URL,
+        TableConstants.TRACKED_URLS,
+        TableConstants.MANAGE_URLS,
+      ],
       row: scrapingThread,
     },
   });
