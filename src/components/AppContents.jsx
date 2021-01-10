@@ -44,6 +44,7 @@ import {
   SupervisedUserCircle as SupervisedUserCircleIcon,
   PowerSettingsNew as PowerSettingsNewIcon,
   AddCircleOutline as AddCircleOutlineIcon,
+  Public as GlobeIcon,
 } from "@material-ui/icons";
 import AppView from "./AppView";
 import sessionStore from "../store/session";
@@ -385,11 +386,22 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText primary={"Tracked URLs"} />
                       </ListItem>
-                      <ListItem button key={"xml"}>
+                      <ListItem button key={"xml"} component={Link} to="/xml">
                         <ListItemIcon>
                           <CodeIcon />
                         </ListItemIcon>
                         <ListItemText primary={"XML"} />
+                      </ListItem>
+                      <ListItem
+                        button
+                        key={"countries"}
+                        component={Link}
+                        to="/countries"
+                      >
+                        <ListItemIcon>
+                          <GlobeIcon />
+                        </ListItemIcon>
+                        <ListItemText primary={"Countries"} />
                       </ListItem>
                       <ListItem
                         button

@@ -18,6 +18,8 @@ const Errors = {
   ERR_EMAIL_ALREADY_REGISTERED: "Email already registered",
   ERR_USERNAME_ALREADY_REGISTERED: "Username already registered",
   ERR_CANNOT_DELETE_YOURSELF: "Cannot delete yourself",
+  ERR_COUNTRY_WITH_SAME_NAME_EXISTS:
+    "A country with the same name already exists",
 };
 
 export default Errors;

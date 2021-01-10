@@ -3,7 +3,7 @@ import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 import User from "../models/User";
 import TableData from "../models/TableData";
-
+import Country from "../models/Country";
 const Errors = require("../constants/Errors");
 
 class CountryFilterStore extends EventEmitter {
@@ -28,7 +28,18 @@ class CountryFilterStore extends EventEmitter {
     this.emit(event, data);
   }
 
-  get() {
+  /**
+   * @returns {Country[]}
+   */
+  get(hideAliases = true) {
+    if (!this.#available_countries) {
+      return null;
+    }
+    if (hideAliases) {
+      return this.#available_countries.filter(
+        ({ parentCountryId }) => !parentCountryId
+      );
+    }
     return this.#available_countries;
   }
 

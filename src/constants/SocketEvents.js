@@ -19,6 +19,9 @@ const SocketEvents = keyMirror({
   STATISTICS_SYNC: null,
   COUNTRIES_FILTER_SYNC: null,
   USER_FILTER_SYNC: null,
+  SET_COUNTRIES_AS_ALIAS: null,
+  UNMARK_COUNTRY_ALIAS: null,
+  RENAME_COUNTRY: null,
 });
 
 export default SocketEvents;

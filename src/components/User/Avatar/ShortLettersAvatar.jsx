@@ -20,8 +20,8 @@ import {
   orange,
 } from "@material-ui/core/colors";
 
-import { Avatar } from "@material-ui/core";
-
+import { Avatar, Tooltip } from "@material-ui/core";
+import robotSvg from "../../../assets/robot.svg";
 const useStyles = makeStyles((theme) => ({
   avatar: {
     height: 32,
@@ -68,7 +68,6 @@ const getColor = (letter) => {
     red,
     teal,
     lightBlue,
-    lime,
     lightGreen,
     green,
     amber,
@@ -93,29 +92,48 @@ const getColor = (letter) => {
 const UserShortLettersAvatar = ({ username, fullname }) => {
   const classes = useStyles();
   const theme = useTheme();
-  const renderShortLetters = () => {
-    const fullName = (fullname || username).toUpperCase();
+
+  const isBot = !username && !fullname;
+
+  const makeBotProps = () => {
+    const shortLetters = "";
+    const src = robotSvg;
+    const backgroundColor = "gray";
+    const tooltip = "BOT";
+    return { shortLetters, src, backgroundColor, tooltip };
+  };
+
+  const makeUserProps = () => {
+    const _targetName = fullname || username;
     let shortLetters = "";
-    const nameParts = fullName.split(" ");
+    const nameParts = _targetName.toUpperCase().split(" ");
     if (nameParts.length >= 2) {
       shortLetters =
         nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
     } else {
       shortLetters = nameParts[0].substring(0, 2);
     }
-    // alert(fullName);
-    return shortLetters;
+    const src = null;
+    const backgroundColor = getColor(_targetName[1]);
+    const tooltip = _targetName;
+    return { shortLetters, src, backgroundColor, tooltip };
   };
+  const { shortLetters, src, backgroundColor, tooltip } = isBot
+    ? makeBotProps()
+    : makeUserProps();
   return (
-    <Avatar
-      className={[classes.avatar]}
-      style={{
-        color: "white",
-        backgroundColor: getColor(fullname[2]),
-      }}
-    >
-      {renderShortLetters()}
-    </Avatar>
+    <Tooltip title={tooltip} aria-label={tooltip}>
+      <Avatar
+        className={[classes.avatar]}
+        style={{
+          color: "white",
+          backgroundColor: backgroundColor,
+        }}
+        src={src}
+      >
+        {shortLetters}
+      </Avatar>
+    </Tooltip>
   );
 };
 

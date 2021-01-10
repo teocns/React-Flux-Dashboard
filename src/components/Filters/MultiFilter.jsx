@@ -350,7 +350,7 @@ function MultiFilter({
         {!disableCountries &&
           (Countries ? (
             <Button
-              aria-controls="simple-menu"
+              aria-controls="countries-menu"
               aria-haspopup="true"
               onClick={toggleCountriesMenu}
               ref={anchorRef}
@@ -450,7 +450,7 @@ function MultiFilter({
       </Menu>
 
       <Menu
-        id="simple-menu"
+        id="countries-menu"
         open={CountryMenuOpen}
         PaperProps={MenuProps.PaperProps}
         keepMounted
@@ -476,23 +476,22 @@ function MultiFilter({
         <Divider />
 
         {Array.isArray(Countries) &&
-          Countries.map((name) => (
+          Countries.map((country) => (
             <MenuItem
               alignItems="center"
-              key={name}
+              key={country.countryId}
               onClick={() => {
-                toggleCountry(name);
+                toggleCountry(country.countryId);
               }}
-              value={name}
-              style={getStyles(name, personName, theme)}
+              value={country.countryId}
             >
               <Checkbox
                 color="secondary"
-                checked={hasFilterForCountry(name)}
+                checked={hasFilterForCountry(country.countryId)}
                 size="small"
                 disableRipple
               />
-              {name}
+              {country.name}
             </MenuItem>
           ))}
       </Menu>

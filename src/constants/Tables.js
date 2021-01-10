@@ -5,4 +5,6 @@ export default keymirror({
   USERS_ADMIN: null,
   MANAGE_URLS: null,
   TRACKED_URLS: null,
+  XML_FEEDS: null,
+  COUNTRIES_MANAGEMENT: null,
 });

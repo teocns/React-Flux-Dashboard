@@ -16,6 +16,8 @@ import FAQView from "../views/FAQ";
 import StatisticsView from "../views/Statistics";
 import StatisticsAdminView from "../views/StatisticsAdmin";
 import ManageUrlsAdminView from "../views/ManageUrlsAdmin";
+import XmlManagementView from "../views/XmlManagement";
+import CountriesManagementView from "../views/CountriesManagement";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
@@ -48,6 +50,8 @@ const AppView = () => {
         <Route exact path="/add-user" component={AddUsersView} />
         <Route exact path="/statistics" component={StatisticsView} />
         <Route exact path="/user-statistics" component={StatisticsAdminView} />
+        <Route exact path="/xml" component={XmlManagementView} />
+        <Route exact path="/countries" component={CountriesManagementView} />
       </Switch>
     </div>
   );
