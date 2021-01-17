@@ -1,4 +1,34 @@
 /**
+ * Enum string values.
+ * @enum {string}
+ */
+var SortVariants = {
+  asc: "asc",
+  desc: "desc",
+};
+
+export class SortColumn {
+  /**
+   *
+   */
+  name;
+  /**
+   * @type {SortVariants}
+   */
+  order;
+
+  /**
+   *
+   * @param {string} name
+   * @param {SortVariants} order
+   */
+  constructor(name, order) {
+    this.name = name;
+    this.order = order;
+  }
+}
+
+/**
  * @typedef {Object} DateRange
  * @property {number} dateStart
  * @property {number} dateEnd
@@ -30,6 +60,11 @@ export default class TableData {
    * @type {DateRange}
    */
   dateRange;
+
+  /**
+   * @type {SortColumn}
+   */
+  sort;
 
   /**
    * Appliable to specific tables only
@@ -73,6 +108,18 @@ export default class TableData {
    */
   scrapedJobs;
 
+  // getSortForColumn(columnName) {
+  //   if (this.sortColumns && Array.isArray(this.sortColumns)) {
+  //     for (let col of this.sortColumns) {
+  //       if (col.name === columnName) {
+  //         return col.order;
+  //       }
+  //     }
+  //   }
+  //   return undefined;
+  // }
+
+  getColumns() {}
   // Uniquely identify each TableData representation by a hash
   createHash() {
     const hashable = [
@@ -112,6 +159,7 @@ export default class TableData {
     isLoading,
     totalRowsCount,
     dateRange,
+    sort,
     countryFilter,
     unfilteredRowsCount,
   }) {
@@ -121,6 +169,7 @@ export default class TableData {
     this.page = page !== undefined ? page : 0;
     this.tableName = tableName;
     this.totalRowsCount = totalRowsCount;
+    this.sort = sort;
     this.isLoading = isLoading || true;
     this.countryFilter = Array.isArray(countryFilter) ? countryFilter : [];
     this.dateRange =

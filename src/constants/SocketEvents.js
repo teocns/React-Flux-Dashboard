@@ -22,6 +22,7 @@ const SocketEvents = keyMirror({
   SET_COUNTRIES_AS_ALIAS: null,
   UNMARK_COUNTRY_ALIAS: null,
   RENAME_COUNTRY: null,
+  HOST_SYNC: null,
 });
 
 export default SocketEvents;

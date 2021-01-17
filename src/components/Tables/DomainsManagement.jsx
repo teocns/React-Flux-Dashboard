@@ -1,36 +1,19 @@
 import React, { useState, useEffect } from "react";
-import WarningIcon from "@material-ui/icons/Warning";
-import Chip from "@material-ui/core/Chip";
-import Paper from "@material-ui/core/Paper";
-
-import CountryPickerDialog from "../Dialogs/CountryPicker";
-import RenameDialog from "../Dialogs/Rename";
-import PropTypes from "prop-types";
 import clsx from "clsx";
-import DateRangeIcon from "@material-ui/icons/DateRange";
-import AssignmentTurnedIn from "@material-ui/icons/AssignmentTurnedIn";
-import { DateRangePicker, DateRange } from "materialui-daterange-picker";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useConfirm } from "material-ui-confirm";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import GlobeIcon from "@material-ui/icons/Public";
-import { prettyTimelapse, timeSince } from "../../helpers/time";
-import UserAvatar from "../User/Avatar/ShortLettersAvatar";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import countriesActions from "../../actions/Countries";
+import hostsActions from "../../actions/Hosts";
+import DEFAULT_PARSING_REGEX from "../../constants/Scraper";
 import {
   Badge,
   Box,
-  Button,
   Checkbox,
-  Divider,
   IconButton,
-  LinearProgress,
-  Link,
   Table,
   TableBody,
   TableCell,
-  CircularProgress,
-  TableContainer,
   TableFooter,
   TableHead,
   TablePagination,
@@ -38,52 +21,47 @@ import {
   Tooltip,
   Menu,
   MenuItem,
+  Link,
   Typography,
-  ButtonGroup,
 } from "@material-ui/core";
 
-import FilterListIcon from "@material-ui/icons/FilterList";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import { motion } from "framer-motion";
-import { Link as RouterLink } from "react-router-dom";
-import sessionStore from "../../store/session";
 import tableStore from "../../store/Tables";
 import scrapingThreadsStore from "../../store/ScrapingThreads";
-import CountryFilter from "../Filters/CountryFilter";
 import TablePaginationActions from "./Pagination";
-import EmptyTablePlaceholder from "./EmptyPlaceholder";
 
 import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
+import EditHostParsingRegexDialog from "../Dialogs/EditHostParsingRegex";
 import {
-  Add,
-  AddCircle,
   Delete,
-  Today,
   AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Public,
-  RssFeedTwoTone,
   Search,
   MoreVert,
+  Edit,
 } from "@material-ui/icons";
 
 import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
 import MultiFilter from "../Filters/MultiFilter";
-import LinkIcon from "@material-ui/icons/Link";
 import Country from "../../models/Country";
 
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
   },
+  editRegexIcon: {
+    opacity: 0,
+  },
   tableRow: {
     height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
+    },
+    '&:hover [name="editRegexIcon"]': {
+      opacity: 1,
     },
   },
   emptyRow: {
@@ -94,41 +72,56 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "8rem",
     },
   },
-
-  countryChipContainer: {
-    display: "flex",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    listStyle: "none",
-    padding: theme.spacing(0.5),
-    margin: 0,
-  },
-  countryChip: {
-    margin: 0,
-    marginRight: theme.spacing(0.5),
-  },
 }));
 
-const THIS_TABLE_NAME = TableNames.COUNTRIES_MANAGEMENT;
-
-const CountriesManagementTable = ({ filter }) => {
+const THIS_TABLE_NAME = TableNames.DOMAINS_MANAGEMENT;
+const COLUMNS = [
+  {
+    name: "host",
+    label: "Host",
+  },
+  {
+    name: "totalLinks",
+    label: "Total parsed links",
+  },
+  {
+    name: "scrapedJobs",
+    label: "Scraped jobs",
+  },
+  {
+    name: "linksWithoutJobSchema",
+    label: "Links without jobs",
+  },
+  {
+    name: "link_parsing_regex",
+    label: "External link parsing regex",
+    sortable: false,
+  },
+  {
+    name: "actions",
+    label: "",
+    sortable: false,
+  },
+];
+const DomainsManagementTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
   /**
    * @type {Array.<Country,CallableFunction>}
    */
-  const [CountryPickerDialogOpen, setCountryPickerDialogOpen] = useState(false);
-  const [CountryRenameDialogOpen, setCountryRenameDialogOpen] = useState(false);
+  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] = useState(
+    false
+  );
 
-  const [RowActionCountryObject, setRowActionCountryObject] = useState(null);
+  const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
 
   const [SelectedRows, setSelectedRows] = useState([]);
   const [DateRange, setDateRange] = useState(null);
 
   const toggleRowMenuOpen = (event, country) => {
-    setRowActionCountryObject(country);
+    setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
   };
 
@@ -206,6 +199,7 @@ const CountriesManagementTable = ({ filter }) => {
   };
   const syncTableData = ({
     newPage,
+    newSort,
     newRowsPerPage,
     newDateRange,
     newCountryFilter,
@@ -216,6 +210,7 @@ const CountriesManagementTable = ({ filter }) => {
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
       filter: filter || "",
       tableName: THIS_TABLE_NAME,
+      sort: newSort,
       previousRowCount:
         tableData && tableData.totalRowsCount
           ? tableData.totalRowsCount
@@ -248,11 +243,11 @@ const CountriesManagementTable = ({ filter }) => {
   };
   console.log("rendering", tableData);
 
-  const onScrapingThreadCreated = () => {
-    setTimeout(() => {
-      syncTableData({ newPage: 0 });
-    });
-  };
+  // const onScrapingThreadCreated = () => {
+  //   setTimeout(() => {
+  //     syncTableData({ newPage: 0 });
+  //   });
+  // };
 
   const reSync = () => {
     setTimeout(() => {
@@ -311,7 +306,7 @@ const CountriesManagementTable = ({ filter }) => {
     });
 
     return bindListeners();
-  });
+  }, []);
 
   const handleCountryFilterChanged = (_countryFilter) => {
     syncTableData({ newCountryFilter: _countryFilter });
@@ -396,41 +391,64 @@ const CountriesManagementTable = ({ filter }) => {
 
     return _createRow();
   };
-  const toggleCountryPickerDialog = () => {
-    setCountryPickerDialogOpen(!CountryPickerDialogOpen);
-  };
-  const toggleCountryRenameDialog = () => {
-    setCountryRenameDialogOpen(!CountryRenameDialogOpen);
+
+  const toggleHostParsingRegexDialog = () => {
+    setHostParsingRegexDialogOpen(!HostParsingRegexDialogOpen);
   };
 
-  const onCountryPickerDialogClosed = (chosenCountryId) => {
-    setCountryPickerDialogOpen(false);
+  const onHostParsingRegexDialogClosed = (regex) => {
+    const hostId = RowActionObject.hostId;
+    setHostParsingRegexDialogOpen(false);
+    setTimeout(() => {
+      setRowActionObject(null);
+    }, 275);
 
-    if (chosenCountryId) {
-      setTimeout(() => {
-        countriesActions.setCountriesAsAlias(
-          [RowActionCountryObject.countryId],
-          chosenCountryId
-        );
-      });
+    if (regex && regex !== setRowActionObject.link_parsing_regex) {
+      hostsActions.changeRegex(hostId, regex);
     }
-    setRowActionCountryObject(null);
+
     // Handle chosenCountry
   };
-  const onCountryRenameDialogClosed = (newCountryName) => {
-    setCountryRenameDialogOpen(false);
-    if (
-      typeof newCountryName === "string" &&
-      newCountryName &&
-      newCountryName.trim().toLowerCase() !== newCountryName
-    ) {
-      countriesActions.renameCountry(
-        RowActionCountryObject.countryId,
-        newCountryName.trim()
-      );
-    }
-    setRowActionCountryObject(null);
-    // Handle chosenCountry
+  // const onCountryRenameDialogClosed = (newCountryName) => {
+  //   setCountryRenameDialogOpen(false);
+  //   if (
+  //     typeof newCountryName === "string" &&
+  //     newCountryName &&
+  //     newCountryName.trim().toLowerCase() !== newCountryName
+  //   ) {
+  //     countriesActions.renameCountry(
+  //       RowActionCountryObject.countryId,
+  //       newCountryName.trim()
+  //     );
+  //   }
+  //   setRowActionCountryObject(null);
+  //   // Handle chosenCountry
+  // };
+
+  const viewJobYieldingLinksExample = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/job-yielding-sample`,
+      "_blank"
+    );
+    handle.focus();
+  };
+
+  const viewHtmlSample = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/view-html-sample`,
+      "_blank"
+    );
+    handle.focus();
+  };
+  const testRegex = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
+      "_blank"
+    );
+    handle.focus();
   };
   const _createRowActionsButton = (country) => {
     const key = country.countryId;
@@ -459,10 +477,10 @@ const CountriesManagementTable = ({ filter }) => {
         open={Boolean(rowMenuAnchorRef)}
         onClose={handleRowMenuClose}
       >
-        <MenuItem
+        {/* <MenuItem
           onClick={() => {
             handleRowMenuClose();
-            toggleCountryRenameDialog();
+            HostParsingRegexDialog();
           }}
         >
           Rename
@@ -471,14 +489,44 @@ const CountriesManagementTable = ({ filter }) => {
         <MenuItem
           onClick={() => {
             handleRowMenuClose();
-            toggleCountryPickerDialog();
+            toggleHostParsingRegexDialog();
           }}
         >
           Mark as alias of..
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={handleRowMenuClose}>Generate XML</MenuItem>
+        <MenuItem
+          onClick={() => {
+            viewJobYieldingLinksExample();
+            handleRowMenuClose();
+          }}
+        >
+          View links with job schema
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            viewHtmlSample();
+            handleRowMenuClose();
+          }}
+        >
+          View HTML sample
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            testRegex();
+            handleRowMenuClose();
+          }}
+        >
+          Test Regex
+        </MenuItem>
       </Menu>
     );
+  };
+
+  const onSortChanged = ({ name, sort }) => {
+    syncTableData({ newSort: { name, sort } });
   };
 
   return (
@@ -489,61 +537,11 @@ const CountriesManagementTable = ({ filter }) => {
         color="secondary"
         style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
       /> */}
-        <TableHead>
-          <TableRow>
-            <TableCell component="th" colspan="6">
-              <Box display="flex" width="100%" position="relative">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Checkbox
-                    size="small"
-                    disabled={rows.length < 1}
-                    checked={rows.length && SelectedRows.length === rows.length}
-                    onChange={selectAllRows}
-                  />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginLeft: theme.spacing(1),
-                  }}
-                >
-                  <Tooltip
-                    title={`Permanently delete ${SelectedRows.length} links?`}
-                  >
-                    <IconButton
-                      disabled={SelectedRows.length < 1}
-                      size="small"
-                      onClick={deleteSelectedRows}
-                    >
-                      <Badge
-                        badgeContent={SelectedRows.length}
-                        color="secondary"
-                      >
-                        <Delete />
-                      </Badge>
-                    </IconButton>
-                  </Tooltip>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginLeft: theme.spacing(1),
-                  }}
-                >
-                  <MultiFilter
-                    disableCountries={true}
-                    disableUsers={true}
-                    onUserFilterChanged={handleUserFilterChanged}
-                    onCountriesChanged={handleCountryFilterChanged}
-                    onDateRangeChanged={handleDateFilterChanged}
-                  />
-                </div>
-              </Box>
-            </TableCell>
-          </TableRow>
-        </TableHead>
+        <MultifunctionalHeading
+          columns={COLUMNS}
+          sort={tableData && tableData.sort}
+          onSortChanged={onSortChanged}
+        />
         <TableBody>
           {isLoadingResults && !hasInheritedRows
             ? [
@@ -581,75 +579,46 @@ const CountriesManagementTable = ({ filter }) => {
                     </TableCell>
                     <TableCell component="th" scope="row">
                       <Box display="inline-flex" alignItems="center">
-                        {row.name.length < 3 && (
-                          <Tooltip title="Possible alias identified">
-                            <WarningIcon
-                              style={{
-                                marginRight: theme.spacing(1),
-                                width: 18,
-                                height: 18,
-                                color: "red",
-                              }}
-                            />
-                          </Tooltip>
-                        )}
-                        {row.name}
+                        <Link href={"https://" + row.host} target="_blank">
+                          {row.host}
+                        </Link>
                       </Box>
                     </TableCell>
 
                     <TableCell component="th" scope="row">
-                      {row.aliases && (
-                        <Box display="flex" flexDirection="column">
-                          <Typography
-                            variant="caption"
-                            style={{ color: theme.palette.text.hint }}
-                          >
-                            Aliases
-                          </Typography>
-                          <Box display="inline-flex">
-                            {row.aliases.map((alias) => {
-                              return (
-                                <div key={alias.countryId}>
-                                  <Chip
-                                    label={alias.name}
-                                    onDelete={() => {
-                                      confirm({
-                                        title: "Confirm removing alias  ",
-                                        description: `If you proceed, "${alias.name}" won't be an alias of "${row.name}" and both will be treated as separate countries.`,
-                                      }).then(() => {
-                                        countriesActions.unmarkCountryAlias(
-                                          alias.countryId
-                                        );
-                                      });
-                                    }}
-                                    className={classes.countryChip}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </Box>
-                        </Box>
-                      )}
+                      {row.totalLinks}
                     </TableCell>
-                    <TableCell>
+                    <TableCell component="th" scope="row">
+                      {row.scrapedJobs}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                      {row.linksWithoutJobSchema}
+                    </TableCell>
+
+                    <TableCell component="th" scope="row">
                       <Box display="inline-flex" alignItems="center">
-                        <AssignmentTurnedIn
-                          style={{
-                            width: 18,
-                            height: 18,
-                            color: theme.palette.text.hint,
-                          }}
-                        />
-                        <Typography
-                          variant="body2"
-                          noWrap={true}
-                          style={{
-                            marginLeft: theme.spacing(1),
-                            whiteSpace: "nowrap",
+                        <Box display="flex" flexDirection="column">
+                          <code style={{ fontWeight: "400" }}>
+                            {row.link_parsing_regex
+                              ? row.link_parsing_regex
+                              : DEFAULT_PARSING_REGEX}
+                          </code>
+                        </Box>
+                        <IconButton
+                          name="editRegexIcon"
+                          className={classes.editRegexIcon}
+                          size="small"
+                          style={{ marginLeft: theme.spacing(1) }}
+                          onClick={(event) => {
+                            setRowActionObject(row);
+
+                            setTimeout(() => {
+                              toggleHostParsingRegexDialog();
+                            });
                           }}
                         >
-                          {row.totalJobs} jobs
-                        </Typography>
+                          <Edit style={{ height: 16, width: 16 }} />
+                        </IconButton>
                       </Box>
                     </TableCell>
                     <TableCell component="th" scope="row" align="right">
@@ -690,18 +659,14 @@ const CountriesManagementTable = ({ filter }) => {
           </TableRow>
         </TableFooter>
       </Table>
-      <RenameDialog
-        open={CountryRenameDialogOpen}
-        country={RowActionCountryObject}
-        onClose={onCountryRenameDialogClosed}
-      />
-      <CountryPickerDialog
-        markAsAlias={RowActionCountryObject}
-        open={CountryPickerDialogOpen}
-        onClose={onCountryPickerDialogClosed}
+      <EditHostParsingRegexDialog
+        open={HostParsingRegexDialogOpen}
+        onClose={onHostParsingRegexDialogClosed}
+        host={RowActionObject && RowActionObject.host}
+        originalRegex={RowActionObject && RowActionObject.link_parsing_regex}
       />
     </React.Fragment>
   );
 };
 
-export default CountriesManagementTable;
+export default DomainsManagementTable;

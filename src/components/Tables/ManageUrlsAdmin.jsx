@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ScrapingThreadStatus from "../ScrapingThread/TableStatus";
+import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
 
 import PropTypes from "prop-types";
 import clsx from "clsx";

@@ -45,11 +45,8 @@ class TableStore extends EventEmitter {
    * @param {string} tableName
    */
   getTableData(tableName) {
-    if (!Object.keys(this.#tables).includes(tableName)) {
-      // Prepare table data object
-      return undefined;
-    }
-    return this.#tables[tableName];
+    const tableHash = this.#tables_name_hash_keypairs[tableName];
+    return this.#tables[tableHash];
   }
 
   isLoadingTableData(tableName) {
@@ -89,6 +86,7 @@ class TableStore extends EventEmitter {
   deleteTableData(hash) {
     delete this.#tables[hash];
   }
+
   /**
    * @param {TableData} tableData
    */

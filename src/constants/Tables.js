@@ -7,4 +7,5 @@ export default keymirror({
   TRACKED_URLS: null,
   XML_FEEDS: null,
   COUNTRIES_MANAGEMENT: null,
+  DOMAINS_MANAGEMENT: null,
 });

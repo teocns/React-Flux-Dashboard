@@ -9,6 +9,7 @@ import bindTableSocketHandler from "./socket-handlers/Table";
 import bindStatisticsSocketHandler from "./socket-handlers/Statistics";
 import bindUserFilter from "./socket-handlers/UserFilter";
 import bindCountryFilter from "./socket-handlers/CountryFilter";
+import bindHostsSocketInterface from "./socket-handlers/Hosts";
 
 var socketInstance = initialize();
 
@@ -27,10 +28,12 @@ export function initialize() {
   bindStatisticsSocketHandler(socket);
   bindUserFilter(socket);
   bindCountryFilter(socket);
+  bindHostsSocketInterface(socket);
 
   socket.on("disconnect", async () => {
     window.location.reload();
   });
+
   return socket;
 }
 export function sendMessage(event, data) {

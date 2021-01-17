@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import clsx from "clsx";
 import DateRangeIcon from "@material-ui/icons/DateRange";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
 import { DateRangePicker, DateRange } from "materialui-daterange-picker";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useConfirm } from "material-ui-confirm";
@@ -27,6 +28,8 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  Menu,
+  MenuItem,
   ButtonGroup,
 } from "@material-ui/core";
 import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
@@ -61,6 +64,7 @@ import TableNames from "../../constants/Tables";
 import TableData from "../../models/TableData";
 import MultiFilter from "../Filters/MultiFilter";
 import LinkIcon from "@material-ui/icons/Link";
+import ScrapingThreadTableStatus from "../Table/ScrapingThreadStatus";
 
 const useStyles = makeStyles((theme) => ({
   table: {
@@ -91,7 +95,26 @@ const ManageUrlsTable = ({ filter }) => {
   const [SelectedRows, setSelectedRows] = useState([]);
   const [DateRange, setDateRange] = useState(null);
 
+  const [RowActionObject, setRowActionObject] = useState(null);
+  const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
+
   const HasTableData = tableData !== undefined;
+
+  const toggleRowMenuOpen = (event, row) => {
+    setRowMenuAnchorRef(event.currentTarget);
+    setRowActionObject(row);
+  };
+
+  const handleRowMenuClose = (event) => {
+    if (
+      rowMenuAnchorRef.current &&
+      rowMenuAnchorRef.current.contains(event.target)
+    ) {
+      return;
+    }
+
+    setRowMenuAnchorRef(null);
+  };
 
   if (!HasTableData) {
     tableData = TableData.defaults(THIS_TABLE_NAME);
@@ -204,10 +227,10 @@ const ManageUrlsTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
-    scrapingThreadsStore.addChangeListener(
-      ActionTypes.ScrapingThread.THREAD_CREATED,
-      onScrapingThreadCreated
-    );
+    // scrapingThreadsStore.addChangeListener(
+    //   ActionTypes.ScrapingThread.THREAD_CREATED,
+    //   onScrapingThreadCreated
+    // );
     return () => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
@@ -217,10 +240,10 @@ const ManageUrlsTable = ({ filter }) => {
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
       );
-      scrapingThreadsStore.removeChangeListener(
-        ActionTypes.Table.ROW_ADDED,
-        onScrapingThreadCreated
-      );
+      // scrapingThreadsStore.removeChangeListener(
+      //   ActionTypes.Table.ROW_ADDED,
+      //   onScrapingThreadCreated
+      // );
     };
   };
   const onRowSelectionChanged = (id) => {
@@ -236,16 +259,67 @@ const ManageUrlsTable = ({ filter }) => {
     }
   };
 
+  const _createRowActionsButton = (row) => {
+    const key = row.threadId;
+    return (
+      <React.Fragment>
+        <IconButton
+          key={key}
+          size="small"
+          aria-haspopup="true"
+          onClick={(event) => {
+            toggleRowMenuOpen(event, row);
+          }}
+          aria-controls={`row-actions-menu`}
+        >
+          <MoreVertIcon />
+        </IconButton>
+      </React.Fragment>
+    );
+  };
+
+  const _attachRowActionsMenu = () => {
+    return (
+      <Menu
+        id={`row-actions-menu`}
+        anchorEl={rowMenuAnchorRef}
+        // keepMounted
+        open={Boolean(rowMenuAnchorRef)}
+        onClose={handleRowMenuClose}
+      >
+        <MenuItem
+          // onClick={() => {
+          //   handleRowMenuClose();
+          //   //toggleCountryRenameDialog();
+          // }}
+          component={RouterLink}
+          to={`/url-details/${RowActionObject.threadId}`}
+        >
+          View details
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleRowMenuClose();
+            //toggleCountryPickerDialog();
+          }}
+        >
+          Retry
+        </MenuItem>
+      </Menu>
+    );
+  };
+
   useEffect(() => {
     // Means data has not yet loaded nor requested
     setTimeout(() => {
-      if (!HasTableData || filter !== tableData.filter) {
-        syncTableData({});
-      }
+      syncTableData({});
+      // if (!HasTableData || filter !== tableData.filter) {
+      // }
     });
 
     return bindListeners();
-  });
+  }, []);
   // if (rows.length <= 0) {
   //   return <EmptyTablePlaceholder />;
   // }
@@ -453,27 +527,11 @@ const ManageUrlsTable = ({ filter }) => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="right">
-                    <Box alignItems="center" flexWrap="nowrap" display="flex">
-                      <AssignmentTurnedInIcon
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
-                        }}
-                      />
-
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{
-                          marginLeft: theme.spacing(1),
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {row.scrapedJobs} Inserted jobs
-                      </Typography>
-                    </Box>
+                  <TableCell align="right">
+                    <ScrapingThreadTableStatus row={row} />
+                  </TableCell>
+                  <TableCell component="th" scope="row" align="right">
+                    {_createRowActionsButton(row)}
                   </TableCell>
                 </React.Fragment>
               );
@@ -485,6 +543,7 @@ const ManageUrlsTable = ({ filter }) => {
               return wrapComponent;
             })}
         {!IsLoadingResults && renderEmptyRows()}
+        {RowActionObject && _attachRowActionsMenu()}
       </TableBody>
       <TableFooter>
         <TableRow>

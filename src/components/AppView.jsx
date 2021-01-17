@@ -18,6 +18,8 @@ import StatisticsAdminView from "../views/StatisticsAdmin";
 import ManageUrlsAdminView from "../views/ManageUrlsAdmin";
 import XmlManagementView from "../views/XmlManagement";
 import CountriesManagementView from "../views/CountriesManagement";
+import ScrapingThreadDetailsView from "../views/ScrapingThreadDetails";
+import DomainsManagementView from "../views/DomainsManagement";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
@@ -28,6 +30,7 @@ const useStyles = makeStyles((theme) => ({
     background: "rgb(250,250,250)",
     marginTop: 64,
     padding: theme.spacing(2),
+    height: "100%",
   },
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
@@ -52,6 +55,11 @@ const AppView = () => {
         <Route exact path="/user-statistics" component={StatisticsAdminView} />
         <Route exact path="/xml" component={XmlManagementView} />
         <Route exact path="/countries" component={CountriesManagementView} />
+        <Route exact path="/domains" component={DomainsManagementView} />
+        <Route
+          path="/url-details/:threadId"
+          render={(props) => <ScrapingThreadDetailsView {...props} />}
+        />
       </Switch>
     </div>
   );

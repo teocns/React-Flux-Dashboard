@@ -45,6 +45,7 @@ import {
   PowerSettingsNew as PowerSettingsNewIcon,
   AddCircleOutline as AddCircleOutlineIcon,
   Public as GlobeIcon,
+  Domain,
 } from "@material-ui/icons";
 import AppView from "./AppView";
 import sessionStore from "../store/session";
@@ -55,6 +56,8 @@ const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
+    height: "100vh",
+    overflow: "hidden",
   },
   avatar: {
     height: 32,
@@ -391,6 +394,17 @@ function AppContents() {
                           <CodeIcon />
                         </ListItemIcon>
                         <ListItemText primary={"XML"} />
+                      </ListItem>
+                      <ListItem
+                        button
+                        key={"domains"}
+                        component={Link}
+                        to="/domains"
+                      >
+                        <ListItemIcon>
+                          <Domain />
+                        </ListItemIcon>
+                        <ListItemText primary={"Domains"} />
                       </ListItem>
                       <ListItem
                         button

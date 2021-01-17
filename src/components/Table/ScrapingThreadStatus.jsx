@@ -79,10 +79,10 @@ const ScrapingThreadTableStatus = ({ row }) => {
         );
         break;
       case Statuses.COMPLETED:
-        innerText = `${
-          row.scrapedJobs > 0 ? row.scrapedJobs : "No"
-        } Jobs found`;
-        caption = `IN ${row.auditsCount} LINKS`;
+        innerText = `${row.scrapedJobs > 0 ? row.scrapedJobs : "No"} Job${
+          row.scrapedJobs !== 1 ? "s" : ""
+        } found`;
+        caption = row.auditsCount > 0 ? `IN ${row.auditsCount} LINKS` : "";
         icon =
           row.scrapedJobs > 0 ? (
             <Tooltip title="Scraping is completed">

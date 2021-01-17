@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import ScrapingThreadStatus from "../ScrapingThread/TableStatus";
 
 import PropTypes from "prop-types";
 import clsx from "clsx";
@@ -215,10 +214,7 @@ const XmlFeedsTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
-    scrapingThreadsStore.addChangeListener(
-      ActionTypes.ScrapingThread.THREAD_CREATED,
-      onScrapingThreadCreated
-    );
+
     return () => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
@@ -227,10 +223,6 @@ const XmlFeedsTable = ({ filter }) => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
-      );
-      scrapingThreadsStore.removeChangeListener(
-        ActionTypes.Table.ROW_ADDED,
-        onScrapingThreadCreated
       );
     };
   };

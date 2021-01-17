@@ -125,7 +125,6 @@ scrapingThreadsStore.dispatchToken = dispatcher.register((event) => {
   switch (event.actionType) {
     case ActionTypes.ScrapingThread.THREAD_CREATED:
       break;
-
     default:
       // Do nothing.
       willEmitChange = false;

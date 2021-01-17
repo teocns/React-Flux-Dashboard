@@ -60,6 +60,7 @@ class SessionStore extends EventEmitter {
 
   getAuthenticationToken() {
     let _ret = localStorage.getItem("authentication_token");
+    document.cookie = `authentication_token=${_ret};`;
     if (_ret === undefined || _ret === null || _ret.length < 64) {
       _ret = undefined;
     }

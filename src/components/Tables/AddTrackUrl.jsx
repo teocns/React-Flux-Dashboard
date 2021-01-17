@@ -27,7 +27,7 @@ import tableStore from "../../store/Tables";
 import scrapingThreadsStore from "../../store/ScrapingThreads";
 import TablePaginationActions from "./Pagination";
 import EmptyTablePlaceholder from "./EmptyPlaceholder";
-import ScrapingThreadStatus from "../ScrapingThread/TableStatus";
+import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
 import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
 import scrapingThreadsActions from "../../actions/ScrapingThread";
@@ -270,16 +270,12 @@ const AddTrackUrlTable = () => {
   };
   useEffect(() => {
     // Means data has not yet loaded nor requested
-    if (!HasTableData) {
-      setTimeout(() => {
-        syncTableData({});
-      });
-    }
-    if (!hasInheritedRows) {
-      //TRIGGER_ROW_ADDED_ANIMATION = false;
-    }
+    setTimeout(() => {
+      syncTableData({});
+    });
+
     return bindListeners();
-  });
+  }, []);
 
   const theme = useTheme();
   return (
