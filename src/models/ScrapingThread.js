@@ -30,7 +30,32 @@ export default class ScrapingThread {
   /**
    * @type {number}
    */
-  scrapedJobsAmount;
+  scrapedJobs;
+
+  /**
+   * @type {number}
+   */
+  externalLinksFound;
+
+  /**
+   * @type {number}
+   */
+  lastFedToBot;
+
+  /**
+   * @type {boolean}
+   */
+  isFromExtension;
+
+  /**
+   * @type {boolean}
+   */
+  isCompleted;
+
+  /**
+   * @type {number}
+   */
+  auditsCount;
 
   /**
    * @type {number}

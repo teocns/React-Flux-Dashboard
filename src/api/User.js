@@ -3,7 +3,7 @@ import UrlTrackingThread from "../models/ScrapingThread";
 import User from "../models/User";
 import ActionTypes from "../constants/ActionTypes";
 
-export default class UrlTracking {
+export default class UserApi {
   /**
    * @returns {User}
    * @param {string} email

@@ -12,4 +12,8 @@ export default class HostsApi {
   static async changeRegex(hostId, regex) {
     return await MakeRequest.post(`/hosts/${hostId}/change-regex`, { regex });
   }
+
+  static async getByName(hostname) {
+    return await MakeRequest.get(`/hosts/by-name`, { hostname });
+  }
 }

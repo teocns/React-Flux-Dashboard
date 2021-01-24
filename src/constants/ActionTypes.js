@@ -7,6 +7,7 @@ import UserActionTypes from "./ActionTypes/Users";
 import StatisticsActionTypes from "./ActionTypes/Statistics";
 import UserFilterActionTypes from "./ActionTypes/UserFilter";
 import CountryFilterActionTypes from "./ActionTypes/CountryFilter";
+import HostActionTypes from "./ActionTypes/Hosts";
 
 export default {
   Session: SessionActionTypes,
@@ -17,4 +18,5 @@ export default {
   Statistics: StatisticsActionTypes,
   UserFilter: UserFilterActionTypes,
   CountryFilter: CountryFilterActionTypes,
+  Hosts: HostActionTypes,
 };

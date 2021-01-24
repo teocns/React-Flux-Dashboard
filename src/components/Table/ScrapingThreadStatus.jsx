@@ -1,6 +1,7 @@
 import React from "react";
 
 import { makeStyles, useTheme } from "@material-ui/core/styles";
+import ScrapingThread from "../../models/ScrapingThread";
 import {
   Box,
   CircularProgress,
@@ -31,13 +32,33 @@ import {
   BugReport,
 } from "@material-ui/icons";
 
+/**
+ *
+ * @param {Object} param0
+ * @param {ScrapingThread} param0.row
+ */
 const ScrapingThreadTableStatus = ({ row }) => {
   const theme = useTheme();
   const renderThreadStatus = () => {
     let icon = undefined;
     let innerText = undefined;
     let caption = undefined;
-    switch (row.status) {
+    let status = Statuses.QUEUED;
+
+    if (row.isCompleted) {
+      if (row.externalLinksFound === 0) {
+        status = Statuses.BAD_LINK;
+      } else if (row.externalLinksFound > row.auditsCount) {
+        status = Statuses.SCRAPING_JOBS;
+      } else if (row.externalLinksFound <= row.auditsCount) {
+        status = Statuses.COMPLETED;
+      }
+    } else {
+      if (row.lastFedToBot) {
+        status = Statuses.SEARCHING_PAGE;
+      }
+    }
+    switch (status) {
       case Statuses.BAD_LINK:
         innerText = "Bad link";
         icon = (
@@ -46,7 +67,7 @@ const ScrapingThreadTableStatus = ({ row }) => {
               style={{
                 width: 18,
                 height: 18,
-                color: "red",
+                color: "  d",
               }}
             />
           </Tooltip>

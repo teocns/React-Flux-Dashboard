@@ -16,7 +16,7 @@ import TableData from "../models/TableData";
 import tableActions from "../actions/Table";
 
 import TableConstants from "../constants/Tables";
-const create = (url) => {
+const create = ({ inputValue: url }) => {
   // Make sure it's authenticated, just in case
   if (!sessionStore.isAuthenticated()) {
     uiActions.showSnackbar(
@@ -85,8 +85,13 @@ const requestTableDataRows = (tableData) => {
   sendMessage(SocketEvents.SCRAPING_THREADS_TABLE_REQUEST, packet);
 };
 
+const retryThread = (threadId) => {
+  sendMessage(SocketEvents.RETRY_THREAD, threadId);
+};
+
 export default {
   create,
+  retryThread,
   onThreadCreated,
   requestTableDataRows,
   onThreadModified,

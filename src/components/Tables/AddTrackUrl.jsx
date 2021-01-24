@@ -140,10 +140,9 @@ const AddTrackUrlTable = () => {
    * @type {Object} obj
    * @type {TableData} obj.tableData
    */
-  const onTableRowsDataModified = ({ tableName }) => {
-    debugger;
-    console.log("data modified on table ", tableName);
-    if (tableName === THIS_TABLE_NAME) {
+  const onTableRowsDataModified = ({ tableNames }) => {
+    console.log("data modified on table ", tableNames);
+    if (tableNames.includes(THIS_TABLE_NAME)) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
       console.log("foundTable", foundTable);
       setTableData({ ...foundTable });

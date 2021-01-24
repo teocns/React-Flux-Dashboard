@@ -5,6 +5,9 @@ import { sendMessage } from "../socket";
 import HostsApi from "../api/Hosts";
 import UIActions from "../actions/UI";
 import TableConstants from "../constants/Tables";
+import HostsStore from "../store/Hosts";
+import hostsStore from "../store/Hosts";
+
 const changeRegex = async (hostId, regex) => {
   const result = await HostsApi.changeRegex(hostId, regex);
   if (result.ok) {
@@ -12,6 +15,21 @@ const changeRegex = async (hostId, regex) => {
     return true;
   }
   return false;
+};
+
+const retrieveHostByName = async (hostname) => {
+  // Check if we should post an API call - in case where we don't have the current hostname stored
+  const storedHost = hostsStore.getByName(hostname);
+  if (storedHost) {
+    return false;
+  }
+  const host = await HostsApi.retrieveHostByName(hostname);
+  if (host) {
+    dispatcher.dispatch({
+      actionType: ActionTypes.Hosts.REGEX_RECEIVED,
+      data: { host },
+    });
+  }
 };
 
 const onHostUpdated = (host) => {

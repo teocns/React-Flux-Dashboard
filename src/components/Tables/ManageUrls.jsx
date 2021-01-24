@@ -159,6 +159,19 @@ const ManageUrlsTable = ({ filter }) => {
         .catch();
     }
   };
+  /**
+   * @type {Object} obj
+   * @type {TableData} obj.tableData
+   */
+  const onTableRowsDataModified = ({ tableNames }) => {
+    debugger;
+    console.log("data modified on table ", tableNames);
+    if (tableNames.includes(THIS_TABLE_NAME)) {
+      const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
+      console.log("foundTable", foundTable);
+      setTableData({ ...foundTable });
+    }
+  };
   const selectAllRows = (evt) => {
     const checked = evt.target.checked;
     if (!checked) {
@@ -227,6 +240,10 @@ const ManageUrlsTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
+    tableStore.addChangeListener(
+      ActionTypes.Table.DATA_MODIFIED,
+      onTableRowsDataModified
+    );
     // scrapingThreadsStore.addChangeListener(
     //   ActionTypes.ScrapingThread.THREAD_CREATED,
     //   onScrapingThreadCreated
@@ -239,6 +256,10 @@ const ManageUrlsTable = ({ filter }) => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
+      );
+      tableStore.removeChangeListener(
+        ActionTypes.Table.DATA_MODIFIED,
+        onTableRowsDataModified
       );
       // scrapingThreadsStore.removeChangeListener(
       //   ActionTypes.Table.ROW_ADDED,
@@ -277,7 +298,12 @@ const ManageUrlsTable = ({ filter }) => {
       </React.Fragment>
     );
   };
-
+  const retryThread = () => {
+    let threadId = RowActionObject.threadId;
+    setTimeout(() => {
+      scrapingThreadsActions.retryThread(threadId);
+    });
+  };
   const _attachRowActionsMenu = () => {
     return (
       <Menu
@@ -300,7 +326,15 @@ const ManageUrlsTable = ({ filter }) => {
 
         <MenuItem
           onClick={() => {
-            handleRowMenuClose();
+            confirm({
+              title: "Confirm to retry crawling URL?",
+              description:
+                "If you proceed some of the scraped data will be deleted. Make sure you know what you're doing.",
+            }).then(() => {
+              retryThread();
+              handleRowMenuClose();
+            });
+
             //toggleCountryPickerDialog();
           }}
         >

@@ -20,6 +20,8 @@ const Errors = {
   ERR_CANNOT_DELETE_YOURSELF: "Cannot delete yourself",
   ERR_COUNTRY_WITH_SAME_NAME_EXISTS:
     "A country with the same name already exists",
+  ERR_URL_SCRAPED_RECENTLY:
+    "The URL has already been scraped in the past 24 hours",
 };
 
 export default Errors;

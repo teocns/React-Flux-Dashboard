@@ -31,11 +31,15 @@ import {
   OutlinedInput,
 } from "@material-ui/core";
 
+import urlHelpers from "../helpers/url";
+
 import AddCircleIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
 import AddTrackUrlTable from "../components/Tables/AddTrackUrl";
 import dispatcher from "../dispatcher";
 import SpinnerGrow from "../components/SpinnerGrow";
+// import HostPatternInputComponent from "../components/AddTrackUrl/HostPatternInput";
+import hostsStore from "../store/Hosts";
 const useStyles = makeStyles((theme) => ({
   root: {
     flexShrink: 0,
@@ -53,8 +57,26 @@ const useStyles2 = makeStyles({
   },
 });
 
+let lastChanged = null;
+
+/**
+ * @typedef {Object} InputValue
+ * @property {string} inputValue
+ * @property {string} hostName
+ */
+
 export default function CustomPaginationActionsTable() {
+  /**
+   * @type {[InputValue, CallableFunction]}
+   */
   const [UrlInputValue, setUrlInputValue] = useState("");
+
+  const hostName = UrlInputValue.hostName;
+
+  console.log(hostName);
+
+  //const [Host, setHost] = useState(hostsStore.getByName(hostName));
+
   const classes = useStyles2();
 
   const history = useHistory();
@@ -89,9 +111,13 @@ export default function CustomPaginationActionsTable() {
             id="standard-adornment-amount"
             size="small"
             placeholder="URL to track"
-            value={UrlInputValue}
+            value={UrlInputValue.inputValue}
             onChange={(evt) => {
-              setUrlInputValue(evt.target.value);
+              const inputValue = evt.target.value;
+              setUrlInputValue({
+                inputValue,
+                hostName: urlHelpers.parseHostname(inputValue),
+              });
             }}
             onKeyPress={(evt) => {
               if (evt.key === "Enter") {
@@ -117,6 +143,8 @@ export default function CustomPaginationActionsTable() {
           Add URL
         </Button>
       </div>
+      {/* {hostName && <HostPatternInputComponent hostName={hostName} />} */}
+
       <Divider />
       <AddTrackUrlTable />
     </TableContainer>

@@ -2,7 +2,7 @@ export default class User {
   /**
    * @type {Number}
    */
-  userId;
+  id;
   /**
    * @type {string}
    */
@@ -27,7 +27,6 @@ export default class User {
    * @type {string}
    */
   authentication_token;
-  z;
 
   /**
    * @type {boolean}
