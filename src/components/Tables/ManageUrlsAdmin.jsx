@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
-
+import MoreVertIcon from "@material-ui/icons/MoreVert";
 import PropTypes from "prop-types";
 import clsx from "clsx";
 import DateRangeIcon from "@material-ui/icons/DateRange";
@@ -29,6 +29,8 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Menu,
+  MenuItem,
   Tooltip,
   Typography,
   ButtonGroup,
@@ -94,7 +96,8 @@ const ManageUrlsAdminTable = ({ filter }) => {
   );
   const [SelectedRows, setSelectedRows] = useState([]);
   const [DateRange, setDateRange] = useState(null);
-
+  const [RowActionObject, setRowActionObject] = useState(null);
+  const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
   const HasTableData = tableData !== undefined;
 
   if (!HasTableData) {
@@ -106,7 +109,21 @@ const ManageUrlsAdminTable = ({ filter }) => {
   const countryFilter = tableData.countryFilter;
   const dateRange = tableData.dateRange;
   let rows = tableData.rows;
+  const toggleRowMenuOpen = (event, row) => {
+    setRowMenuAnchorRef(event.currentTarget);
+    setRowActionObject(row);
+  };
 
+  const handleRowMenuClose = (event) => {
+    if (
+      rowMenuAnchorRef.current &&
+      rowMenuAnchorRef.current.contains(event.target)
+    ) {
+      return;
+    }
+
+    setRowMenuAnchorRef(null);
+  };
   const IsLoadingResults = tableData.isLoading;
   let hasInheritedRows = false;
   if (IsLoadingResults && tableData.previousTableData) {
@@ -244,7 +261,51 @@ const ManageUrlsAdminTable = ({ filter }) => {
       setSelectedRows([id, ...SelectedRows]);
     }
   };
+  const retryThread = () => {
+    let threadId = RowActionObject.threadId;
+    setTimeout(() => {
+      scrapingThreadsActions.retryThread(threadId);
+    });
+  };
+  const _attachRowActionsMenu = () => {
+    return (
+      <Menu
+        id={`row-actions-menu`}
+        anchorEl={rowMenuAnchorRef}
+        // keepMounted
+        open={Boolean(rowMenuAnchorRef)}
+        onClose={handleRowMenuClose}
+      >
+        <MenuItem
+          // onClick={() => {
+          //   handleRowMenuClose();
+          //   //toggleCountryRenameDialog();
+          // }}
+          component={RouterLink}
+          to={`/url-details/${RowActionObject.threadId}`}
+        >
+          View details
+        </MenuItem>
 
+        <MenuItem
+          onClick={() => {
+            confirm({
+              title: "Confirm to retry crawling URL?",
+              description:
+                "If you proceed some of the scraped data will be deleted. Make sure you know what you're doing.",
+            }).then(() => {
+              retryThread();
+              handleRowMenuClose();
+            });
+
+            //toggleCountryPickerDialog();
+          }}
+        >
+          Retry
+        </MenuItem>
+      </Menu>
+    );
+  };
   useEffect(() => {
     // Means data has not yet loaded nor requested
     setTimeout(() => {
@@ -342,7 +403,24 @@ const ManageUrlsAdminTable = ({ filter }) => {
 
     return _createRow();
   };
-
+  const _createRowActionsButton = (row) => {
+    const key = row.threadId;
+    return (
+      <React.Fragment>
+        <IconButton
+          key={key}
+          size="small"
+          aria-haspopup="true"
+          onClick={(event) => {
+            toggleRowMenuOpen(event, row);
+          }}
+          aria-controls={`row-actions-menu`}
+        >
+          <MoreVertIcon />
+        </IconButton>
+      </React.Fragment>
+    );
+  };
   return (
     <Table className={classes.table} aria-label="custom pagination table">
       {/* <LinearProgress
@@ -350,6 +428,13 @@ const ManageUrlsAdminTable = ({ filter }) => {
         color="secondary"
         style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
       /> */}
+      <colgroup>
+        <col style={{ width: "5%" }} />
+        <col style={{ width: "65%" }} />
+        <col style={{ width: "10%" }} />
+        <col style={{ width: "10%" }} />
+        <col style={{ width: "10%" }} />
+      </colgroup>
       <TableHead>
         <TableRow>
           <TableCell component="th" colspan="6">
@@ -484,6 +569,9 @@ const ManageUrlsAdminTable = ({ filter }) => {
                   <TableCell style={{ width: 160 }} align="right">
                     <ScrapingThreadStatus row={row} />
                   </TableCell>
+                  <TableCell component="th" scope="row" align="right">
+                    {_createRowActionsButton(row)}
+                  </TableCell>
                 </React.Fragment>
               );
               const wrapComponent = (
@@ -494,6 +582,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
               return wrapComponent;
             })}
         {!IsLoadingResults && renderEmptyRows()}
+        {RowActionObject && _attachRowActionsMenu()}
       </TableBody>
       <TableFooter>
         <TableRow>

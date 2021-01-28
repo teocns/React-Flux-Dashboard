@@ -92,11 +92,11 @@ const COLUMNS = [
     name: "linksWithoutJobSchema",
     label: "Links without jobs",
   },
-  {
-    name: "link_parsing_regex",
-    label: "External link parsing regex",
-    sortable: false,
-  },
+  // {
+  //   name: "link_parsing_regex",
+  //   label: "External link parsing regex",
+  //   sortable: false,
+  // },
   {
     name: "actions",
     label: "",
@@ -512,15 +512,6 @@ const DomainsManagementTable = ({ filter }) => {
         >
           View HTML sample
         </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            testRegex();
-            handleRowMenuClose();
-          }}
-        >
-          Test Regex
-        </MenuItem>
       </Menu>
     );
   };
@@ -595,7 +586,7 @@ const DomainsManagementTable = ({ filter }) => {
                       {row.linksWithoutJobSchema}
                     </TableCell>
 
-                    <TableCell component="th" scope="row">
+                    {/* <TableCell component="th" scope="row">
                       <Box display="inline-flex" alignItems="center">
                         <Box display="flex" flexDirection="column">
                           <code style={{ fontWeight: "400" }}>
@@ -620,7 +611,7 @@ const DomainsManagementTable = ({ filter }) => {
                           <Edit style={{ height: 16, width: 16 }} />
                         </IconButton>
                       </Box>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell component="th" scope="row" align="right">
                       {_createRowActionsButton(row)}
                     </TableCell>

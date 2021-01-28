@@ -16,3 +16,7 @@ code {
   padding: 4px;
   font-weight: bold;
 }
+
+tr {
+  height: 32px !important;
+}

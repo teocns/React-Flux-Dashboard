@@ -71,7 +71,7 @@ export default function XmlManagementView() {
 
   return (
     <TableContainer component={Paper}>
-      <div
+      {/* <div
         style={{
           padding: theme.spacing(2),
           width: "100%",
@@ -90,7 +90,7 @@ export default function XmlManagementView() {
           Search
         </Button>
       </div>
-      <Divider />
+      <Divider /> */}
       <XmlHistoryTable filter={Filter} />
     </TableContainer>
   );
