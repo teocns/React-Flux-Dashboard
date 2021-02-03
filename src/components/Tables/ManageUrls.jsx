@@ -164,7 +164,6 @@ const ManageUrlsTable = ({ filter }) => {
    * @type {TableData} obj.tableData
    */
   const onTableRowsDataModified = ({ tableNames }) => {
-    debugger;
     console.log("data modified on table ", tableNames);
     if (tableNames.includes(THIS_TABLE_NAME)) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);

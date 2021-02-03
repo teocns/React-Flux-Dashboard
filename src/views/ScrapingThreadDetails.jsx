@@ -217,7 +217,6 @@ const ScrapingThreadDetailsView = (props) => {
     isFromExtension,
     parentThreadId,
   }) => {
-    debugger;
     const hasResources =
       Array.isArray(requests) &&
       requests.slice(1, requests.length).every((c) => c.is_js_engine_resource);
@@ -385,16 +384,16 @@ const ScrapingThreadDetailsView = (props) => {
               ? [...Array(8).keys()].map((x) => (
                   <TableRow key={x} style={{ height: 56 }}>
                     <TableCell>
-                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                      <Skeleton animation="wave" style={{ width: "60%" }} />
                     </TableCell>
                     <TableCell align="right">
-                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                      <Skeleton animation="wave" style={{ width: "15%" }} />
                     </TableCell>
                     <TableCell align="right">
-                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                      <Skeleton animation="wave" style={{ width: "15%" }} />
                     </TableCell>
                     <TableCell align="right">
-                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                      <Skeleton animation="wave" style={{ width: "10%" }} />
                     </TableCell>
                   </TableRow>
                 ))

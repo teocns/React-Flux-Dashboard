@@ -60,9 +60,9 @@ const ScrapingThreadTableStatus = ({ row }) => {
     }
     switch (status) {
       case Statuses.BAD_LINK:
-        innerText = "Bad link";
+        innerText = "NO LINKS PARSED";
         icon = (
-          <Tooltip title="Could not scrape link">
+          <Tooltip title="Could not scrape any link, either because our bots failed or the page contained no links to potential jobs.">
             <ErrorOutline
               style={{
                 width: 18,

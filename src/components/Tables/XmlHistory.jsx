@@ -506,7 +506,7 @@ const XmlFeedsTable = ({ filter }) => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="left">
                     <Box alignItems="center" display="inline-flex">
                       <GlobeIcon
                         style={{
@@ -520,11 +520,11 @@ const XmlFeedsTable = ({ filter }) => {
                         noWrap={true}
                         style={{ marginLeft: theme.spacing(1) }}
                       >
-                        ... Countries
+                        {row.country}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="right">
+                  <TableCell style={{ width: 160 }} align="left">
                     <Box
                       display="inline-flex"
                       alignItems="center"
