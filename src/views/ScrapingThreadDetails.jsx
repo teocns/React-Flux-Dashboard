@@ -364,7 +364,11 @@ const ScrapingThreadDetailsView = (props) => {
       </Paper>
 
       <TableContainer component={Paper}>
-        <Table className={classes.table} aria-label="simple table">
+        <Table
+          className={classes.table}
+          aria-label="simple table"
+          style={{ tableLayout: "fixed" }}
+        >
           <colgroup>
             <col style={{ width: "60%" }} />
             <col style={{ width: "20%" }} />
