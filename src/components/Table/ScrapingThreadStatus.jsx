@@ -46,7 +46,7 @@ const ScrapingThreadTableStatus = ({ row }) => {
     let status = Statuses.QUEUED;
 
     if (row.isCompleted) {
-      if (row.externalLinksFound === 0 && !row.scrapedJobs) {
+      if (row.externalLinksFound === 0 && row.scrapedJobs < 0) {
         status = Statuses.BAD_LINK;
       } else if (row.externalLinksFound > row.auditsCount) {
         status = Statuses.SCRAPING_JOBS;
