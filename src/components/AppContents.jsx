@@ -386,7 +386,7 @@ function AppContents() {
                     <ListItemIcon>
                       <ExtensionIcon />
                     </ListItemIcon>
-                    <ListItemText primary={"Chrome Extension"} />
+                    <ListItemText primary={"Crawling Extension"} />
                   </ListItem>
                 </List>
                 <Divider />
