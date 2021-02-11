@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
-
+import faviconIconPng from "../assets/favicon128.png";
+import ExtensionIcon from "@material-ui/icons/Extension";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import UserAvatar from "../components/User/Avatar/ShortLettersAvatar";
 import {
@@ -85,9 +86,7 @@ const useStyles = makeStyles((theme) => ({
   menuButton: {
     marginRight: theme.spacing(2),
   },
-  drawerHeader: {
-    height: 64,
-  },
+  drawerHeader: {},
   hide: {
     display: "none",
   },
@@ -95,7 +94,7 @@ const useStyles = makeStyles((theme) => ({
     width: drawerWidth,
     flexShrink: 0,
     whiteSpace: "nowrap",
-    backgroundColor: "rgb(52, 58, 64)",
+    backgroundColor: "#f2902b",
   },
   drawerOpen: {
     width: drawerWidth,
@@ -137,13 +136,13 @@ const useStyles = makeStyles((theme) => ({
   },
 
   drawerPaper: {
-    backgroundColor: "rgb(52, 58, 64)",
-    color: "#c2c7d0",
+    backgroundColor: theme.palette.primary.dark,
+    color: "#ffffff",
     "& .MuiListItemIcon-root": {
-      color: "#c2c7d0",
+      color: "#ffffff",
     },
     "& .MuiDivider-root": {
-      backgroundColor: "#c2c7d02e",
+      backgroundColor: "#ffffff2e",
     },
   },
 }));
@@ -292,19 +291,34 @@ function AppContents() {
                 <div className={classes.drawerHeader}>
                   <List>
                     <ListItem button>
-                      <img style={{ width: 32 }} src={logoIconSvg} alt="yes" />
-                      <Typography
-                        variant="h6"
-                        style={{ marginLeft: theme.spacing(3) }}
-                      >
-                        Linksforcash
-                      </Typography>
+                      <img
+                        style={{ width: 64 }}
+                        src={faviconIconPng}
+                        alt="yes"
+                      />
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <Typography
+                          variant="h6"
+                          style={{ marginLeft: theme.spacing(3) }}
+                        >
+                          BeBee
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          style={{
+                            marginLeft: theme.spacing(3),
+                            marginTop: -4,
+                          }}
+                        >
+                          Crawling
+                        </Typography>
+                      </div>
                     </ListItem>
                   </List>
                 </div>
                 <Divider />
                 <List>
-                  {IsAdmin && (
+                  {false && IsAdmin && (
                     <ListItem style={{ padding: 0 }}>
                       <div
                         style={{
@@ -361,6 +375,18 @@ function AppContents() {
                       <HelpIcon />
                     </ListItemIcon>
                     <ListItemText primary={"FAQ"} />
+                  </ListItem>
+                  <ListItem
+                    button
+                    key={"Extension"}
+                    component={Link}
+                    to="/extension"
+                    selected={location.pathname === "/extension"}
+                  >
+                    <ListItemIcon>
+                      <ExtensionIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={"Chrome Extension"} />
                   </ListItem>
                 </List>
                 <Divider />

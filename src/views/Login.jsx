@@ -19,7 +19,7 @@ import ActionTypes from "../constants/ActionTypes";
 
 import sessionActions from "../actions/Session";
 import sessionStore from "../store/session";
-import LinksForCashIcon from "../assets/l4c.svg";
+import BebeeCrawlingLogo from "../assets/favicon128.png";
 const useStyles = makeStyles((theme) => ({
   formPaper: {
     padding: theme.spacing(3),
@@ -99,11 +99,11 @@ const LoginView = () => {
         }}
       >
         <img
-          src={LinksForCashIcon}
+          src={BebeeCrawlingLogo}
           style={{ height: 32, marginRight: theme.spacing(2) }}
-          alt="Linksforcash"
+          alt="bebeee"
         />
-        <Typography variant="h5">Linksforcash</Typography>
+        <Typography variant="h5">Bebee Crawling</Typography>
       </div>
       <Paper className={classes.formPaper}>
         <Typography variant="h6">Sign in</Typography>

@@ -278,7 +278,11 @@ const AddTrackUrlTable = () => {
 
   const theme = useTheme();
   return (
-    <Table className={classes.table} aria-label="custom pagination table">
+    <Table
+      className={classes.table}
+      aria-label="custom pagination table"
+      style={{ tableLayout: "fixed" }}
+    >
       {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
@@ -315,12 +319,19 @@ const AddTrackUrlTable = () => {
           : rows.map((row, index) => {
               const innerRow = (
                 <React.Fragment>
-                  <TableCell component="th" scope="row">
+                  <TableCell
+                    width="60%"
+                    style={{
+                      width: "60%",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                    }}
+                  >
                     <Link href={row.url} target="_blank">
                       {row.url}
                     </Link>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="left">
+                  <TableCell width="20%" align="left">
                     <Box
                       display="inline-flex"
                       alignItems="center"
@@ -342,7 +353,7 @@ const AddTrackUrlTable = () => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="right">
+                  <TableCell width="20%" align="right">
                     <ScrapingThreadStatus row={row} />
                   </TableCell>
                 </React.Fragment>

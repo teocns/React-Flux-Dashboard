@@ -20,6 +20,7 @@ import XmlManagementView from "../views/XmlManagement";
 import CountriesManagementView from "../views/CountriesManagement";
 import ScrapingThreadDetailsView from "../views/ScrapingThreadDetails";
 import DomainsManagementView from "../views/DomainsManagement";
+import CrawlingExtensionView from "../views/CrawlingExtension";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
@@ -56,6 +57,7 @@ const AppView = () => {
         <Route exact path="/xml" component={XmlManagementView} />
         <Route exact path="/countries" component={CountriesManagementView} />
         <Route exact path="/domains" component={DomainsManagementView} />
+        <Route exact path="/extension" component={CrawlingExtensionView} />
         <Route
           path="/url-details/:threadId"
           render={(props) => <ScrapingThreadDetailsView {...props} />}

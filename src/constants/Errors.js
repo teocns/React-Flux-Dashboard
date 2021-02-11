@@ -22,6 +22,7 @@ const Errors = {
     "A country with the same name already exists",
   ERR_URL_SCRAPED_RECENTLY:
     "The URL has already been scraped in the past 24 hours",
+  ERR_HOST_BANNED: "Domain is banned by administrators",
 };
 
 export default Errors;

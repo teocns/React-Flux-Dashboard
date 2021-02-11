@@ -65,35 +65,46 @@ const MultifunctionalTableHeading = ({
             />
           </TableCell>
         )}
-        {columns.map(({ name, label, width = "auto", sortable = true }) => {
-          const thisColumnSort = sort && sort.name === name ? sort.sort : "asc";
-          const isActive = sort && sort.name === name;
-          return (
-            <TableCell width={width}>
-              <TableSortLabel
-                active={isActive}
-                direction={thisColumnSort}
-                hideSortIcon={!isActive}
-                onClick={() => {
-                  if (!sortable) {
-                    return;
-                  }
-                  onSortChanged({
-                    name: name,
-                    sort: thisColumnSort === "asc" ? "desc" : "asc",
-                  });
-                }}
-              >
-                {label}
-                {isActive && sortable ? (
-                  <span className={classes.visuallyHidden}>
-                    {sort === "desc" ? "sorted descending" : "sorted ascending"}
-                  </span>
-                ) : null}
-              </TableSortLabel>
-            </TableCell>
-          );
-        })}
+        {columns.map(
+          ({
+            name,
+            label,
+            width = "auto",
+            sortable = true,
+            align = "left",
+          }) => {
+            const thisColumnSort =
+              sort && sort.name === name ? sort.sort : "asc";
+            const isActive = sort && sort.name === name;
+            return (
+              <TableCell width={width} align={align}>
+                <TableSortLabel
+                  active={isActive}
+                  direction={thisColumnSort}
+                  hideSortIcon={!isActive}
+                  onClick={() => {
+                    if (!sortable) {
+                      return;
+                    }
+                    onSortChanged({
+                      name: name,
+                      sort: thisColumnSort === "asc" ? "desc" : "asc",
+                    });
+                  }}
+                >
+                  {label}
+                  {isActive && sortable ? (
+                    <span className={classes.visuallyHidden}>
+                      {sort === "desc"
+                        ? "sorted descending"
+                        : "sorted ascending"}
+                    </span>
+                  ) : null}
+                </TableSortLabel>
+              </TableCell>
+            );
+          }
+        )}
       </TableRow>
     </TableHead>
   );

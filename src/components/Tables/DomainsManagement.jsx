@@ -83,14 +83,17 @@ const COLUMNS = [
   {
     name: "totalLinks",
     label: "Total parsed links",
+    align: "right",
   },
   {
     name: "scrapedJobs",
     label: "Scraped jobs",
+    align: "right",
   },
   {
     name: "linksWithoutJobSchema",
     label: "Links without jobs",
+    align: "right",
   },
   // {
   //   name: "link_parsing_regex",
@@ -539,13 +542,25 @@ const DomainsManagementTable = ({ filter }) => {
                 ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
               ].map((x) => (
                 <TableRow key={x} style={{ height: 56 }}>
-                  <TableCell width="45%">
+                  <TableCell width="5%">
                     <Skeleton animation="wave" style={{ width: "75%" }} />
                   </TableCell>
-                  <TableCell width="27,5%">
+                  <TableCell width="50%">
                     <Skeleton animation="wave" style={{ width: "75%" }} />
                   </TableCell>
-                  <TableCell width="27,5%" align="right">
+                  <TableCell width="15%">
+                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  </TableCell>
+                  <TableCell width="15%" align="right">
+                    <Skeleton
+                      animation="wave"
+                      style={{
+                        width: "75%",
+                        display: "inline-block",
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell width="15%" align="right">
                     <Skeleton
                       animation="wave"
                       style={{
@@ -568,7 +583,7 @@ const DomainsManagementTable = ({ filter }) => {
                         }}
                       />
                     </TableCell>
-                    <TableCell component="th" scope="row">
+                    <TableCell scope="row">
                       <Box display="inline-flex" alignItems="center">
                         <Link href={"https://" + row.host} target="_blank">
                           {row.host}
@@ -576,13 +591,9 @@ const DomainsManagementTable = ({ filter }) => {
                       </Box>
                     </TableCell>
 
-                    <TableCell component="th" scope="row">
-                      {row.totalLinks}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
-                      {row.scrapedJobs}
-                    </TableCell>
-                    <TableCell component="th" scope="row">
+                    <TableCell align="right">{row.totalLinks}</TableCell>
+                    <TableCell align="right">{row.scrapedJobs}</TableCell>
+                    <TableCell align="right">
                       {row.linksWithoutJobSchema}
                     </TableCell>
 
@@ -612,7 +623,7 @@ const DomainsManagementTable = ({ filter }) => {
                         </IconButton>
                       </Box>
                     </TableCell> */}
-                    <TableCell component="th" scope="row" align="right">
+                    <TableCell component="th" align="right">
                       {_createRowActionsButton(row)}
                     </TableCell>
                   </React.Fragment>

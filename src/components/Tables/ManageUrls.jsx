@@ -69,6 +69,7 @@ import ScrapingThreadTableStatus from "../Table/ScrapingThreadStatus";
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
+    tableLayout: "fixed",
   },
   tableRow: {
     height: 70,
@@ -83,6 +84,10 @@ const useStyles = makeStyles((theme) => ({
       paddingTop: "8rem",
       paddingBottom: "8rem",
     },
+  },
+
+  columnCheckbox: {
+    width: 64,
   },
 }));
 
@@ -442,6 +447,14 @@ const ManageUrlsTable = ({ filter }) => {
   };
   return (
     <Table className={classes.table} aria-label="custom pagination table">
+      <colgroup>
+        <col style={{ width: 64 }} />
+        {/* <col style={{ width: "calc(50% - 128px)" }} /> */}
+        <col style={{ width: "100%" }} />
+        <col style={{ width: 128 }} />
+        <col style={{ width: 316 }} />
+        <col style={{ width: 64 }} />
+      </colgroup>
       {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
@@ -523,7 +536,7 @@ const ManageUrlsTable = ({ filter }) => {
           : rows.map((row, index) => {
               const innerRow = (
                 <React.Fragment>
-                  <TableCell width="64px">
+                  <TableCell className={classes.columnCheckbox}>
                     <Checkbox
                       size="small"
                       checked={SelectedRows.includes(row.threadId)}
@@ -532,12 +545,19 @@ const ManageUrlsTable = ({ filter }) => {
                       }}
                     />
                   </TableCell>
-                  <TableCell component="th" scope="row">
+                  <TableCell
+                    style={{
+                      width: "auto",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                    }}
+                    align="left"
+                  >
                     <Link href={row.url} target="_blank">
                       {row.url}
                     </Link>
                   </TableCell>
-                  <TableCell style={{ width: 160 }} align="left">
+                  <TableCell align="left">
                     <Box
                       display="inline-flex"
                       alignItems="center"
@@ -563,7 +583,7 @@ const ManageUrlsTable = ({ filter }) => {
                   <TableCell align="right">
                     <ScrapingThreadTableStatus row={row} />
                   </TableCell>
-                  <TableCell component="th" scope="row" align="right">
+                  <TableCell align="right">
                     {_createRowActionsButton(row)}
                   </TableCell>
                 </React.Fragment>

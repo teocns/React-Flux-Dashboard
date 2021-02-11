@@ -334,7 +334,7 @@ const ScrapingThreadDetailsView = (props) => {
         </Typography>
       </div>
 
-      <Paper style={{ marginBottom: theme.spacing(3) }}>
+      <Paper variant="outlined" style={{ marginBottom: theme.spacing(3) }}>
         <Box display="flex" justifyContent="between" alignItems="center">
           <Box
             display="flex"
