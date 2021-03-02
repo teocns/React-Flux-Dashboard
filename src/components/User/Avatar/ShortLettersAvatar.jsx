@@ -122,18 +122,18 @@ const UserShortLettersAvatar = ({ username, fullname }) => {
     ? makeBotProps()
     : makeUserProps();
   return (
-    <Tooltip title={tooltip} aria-label={tooltip}>
-      <Avatar
-        className={[classes.avatar]}
-        style={{
-          color: "white",
-          backgroundColor: backgroundColor,
-        }}
-        src={src}
-      >
-        {shortLetters}
-      </Avatar>
-    </Tooltip>
+    <Avatar
+      className={[classes.avatar]}
+      style={{
+        color: "white",
+        backgroundColor: backgroundColor,
+      }}
+      src={src}
+    >
+      {shortLetters}
+    </Avatar>
+    // <Tooltip title={tooltip} aria-label={tooltip}>
+    // </Tooltip>
   );
 };
 

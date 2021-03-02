@@ -186,6 +186,15 @@ const ScrapingThreadDetailsView = (props) => {
   //     </ListItem>
   //   );
   // };
+
+  const viewSchemas = (schemas) => {
+    let myWindow = window.open(
+      "data:text/html," + encodeURIComponent(schemas),
+      "_blank",
+      "width=200,height=100"
+    );
+    myWindow.focus();
+  };
   const renderJobSchemaFound = ({ jobSchemaFound, threadId, isCompleted }) => {
     if (!isCompleted) {
       return "-";
@@ -203,33 +212,23 @@ const ScrapingThreadDetailsView = (props) => {
       </Link>
     );
   };
-  const renderRow = ({
-    pageAuditId,
-    url,
-    statusCode,
-    statusText,
-    jobSchemaFound,
-    threadId,
-    requests,
-    timeNeeded,
-    isSubRow,
-    isCompleted,
-    isFromExtension,
-    parentThreadId,
-  }) => {
-    const hasResources =
-      Array.isArray(requests) &&
-      requests.slice(1, requests.length).every((c) => c.is_js_engine_resource);
+  const renderRow = (rowData, isSubRow = false) => {
+    let data = JSON.parse(rowData.results);
+    let url = data.url;
+    let threadId = data.threadId;
+    let requests = data.requests;
+    const hasResources = data.spider_used && data.requests.length > 0;
+
     return (
       <TableRow
-        key={pageAuditId}
+        key={data.threadId}
         // className={clsx({
         //   [classes.subRow]: !!isSubRow,
         // })}
       >
         <TableCell>
           <Box display="flex">
-            {isSubRow && (
+            {/* {isSubRow && (
               // <div
               //   style={{ padding: 24, background: theme.palette.grey[200] }}
               // ></div>
@@ -239,7 +238,7 @@ const ScrapingThreadDetailsView = (props) => {
                   color: theme.palette.grey[400],
                 }}
               />
-            )}
+            )} */}
             <Box
               display="flex"
               flexDirection="column"
@@ -248,7 +247,7 @@ const ScrapingThreadDetailsView = (props) => {
               <Link href={url} target="_blank" style={{ textOverflow: "clip" }}>
                 {url}
               </Link>
-              {requests && requests.length > 2 && (
+              {data.requests.length >= 2 && (
                 <div
                   compoennt={Button}
                   style={{
@@ -280,35 +279,34 @@ const ScrapingThreadDetailsView = (props) => {
         </TableCell>
         <TableCell>
           {(() => {
-            if (requests && requests.length) {
-              const target = requests[requests.length - 1];
-              return renderStatusCode(
-                target.statusCode,
-                target.statusText,
-                target.isFromExtension,
-                target.isCompleted,
-                target.parentThreadId
-              );
-            } else {
-              return renderStatusCode(
-                statusCode,
-                statusText,
-                isFromExtension,
-                isCompleted,
-                parentThreadId
-              );
-            }
+            const target = data.requests[requests.length - 1];
+            return renderStatusCode(
+              target.response.status_code,
+              target.response.status_text,
+              1,
+              data.scraping_thread.parentThreadId
+            );
           })()}
         </TableCell>
         <TableCell>
-          {requests &&
-          requests.length &&
-          requests[requests.length - 1].timeNeeded
-            ? requests[requests.length - 1].timeNeeded + " ms"
-            : "-"}
+          {data.timings.crawler +
+            data.timings.task_queue +
+            data.timings.post_processing}
         </TableCell>
         <TableCell>
-          {renderJobSchemaFound({ threadId, jobSchemaFound, isCompleted })}
+          {/* {renderJobSchemaFound({ threadId, jobSchemaFound, isCompleted })} */}
+          {data.job_schemas.length ? (
+            <Link
+              href={encodeURIComponent(data.job_schemas)}
+              // onClick={() => {
+              //   viewSchemas(data.job_schemas);
+              // }}
+            >
+              View schemas
+            </Link>
+          ) : (
+            "-"
+          )}
         </TableCell>
       </TableRow>
     );

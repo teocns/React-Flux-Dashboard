@@ -46,11 +46,11 @@ const ScrapingThreadTableStatus = ({ row }) => {
     let status = Statuses.QUEUED;
 
     if (row.isCompleted) {
-      if (row.externalLinksFound === 0 && row.scrapedJobs < 0) {
+      if (row.externalLinksFound === 0 && row.totalScrapedJobs < 0) {
         status = Statuses.BAD_LINK;
-      } else if (row.externalLinksFound > row.auditsCount) {
+      } else if (row.externalLinksFound > row.childrenCompleted) {
         status = Statuses.SCRAPING_JOBS;
-      } else if (row.externalLinksFound <= row.auditsCount) {
+      } else if (row.externalLinksFound <= row.childrenCompleted) {
         status = Statuses.COMPLETED;
       } else {
         status = Statuses.COMPLETED;
@@ -102,12 +102,13 @@ const ScrapingThreadTableStatus = ({ row }) => {
         );
         break;
       case Statuses.COMPLETED:
-        innerText = `${row.scrapedJobs > 0 ? row.scrapedJobs : "No"} Job${
-          row.scrapedJobs !== 1 ? "s" : ""
-        } found`;
-        caption = row.auditsCount > 0 ? `IN ${row.auditsCount} LINKS` : "";
+        innerText = `${
+          row.totalScrapedJobs > 0 ? row.totalScrapedJobs : "No"
+        } Job${row.totalScrapedJobs !== 1 ? "s" : ""} found`;
+        caption =
+          row.childrenCompleted > 0 ? `IN ${row.childrenCompleted} LINKS` : "";
         icon =
-          row.scrapedJobs > 0 ? (
+          row.totalScrapedJobs > 0 ? (
             <Tooltip title="Scraping is completed">
               <DoneAll
                 style={{
@@ -130,8 +131,8 @@ const ScrapingThreadTableStatus = ({ row }) => {
           );
         break;
       case Statuses.SCRAPING_JOBS:
-        innerText = `${row.scrapedJobs} Jobs found`;
-        caption = `SUB LINK ${row.auditsCount}/${row.externalLinksFound}`;
+        innerText = `${row.totalScrapedJobs} Jobs found`;
+        caption = `SUB LINK ${row.childrenCompleted}/${row.externalLinksFound}`;
         icon = (
           <BugReport
             color="primary"

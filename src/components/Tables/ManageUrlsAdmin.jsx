@@ -282,7 +282,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
           //   //toggleCountryRenameDialog();
           // }}
           component={RouterLink}
-          to={`/url-details/${RowActionObject.threadId}`}
+          to={`/url-details/${RowActionObject.groupId}`}
         >
           View details
         </MenuItem>
@@ -468,7 +468,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
                   </IconButton>
                 </Tooltip>
               </div>
-              <div
+              {/* <div
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -480,7 +480,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
                   onCountriesChanged={handleCountryFilterChanged}
                   onDateRangeChanged={handleDateFilterChanged}
                 />
-              </div>
+              </div> */}
             </Box>
           </TableCell>
         </TableRow>
