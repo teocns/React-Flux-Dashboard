@@ -11,6 +11,7 @@ import defaultTheme from "./theme";
 import StartServices from "./services/bundle";
 
 export default function App() {
+  document.title = "BeBee Crawling";
   const [ShowPreload, setShowPreload] = useState(true);
   const history = useHistory();
 

@@ -42,6 +42,20 @@ import { useHistory } from "react-router-dom";
 import ScrapingThreadApi from "../api/ScrapingThread";
 import Collapsable from "../components/Collapsable";
 
+const openWindowWithJson = (dict) => {
+  let jsstr = JSON.stringify(dict, undefined, 2);
+  console.log(dict);
+  let myWindow = window.open(
+    "about:blank?doctype=application/json",
+    "_blank",
+    "width=420,height=480"
+  );
+  let pre = myWindow.document.createElement("pre");
+  pre.textContent = jsstr;
+  myWindow.document.body.appendChild(pre);
+  myWindow.focus();
+};
+
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 650,
@@ -187,14 +201,6 @@ const ScrapingThreadDetailsView = (props) => {
   //   );
   // };
 
-  const viewSchemas = (schemas) => {
-    let myWindow = window.open(
-      "data:text/html," + encodeURIComponent(schemas),
-      "_blank",
-      "width=200,height=100"
-    );
-    myWindow.focus();
-  };
   const renderJobSchemaFound = ({ jobSchemaFound, threadId, isCompleted }) => {
     if (!isCompleted) {
       return "-";
@@ -212,11 +218,21 @@ const ScrapingThreadDetailsView = (props) => {
       </Link>
     );
   };
-  const renderRow = (rowData, isSubRow = false) => {
-    let data = JSON.parse(rowData.results);
-    let url = data.url;
-    let threadId = data.threadId;
+  const renderRow = (data, renderRequest = null) => {
+    // Filter out some requests that have empty URL
+    if (renderRequest && !renderRequest.url) {
+      return null;
+    }
+
+    // Collapsed row?
+    const isSubRow = !!renderRequest;
+
+    let url = data.scraping_thread.url;
+    let threadId = data.scraping_thread.threadId;
     let requests = data.requests;
+    if (!renderRequest) {
+      renderRequest = requests[0];
+    }
     const hasResources = data.spider_used && data.requests.length > 0;
 
     return (
@@ -227,33 +243,49 @@ const ScrapingThreadDetailsView = (props) => {
         // })}
       >
         <TableCell>
-          <Box display="flex">
-            {/* {isSubRow && (
+          <Box display="flex" style={{ alignItems: "center" }}>
+            {isSubRow && (
               // <div
               //   style={{ padding: 24, background: theme.palette.grey[200] }}
               // ></div>
               <SubdirectoryArrowRightIcon
+                size="small"
                 style={{
                   marginLeft: theme.spacing(2),
                   color: theme.palette.grey[400],
                 }}
               />
-            )} */}
+            )}
             <Box
               display="flex"
               flexDirection="column"
-              style={{ padding: theme.spacing(2) }}
+              style={{
+                padding: theme.spacing(2),
+                maxWidth: "100%",
+                overflow: "hidden",
+              }}
             >
-              <Link href={url} target="_blank" style={{ textOverflow: "clip" }}>
-                {url}
+              <Typography
+                variant="caption"
+                style={{ color: theme.palette.text.disabled }}
+              >
+                #{data.scraping_thread.threadId}
+              </Typography>
+              <Link
+                href={renderRequest.url}
+                target="_blank"
+                style={{ textOverflow: "clip" }}
+              >
+                {renderRequest.url}
               </Link>
-              {data.requests.length >= 2 && (
+              {!isSubRow && data.requests.length >= 2 && (
                 <div
                   compoennt={Button}
                   style={{
                     color: theme.palette.text.hint,
                     display: "flex",
                     alignItems: "center",
+                    cursor: "pointer",
                   }}
                   onClick={() => {
                     const target = Boolean(CollapsedRow) ? 0 : threadId;
@@ -279,19 +311,22 @@ const ScrapingThreadDetailsView = (props) => {
         </TableCell>
         <TableCell>
           {(() => {
-            const target = data.requests[requests.length - 1];
             return renderStatusCode(
-              target.response.status_code,
-              target.response.status_text,
+              renderRequest.response.status_code,
+              renderRequest.response.status_text,
+              false,
               1,
               data.scraping_thread.parentThreadId
             );
           })()}
         </TableCell>
         <TableCell>
-          {data.timings.crawler +
-            data.timings.task_queue +
-            data.timings.post_processing}
+          {(() => {
+            if (isSubRow) {
+              return renderRequest.response.time_needed;
+            }
+            return data.timings.post_processing + data.timings.crawler;
+          })()}
         </TableCell>
         <TableCell>
           {/* {renderJobSchemaFound({ threadId, jobSchemaFound, isCompleted })} */}
@@ -310,9 +345,6 @@ const ScrapingThreadDetailsView = (props) => {
         </TableCell>
       </TableRow>
     );
-  };
-  const renderCollapsedRows = (requests) => {
-    return requests.map((subRow) => renderRow({ ...subRow, isSubRow: true }));
   };
 
   return (
@@ -342,6 +374,18 @@ const ScrapingThreadDetailsView = (props) => {
             <Typography variant="caption">Total requests performed:</Typography>
             <Typography variant="caption">Failed requests:</Typography>
             <Typography variant="caption">Job schemas:</Typography>
+            <Link
+              href="javascript:void(0)"
+              onClick={() => {
+                let js = Rows;
+                for (let i = 0; i < js.length; i++) {
+                  js[i].results = JSON.parse(js[i].results);
+                }
+                openWindowWithJson(js);
+              }}
+            >
+              View raw json
+            </Link>
           </Box>
           <Box
             display="flex"
@@ -378,7 +422,7 @@ const ScrapingThreadDetailsView = (props) => {
               <TableCell width="60%">URL</TableCell>
               <TableCell width="15%">Status</TableCell>
               <TableCell width="15%">Time needed (ms)</TableCell>
-              <TableCell width="10%">Job Schema</TableCell>
+              <TableCell width="10%">Job Schema(s)</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -399,52 +443,20 @@ const ScrapingThreadDetailsView = (props) => {
                     </TableCell>
                   </TableRow>
                 ))
-              : Rows.map((row) => (
-                  <React.Fragment>
-                    {/* <TableRow key={row.pageAuditId}>
-                      <TableCell scope="row" verticalAlign="start">
-                        <Box display="flex" flexDirection="column">
-                          <Link href={row.url} target="_blank">
-                            {row.url}
-                          </Link>
-                          {row.requests.length === 1 && (
-                            <Collapsable>
-                              <List>
-                                {row.requests.map((retry, index) =>
-                                  renderRetry(retry, index + 1)
-                                )}
-                              </List>
-                            </Collapsable>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="left">
-                        {row.requests.length === 1 ? (
-                          renderRetry(row.requests[0])
-                        ) : (
-                          <Collapsable title={renderRetriesTitle(row.requests)}>
-                            <List>
-                              {row.requests.map((retry, index) =>
-                                renderRetry(retry, index + 1)
-                              )}
-                            </List>
-                          </Collapsable>
-                        )}
-                      </TableCell>
-                      <TableCell>{renderJobSchemaFound(row)}</TableCell>
-                    </TableRow> */}
-                    {renderRow(row)}
+              : Rows.map((row) => {
+                  const threadId = row.threadId;
+                  const rowData = JSON.parse(row.results);
+                  return (
+                    <React.Fragment>
+                      {renderRow(rowData)}
 
-                    {CollapsedRow === row.threadId &&
-                      renderCollapsedRows(
-                        row.threadId === parentThreadId &&
-                          row.requests &&
-                          row.requests.length
-                          ? row.requests.slice(1, row.requests.length)
-                          : row.requests
-                      )}
-                  </React.Fragment>
-                ))}
+                      {CollapsedRow === threadId &&
+                        rowData.requests.map((request) =>
+                          renderRow(rowData, request)
+                        )}
+                    </React.Fragment>
+                  );
+                })}
           </TableBody>
         </Table>
       </TableContainer>
