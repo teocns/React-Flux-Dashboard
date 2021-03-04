@@ -332,10 +332,8 @@ const ScrapingThreadDetailsView = (props) => {
           {/* {renderJobSchemaFound({ threadId, jobSchemaFound, isCompleted })} */}
           {data.job_schemas.length ? (
             <Link
-              href={encodeURIComponent(data.job_schemas)}
-              // onClick={() => {
-              //   viewSchemas(data.job_schemas);
-              // }}
+              href={`https://api2-scrapers.bebee.com/scraping-thread/${threadId}/schema`}
+              target="_blank"
             >
               View schemas
             </Link>
