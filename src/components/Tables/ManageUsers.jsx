@@ -120,18 +120,30 @@ const ManageUsersTable = ({ filter }) => {
       })
       .catch();
   };
+  const getTableData = () => {
+    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
+  };
+  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
+    const _tableData = getTableData();
 
-  const syncTableData = ({ newPage, newRowsPerPage }) => {
     tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
+      rowsPerPage:
+        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
+      totalRowsCount: _tableData.totalRowsCount,
       page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
+        newRowsPerPage !== -1
+          ? newPage !== undefined
+            ? newPage
+            : _tableData.page
+          : 0,
       filter: filter || "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
+        _tableData && _tableData.totalRowsCount
+          ? _tableData.totalRowsCount
           : undefined,
+      dateRange:
+        newDateRange !== undefined ? newDateRange : _tableData.dateRange,
     });
   };
 
@@ -168,11 +180,7 @@ const ManageUsersTable = ({ filter }) => {
       }
     }
   };
-  const onScrapingThreadCreated = () => {
-    setTimeout(() => {
-      syncTableData({ newPage: 0 });
-    });
-  };
+
   const bindListeners = () => {
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_CREATED,
@@ -182,10 +190,7 @@ const ManageUsersTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
-    scrapingThreadsStore.addChangeListener(
-      ActionTypes.ScrapingThread.THREAD_CREATED,
-      onScrapingThreadCreated
-    );
+
     return () => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
@@ -195,22 +200,17 @@ const ManageUsersTable = ({ filter }) => {
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
       );
-      scrapingThreadsStore.removeChangeListener(
-        ActionTypes.Table.ROW_ADDED,
-        onScrapingThreadCreated
-      );
     };
   };
 
   useEffect(() => {
     // Means data has not yet loaded nor requested
-    if (!HasTableData || filter !== tableData.filter) {
-      setTimeout(() => {
-        syncTableData({});
-      });
-    }
+    setTimeout(() => {
+      syncTableData({});
+    });
+
     return bindListeners();
-  });
+  }, []);
   // if (rows.length <= 0) {
   //   return <EmptyTablePlaceholder />;
   // }
