@@ -1,76 +1,49 @@
-import React, { useState, useEffect } from "react";
-import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
-import PropTypes from "prop-types";
-import clsx from "clsx";
-import DateRangeIcon from "@material-ui/icons/DateRange";
-import { DateRangePicker, DateRange } from "materialui-daterange-picker";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { useConfirm } from "material-ui-confirm";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import { prettyTimelapse, timeSince } from "../../helpers/time";
-import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
-
 import {
   Badge,
   Box,
-  Button,
   Checkbox,
-  Divider,
   IconButton,
-  LinearProgress,
   Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  CircularProgress,
-  TableContainer,
-  TableFooter,
   TableHead,
   TablePagination,
   TableRow,
-  Menu,
-  MenuItem,
   Tooltip,
   Typography,
-  ButtonGroup,
 } from "@material-ui/core";
-
-import FilterListIcon from "@material-ui/icons/FilterList";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { Delete, Search, Today } from "@material-ui/icons";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import scrapingThreadsActions from "../../actions/ScrapingThread";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import { motion } from "framer-motion";
-import { Link as RouterLink } from "react-router-dom";
-import sessionStore from "../../store/session";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import CountryFilter from "../Filters/CountryFilter";
-import TablePaginationActions from "./Pagination";
-import EmptyTablePlaceholder from "./EmptyPlaceholder";
-
-import { Skeleton } from "@material-ui/lab";
+import ManageUrlsHeader from "../../components/Table/Headers/ManageUrls";
+import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
 import ActionTypes from "../../constants/ActionTypes";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
-import {
-  Add,
-  AddCircle,
-  Delete,
-  Today,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Public,
-  RssFeedTwoTone,
-  Search,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
+import { timeSince } from "../../helpers/time";
 import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
-import LinkIcon from "@material-ui/icons/Link";
+import scrapingThreadsStore from "../../store/ScrapingThreads";
+import tableStore from "../../store/Tables";
+import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
+import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
+    tableLayout: "fixed",
+    display: "block",
+    overflowY: "auto",
   },
   tableRow: {
     height: 70,
@@ -78,6 +51,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.palette.action.hover,
     },
   },
+  tableBody: {},
   emptyRow: {
     height: 70,
     backgroundColor: "white!important",
@@ -86,12 +60,16 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "8rem",
     },
   },
+
+  columnCheckbox: {
+    width: 64,
+  },
 }));
 
 const THIS_TABLE_NAME = TableNames.TRACKED_URLS;
 
 const ManageUrlsAdminTable = ({ filter }) => {
-  let [tableData, setTableData] = useState(
+  const [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
   const [SelectedRows, setSelectedRows] = useState([]);
@@ -100,9 +78,6 @@ const ManageUrlsAdminTable = ({ filter }) => {
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
   const HasTableData = tableData !== undefined;
 
-  if (!HasTableData) {
-    tableData = TableData.defaults(THIS_TABLE_NAME);
-  }
   const confirm = useConfirm();
   const rowsPerPage = tableData.rowsPerPage;
   const page = tableData.page;
@@ -172,25 +147,27 @@ const ManageUrlsAdminTable = ({ filter }) => {
       }
     }
   };
-  const syncTableData = ({
-    newPage,
-    newRowsPerPage,
-    newDateRange,
-    newCountryFilter,
-  }) => {
+  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
+    const _tableData = getTableData();
+
     tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
+      rowsPerPage:
+        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
+      totalRowsCount: _tableData.totalRowsCount,
       page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
+        newRowsPerPage !== -1
+          ? newPage !== undefined
+            ? newPage
+            : _tableData.page
+          : 0,
       filter: filter || "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
+        _tableData && _tableData.totalRowsCount
+          ? _tableData.totalRowsCount
           : undefined,
-      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
-      countryFilter:
-        newCountryFilter !== undefined ? newCountryFilter : countryFilter,
+      dateRange:
+        newDateRange !== undefined ? newDateRange : _tableData.dateRange,
     });
   };
   const handleChangePage = (event, newPage) => {
@@ -221,7 +198,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
       syncTableData({ newPage: 0 });
     });
   };
-  const bindListeners = () => {
+  const registerEventListeners = () => {
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
@@ -230,10 +207,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
-    scrapingThreadsStore.addChangeListener(
-      ActionTypes.ScrapingThread.THREAD_CREATED,
-      onScrapingThreadCreated
-    );
+
     return () => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
@@ -242,10 +216,6 @@ const ManageUrlsAdminTable = ({ filter }) => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
-      );
-      scrapingThreadsStore.removeChangeListener(
-        ActionTypes.Table.ROW_ADDED,
-        onScrapingThreadCreated
       );
     };
   };
@@ -306,19 +276,35 @@ const ManageUrlsAdminTable = ({ filter }) => {
       </Menu>
     );
   };
+  const getTableData = () => {
+    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
+  };
+  const refreshFunc = () => {
+    const _tableData = getTableData();
+
+    if (
+      _tableData.isLoading ||
+      parseInt(new Date() / 1000) - _tableData.age < 10
+    ) {
+      console.log("@@@@@ Skipping REFRESH");
+      return;
+    }
+    syncTableData({});
+  };
   useEffect(() => {
-    // Means data has not yet loaded nor requested
+    // Create an interval that refreshes the page every X
+    const refreshInterval = setInterval(refreshFunc, 5000);
     setTimeout(() => {
-      if (!HasTableData || filter !== tableData.filter) {
-        syncTableData({});
-      }
+      syncTableData({});
     });
 
-    return bindListeners();
-  });
-  // if (rows.length <= 0) {
-  //   return <EmptyTablePlaceholder />;
-  // }
+    const revokeEventListeners = registerEventListeners();
+
+    return () => {
+      clearInterval(refreshInterval);
+      revokeEventListeners();
+    };
+  }, []);
 
   const handleCountryFilterChanged = (_countryFilter) => {
     syncTableData({ newCountryFilter: _countryFilter });
@@ -422,189 +408,150 @@ const ManageUrlsAdminTable = ({ filter }) => {
     );
   };
   return (
-    <Table className={classes.table} aria-label="custom pagination table">
-      {/* <LinearProgress
+    <React.Fragment>
+      <ManageUrlsHeader
+        rows={rows}
+        SelectedRows={SelectedRows}
+        selectAllRowsFunc={selectAllRows}
+        deleteSelectedRowsFunc={deleteSelectedRows}
+        refreshFunc={() => {
+          syncTableData({ keepCurrentSettings: true });
+        }}
+        IsLoading={isLoadingResults}
+        theme={theme}
+      />
+      <Table className={classes.table} aria-label="custom pagination table">
+        {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
         style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
       /> */}
-      <colgroup>
-        <col style={{ width: "5%" }} />
-        <col style={{ width: "65%" }} />
-        <col style={{ width: "10%" }} />
-        <col style={{ width: "10%" }} />
-        <col style={{ width: "10%" }} />
-      </colgroup>
-      <TableHead>
-        <TableRow>
-          <TableCell component="th" colspan="6">
-            <Box display="flex" width="100%" position="relative">
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Checkbox
-                  size="small"
-                  disabled={rows.length < 1}
-                  checked={rows.length && SelectedRows.length === rows.length}
-                  onChange={selectAllRows}
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginLeft: theme.spacing(1),
-                }}
-              >
-                <Tooltip
-                  title={`Permanently delete ${SelectedRows.length} links?`}
-                >
-                  <IconButton
-                    disabled={SelectedRows.length < 1}
-                    size="small"
-                    onClick={deleteSelectedRows}
-                  >
-                    <Badge badgeContent={SelectedRows.length} color="secondary">
-                      <Delete />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-              </div>
-              {/* <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginLeft: theme.spacing(1),
-                }}
-              >
-                <MultiFilter
-                  onUserFilterChanged={handleUserFilterChanged}
-                  onCountriesChanged={handleCountryFilterChanged}
-                  onDateRangeChanged={handleDateFilterChanged}
-                />
-              </div> */}
-            </Box>
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {isLoadingResults && !hasInheritedRows
-          ? [...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys()].map(
-              (x) => (
+        <colgroup>
+          <col style={{ width: 64 }} />
+          <col style={{ width: "70%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: 64 }} />
+        </colgroup>
+        <TableBody className={classes.tableBody}>
+          {isLoadingResults && !hasInheritedRows
+            ? [
+                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+              ].map((x) => (
                 <TableRow key={x} style={{ height: 56 }}>
-                  <TableCell width="45%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  {/* <TableCell>
+                  <Skeleton animation="wave" />
+                </TableCell> */}
+                  <div></div>
+                  <TableCell>
+                    <Skeleton animation="wave" />
                   </TableCell>
-                  <TableCell width="27,5%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  <TableCell>
+                    <Skeleton animation="wave" />
                   </TableCell>
-                  <TableCell width="27,5%" align="right">
-                    <Skeleton
-                      animation="wave"
-                      style={{
-                        width: "75%",
-                        display: "inline-block",
-                      }}
-                    />
+                  <TableCell>
+                    <Skeleton animation="wave" />
                   </TableCell>
+                  <div></div>
                 </TableRow>
-              )
-            )
-          : rows.map((row, index) => {
-              const innerRow = (
-                <React.Fragment>
-                  <TableCell width="64px">
-                    <Checkbox
-                      size="small"
-                      checked={SelectedRows.includes(row.threadId)}
-                      onChange={(evt) => {
-                        onRowSelectionChanged(row.threadId);
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell component="th" scope="row">
-                    <Box display="flex" alignItems="center">
-                      <UserAvatar
-                        username={row.username}
-                        fullname={row.fullname}
-                      />
-                      <Box
-                        display="flex"
-                        flexDirection="column"
-                        style={{ marginLeft: theme.spacing(1) }}
-                      >
-                        <Typography
-                          variant="caption"
-                          style={{ color: theme.palette.text.hint }}
-                        >
-                          {row.username}
-                        </Typography>
-                        <Link href={row.url} target="_blank">
-                          {row.url}
-                        </Link>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell style={{ width: 160 }} align="left">
-                    <Box
-                      display="inline-flex"
-                      alignItems="center"
-                      justifyContent="start"
-                    >
-                      <Today
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
+              ))
+            : rows.map((row, index) => {
+                const innerRow = (
+                  <React.Fragment>
+                    <TableCell width="64px">
+                      <Checkbox
+                        size="small"
+                        checked={SelectedRows.includes(row.threadId)}
+                        onChange={(evt) => {
+                          onRowSelectionChanged(row.threadId);
                         }}
-                        //style={{ color: theme.palette.text.hint }}
                       />
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{ marginLeft: theme.spacing(1) }}
+                    </TableCell>
+                    <TableCell component="th" scope="row">
+                      <Box display="flex" alignItems="center">
+                        <UserAvatar
+                          username={row.username}
+                          fullname={row.fullname}
+                        />
+                        <Box
+                          display="flex"
+                          flexDirection="column"
+                          style={{ marginLeft: theme.spacing(1) }}
+                        >
+                          <Typography
+                            variant="caption"
+                            style={{ color: theme.palette.text.hint }}
+                          >
+                            {row.username}
+                          </Typography>
+                          <Link href={row.url} target="_blank">
+                            {row.url}
+                          </Link>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell style={{ width: 160 }} align="left">
+                      <Box
+                        display="inline-flex"
+                        alignItems="center"
+                        justifyContent="start"
                       >
-                        {timeSince(row.age)}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell style={{ width: 160 }} align="right">
-                    <ScrapingThreadStatus row={row} />
-                  </TableCell>
-                  <TableCell component="th" scope="row" align="right">
-                    {_createRowActionsButton(row)}
-                  </TableCell>
-                </React.Fragment>
-              );
-              const wrapComponent = (
-                <TableRow className={classes.tableRow} key={row.uuid}>
-                  {innerRow}
-                </TableRow>
-              );
-              return wrapComponent;
-            })}
-        {!IsLoadingResults && renderEmptyRows()}
-        {RowActionObject && _attachRowActionsMenu()}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          {rowsLength > 0 && (
-            <TablePagination
-              rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-              colSpan={3}
-              count={tableData.totalRowsCount}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                inputProps: { "aria-label": "rows per page" },
-                native: true,
-              }}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
-              ActionsComponent={TablePaginationActions}
-            />
-          )}
-        </TableRow>
-      </TableFooter>
-    </Table>
+                        <Today
+                          style={{
+                            width: 18,
+                            height: 18,
+                            color: theme.palette.text.hint,
+                          }}
+                          //style={{ color: theme.palette.text.hint }}
+                        />
+                        <Typography
+                          variant="body2"
+                          noWrap={true}
+                          style={{ marginLeft: theme.spacing(1) }}
+                        >
+                          {timeSince(row.age)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell style={{ width: 160 }} align="right">
+                      <ScrapingThreadStatus row={row} />
+                    </TableCell>
+                    <TableCell component="th" scope="row" align="right">
+                      {_createRowActionsButton(row)}
+                    </TableCell>
+                  </React.Fragment>
+                );
+                const wrapComponent = (
+                  <TableRow className={classes.tableRow} key={row.uuid}>
+                    {innerRow}
+                  </TableRow>
+                );
+                return wrapComponent;
+              })}
+          {!IsLoadingResults && renderEmptyRows()}
+          {RowActionObject && _attachRowActionsMenu()}
+        </TableBody>
+      </Table>
+      {rowsLength > 0 && (
+        <div>
+          <TablePagination
+            style={{ width: "100%", float: "right" }}
+            rowsPerPageOptions={[5, 8, 10, 25, 50, 100]}
+            colSpan={3}
+            count={tableData.totalRowsCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            SelectProps={{
+              inputProps: { "aria-label": "rows per page" },
+              native: true,
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={TablePaginationActions}
+          />
+        </div>
+      )}
+    </React.Fragment>
   );
 };
 

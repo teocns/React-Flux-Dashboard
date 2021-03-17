@@ -1,75 +1,44 @@
-import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
-import clsx from "clsx";
-import DateRangeIcon from "@material-ui/icons/DateRange";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
-import { DateRangePicker, DateRange } from "materialui-daterange-picker";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { useConfirm } from "material-ui-confirm";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import { prettyTimelapse, timeSince } from "../../helpers/time";
 import {
-  Badge,
   Box,
-  Button,
   Checkbox,
-  Divider,
   IconButton,
-  LinearProgress,
   Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  CircularProgress,
-  TableContainer,
-  TableFooter,
-  TableHead,
   TablePagination,
   TableRow,
-  Tooltip,
   Typography,
-  Menu,
-  MenuItem,
-  ButtonGroup,
 } from "@material-ui/core";
-import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
-import FilterListIcon from "@material-ui/icons/FilterList";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { Search, Today } from "@material-ui/icons";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import scrapingThreadsActions from "../../actions/ScrapingThread";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import { motion } from "framer-motion";
-import { Link as RouterLink } from "react-router-dom";
-import sessionStore from "../../store/session";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import CountryFilter from "../Filters/CountryFilter";
-import TablePaginationActions from "./Pagination";
-import EmptyTablePlaceholder from "./EmptyPlaceholder";
-
-import { Skeleton } from "@material-ui/lab";
+import ManageUrlsHeader from "../../components/Table/Headers/ManageUrls";
 import ActionTypes from "../../constants/ActionTypes";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
-import {
-  Add,
-  AddCircle,
-  Delete,
-  Today,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Public,
-  RssFeedTwoTone,
-  Search,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
+import { timeSince } from "../../helpers/time";
 import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
-import LinkIcon from "@material-ui/icons/Link";
+import tableStore from "../../store/Tables";
 import ScrapingThreadTableStatus from "../Table/ScrapingThreadStatus";
+import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
     tableLayout: "fixed",
+    display: "block",
+    overflowY: "auto",
   },
   tableRow: {
     height: 70,
@@ -77,6 +46,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.palette.action.hover,
     },
   },
+  tableBody: {},
   emptyRow: {
     height: 70,
     backgroundColor: "white!important",
@@ -98,6 +68,7 @@ const ManageUrlsTable = ({ filter }) => {
     tableStore.getTableData(THIS_TABLE_NAME)
   );
   const [SelectedRows, setSelectedRows] = useState([]);
+
   const [DateRange, setDateRange] = useState(null);
 
   const [RowActionObject, setRowActionObject] = useState(null);
@@ -164,18 +135,7 @@ const ManageUrlsTable = ({ filter }) => {
         .catch();
     }
   };
-  /**
-   * @type {Object} obj
-   * @type {TableData} obj.tableData
-   */
-  const onTableRowsDataModified = ({ tableNames }) => {
-    console.log("data modified on table ", tableNames);
-    if (tableNames.includes(THIS_TABLE_NAME)) {
-      const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
-      console.log("foundTable", foundTable);
-      setTableData({ ...foundTable });
-    }
-  };
+
   const selectAllRows = (evt) => {
     const checked = evt.target.checked;
     if (!checked) {
@@ -186,29 +146,33 @@ const ManageUrlsTable = ({ filter }) => {
       }
     }
   };
-  const syncTableData = ({
-    newPage,
-    newRowsPerPage,
-    newDateRange,
-    newCountryFilter,
-  }) => {
+  const getTableData = () => {
+    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
+  };
+  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
+    const _tableData = getTableData();
+
     tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
+      rowsPerPage:
+        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
+      totalRowsCount: _tableData.totalRowsCount,
       page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
+        newRowsPerPage !== -1
+          ? newPage !== undefined
+            ? newPage
+            : _tableData.page
+          : 0,
       filter: filter || "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
+        _tableData && _tableData.totalRowsCount
+          ? _tableData.totalRowsCount
           : undefined,
-      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
-      countryFilter:
-        newCountryFilter !== undefined ? newCountryFilter : countryFilter,
+      dateRange:
+        newDateRange !== undefined ? newDateRange : _tableData.dateRange,
     });
   };
   const handleChangePage = (event, newPage) => {
-    console.log("handleChangePage.newPage", newPage);
     syncTableData({ newPage });
   };
 
@@ -224,18 +188,13 @@ const ManageUrlsTable = ({ filter }) => {
   const onTableRowsDataUpdated = ({ tableData }) => {
     if (tableData.tableName === THIS_TABLE_NAME) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
-      console.log("foundTable", foundTable);
+      //debugger;
+      //console.log("foundTable", foundTable);
       setTableData(foundTable);
     }
   };
-  console.log("rendering", tableData);
 
-  const onScrapingThreadCreated = () => {
-    setTimeout(() => {
-      syncTableData({ newPage: 0 });
-    });
-  };
-  const bindListeners = () => {
+  const registerEventListeners = () => {
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
@@ -244,14 +203,7 @@ const ManageUrlsTable = ({ filter }) => {
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
     );
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_MODIFIED,
-      onTableRowsDataModified
-    );
-    // scrapingThreadsStore.addChangeListener(
-    //   ActionTypes.ScrapingThread.THREAD_CREATED,
-    //   onScrapingThreadCreated
-    // );
+
     return () => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
@@ -261,18 +213,10 @@ const ManageUrlsTable = ({ filter }) => {
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
       );
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_MODIFIED,
-        onTableRowsDataModified
-      );
-      // scrapingThreadsStore.removeChangeListener(
-      //   ActionTypes.Table.ROW_ADDED,
-      //   onScrapingThreadCreated
-      // );
     };
   };
   const onRowSelectionChanged = (id) => {
-    console.log(SelectedRows);
+    //console.log(SelectedRows);
     const alreadySelectedIndex = SelectedRows.findIndex((c) => c === id);
     const alreadySelected =
       alreadySelectedIndex !== -1 && alreadySelectedIndex !== false;
@@ -347,24 +291,37 @@ const ManageUrlsTable = ({ filter }) => {
       </Menu>
     );
   };
+  const refreshFunc = () => {
+    const _tableData = getTableData();
 
+    if (
+      _tableData.isLoading ||
+      parseInt(new Date() / 1000) - _tableData.age < 10
+    ) {
+      console.log("@@@@@ Skipping REFRESH");
+      return;
+    }
+    syncTableData({});
+  };
   useEffect(() => {
-    // Means data has not yet loaded nor requested
+    // Create an interval that refreshes the page every X
+    const refreshInterval = setInterval(refreshFunc, 5000);
     setTimeout(() => {
       syncTableData({});
-      // if (!HasTableData || filter !== tableData.filter) {
-      // }
     });
 
-    return bindListeners();
+    const revokeEventListeners = registerEventListeners();
+
+    return () => {
+      clearInterval(refreshInterval);
+      revokeEventListeners();
+    };
   }, []);
+
   // if (rows.length <= 0) {
   //   return <EmptyTablePlaceholder />;
   // }
 
-  const handleCountryFilterChanged = (_countryFilter) => {
-    syncTableData({ newCountryFilter: _countryFilter });
-  };
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
   };
@@ -446,179 +403,152 @@ const ManageUrlsTable = ({ filter }) => {
     return _createRow();
   };
   return (
-    <Table className={classes.table} aria-label="custom pagination table">
-      <colgroup>
-        <col style={{ width: 64 }} />
-        {/* <col style={{ width: "calc(50% - 128px)" }} /> */}
-        <col style={{ width: "100%" }} />
-        <col style={{ width: 128 }} />
-        <col style={{ width: 316 }} />
-        <col style={{ width: 64 }} />
-      </colgroup>
-      {/* <LinearProgress
+    <React.Fragment>
+      <ManageUrlsHeader
+        rows={rows}
+        SelectedRows={SelectedRows}
+        selectAllRowsFunc={selectAllRows}
+        deleteSelectedRowsFunc={deleteSelectedRows}
+        refreshFunc={() => {
+          syncTableData({ newPage: tableData.page });
+        }}
+        IsLoading={isLoadingResults}
+        theme={theme}
+      />
+      <Table className={classes.table} aria-label="custom pagination table">
+        <colgroup>
+          <col style={{ width: 64 }} />
+          <col style={{ width: "70%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: 64 }} />
+        </colgroup>
+        {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
         style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
       /> */}
-      <TableHead>
-        <TableRow>
-          <TableCell component="th" colspan="6">
-            <Box display="flex" width="100%" position="relative">
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Checkbox
-                  size="small"
-                  disabled={rows.length < 1}
-                  checked={rows.length && SelectedRows.length === rows.length}
-                  onChange={selectAllRows}
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginLeft: theme.spacing(1),
-                }}
-              >
-                <Tooltip
-                  title={`Permanently delete ${SelectedRows.length} links?`}
+
+        <TableBody className={classes.tableBody}>
+          {isLoadingResults && !hasInheritedRows
+            ? [
+                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+              ].map((x) => (
+                <TableRow
+                  key={x}
+                  style={{ height: 56 }}
+                  className={classes.tableRow}
                 >
-                  <IconButton
-                    disabled={SelectedRows.length < 1}
-                    size="small"
-                    onClick={deleteSelectedRows}
-                  >
-                    <Badge badgeContent={SelectedRows.length} color="secondary">
-                      <Delete />
-                    </Badge>
-                  </IconButton>
-                </Tooltip>
-              </div>
-              {/* <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginLeft: theme.spacing(1),
-                }}
-              >
-                <MultiFilter
-                  Countries={tableData.availableCountries}
-                  onCountriesChanged={handleCountryFilterChanged}
-                  onDateRangeChanged={handleDateFilterChanged}
-                />
-              </div> */}
-            </Box>
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {isLoadingResults && !hasInheritedRows
-          ? [...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys()].map(
-              (x) => (
-                <TableRow key={x} style={{ height: 56 }}>
-                  <TableCell width="45%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  {/* <TableCell>
+                    <Skeleton  />
+                  </TableCell> */}
+                  <div></div>
+                  <TableCell>
+                    <Skeleton />
                   </TableCell>
-                  <TableCell width="27,5%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  <TableCell>
+                    <Skeleton />
                   </TableCell>
-                  <TableCell width="27,5%" align="right">
-                    <Skeleton
-                      animation="wave"
-                      style={{
-                        width: "75%",
-                        display: "inline-block",
-                      }}
-                    />
+                  <TableCell>
+                    <Skeleton />
                   </TableCell>
+                  <div></div>
                 </TableRow>
-              )
-            )
-          : rows.map((row, index) => {
-              const innerRow = (
-                <React.Fragment>
-                  <TableCell className={classes.columnCheckbox}>
-                    <Checkbox
-                      size="small"
-                      checked={SelectedRows.includes(row.threadId)}
-                      onChange={(evt) => {
-                        onRowSelectionChanged(row.threadId);
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell
-                    style={{
-                      width: "auto",
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                    }}
-                    align="left"
-                  >
-                    <Link href={row.url} target="_blank">
-                      {row.url}
-                    </Link>
-                  </TableCell>
-                  <TableCell align="left">
-                    <Box
-                      display="inline-flex"
-                      alignItems="center"
-                      justifyContent="start"
-                    >
-                      <Today
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
+              ))
+            : rows.map((row, index) => {
+                const innerRow = (
+                  <React.Fragment>
+                    <TableCell className={classes.columnCheckbox}>
+                      <Checkbox
+                        size="small"
+                        checked={SelectedRows.includes(row.threadId)}
+                        onChange={(evt) => {
+                          onRowSelectionChanged(row.threadId);
                         }}
-                        //style={{ color: theme.palette.text.hint }}
                       />
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{ marginLeft: theme.spacing(1) }}
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        width: "auto",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                      }}
+                      align="left"
+                    >
+                      <Link href={row.url} target="_blank">
+                        {row.url}
+                      </Link>
+                    </TableCell>
+                    <TableCell align="left">
+                      <Box
+                        display="inline-flex"
+                        alignItems="center"
+                        justifyContent="start"
                       >
-                        {timeSince(row.age)}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
-                    <ScrapingThreadTableStatus row={row} />
-                  </TableCell>
-                  <TableCell align="right">
-                    {_createRowActionsButton(row)}
-                  </TableCell>
-                </React.Fragment>
-              );
-              const wrapComponent = (
-                <TableRow className={classes.tableRow} key={row.uuid}>
-                  {innerRow}
-                </TableRow>
-              );
-              return wrapComponent;
-            })}
-        {!IsLoadingResults && renderEmptyRows()}
-        {RowActionObject && _attachRowActionsMenu()}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          {rowsLength > 0 && (
-            <TablePagination
-              rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-              colSpan={3}
-              count={tableData.totalRowsCount}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                inputProps: { "aria-label": "rows per page" },
-                native: true,
-              }}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
-              ActionsComponent={TablePaginationActions}
-            />
-          )}
-        </TableRow>
-      </TableFooter>
-    </Table>
+                        <Today
+                          style={{
+                            width: 18,
+                            height: 18,
+                            color: theme.palette.text.hint,
+                          }}
+                          //style={{ color: theme.palette.text.hint }}
+                        />
+                        <Typography
+                          variant="body2"
+                          noWrap={true}
+                          style={{ marginLeft: theme.spacing(1) }}
+                        >
+                          {timeSince(row.age)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <ScrapingThreadTableStatus row={row} />
+                    </TableCell>
+                    <TableCell align="right">
+                      {_createRowActionsButton(row)}
+                    </TableCell>
+                  </React.Fragment>
+                );
+                const wrapComponent = (
+                  <TableRow className={classes.tableRow} key={row.uuid}>
+                    {innerRow}
+                  </TableRow>
+                );
+                return wrapComponent;
+              })}
+          {!IsLoadingResults && renderEmptyRows()}
+          {RowActionObject && _attachRowActionsMenu()}
+        </TableBody>
+      </Table>
+      {rowsLength > 0 && (
+        <div>
+          <TablePagination
+            style={{ width: "100%", float: "right" }}
+            rowsPerPageOptions={[
+              5,
+              8,
+              10,
+              25,
+              50,
+              100,
+              // { label: "All", value: -1 },
+            ]}
+            colSpan={3}
+            count={tableData.totalRowsCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            SelectProps={{
+              inputProps: { "aria-label": "rows per page" },
+              native: true,
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={TablePaginationActions}
+          />
+        </div>
+      )}
+    </React.Fragment>
   );
 };
 

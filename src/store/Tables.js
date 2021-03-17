@@ -3,6 +3,7 @@ import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 import User from "../models/User";
 import TableData from "../models/TableData";
+import { getPanelId } from "@material-ui/lab";
 
 const Errors = require("../constants/Errors");
 
@@ -46,6 +47,14 @@ class TableStore extends EventEmitter {
    */
   getTableData(tableName) {
     const tableHash = this.#tables_name_hash_keypairs[tableName];
+    if (!tableHash) {
+      const td = TableData.defaults(tableName);
+      const cachedResult = this.getCachedRowsPerPage(tableName);
+      if (cachedResult) {
+        td.rowsPerPage = cachedResult;
+      }
+      return td;
+    }
     return this.#tables[tableHash];
   }
 
@@ -81,6 +90,28 @@ class TableStore extends EventEmitter {
 
     this.#tables_name_hash_keypairs[tableData.tableName] = tableData.hash;
     this.#tables[tableData.hash] = tableData;
+
+    // Store settings for current table data
+    console.log(">> CACHING", tableData.tableName, tableData.rowsPerPage);
+    this.cacheRowsPerPage(tableData.tableName, tableData.rowsPerPage);
+  }
+
+  // cachePagination(tableName, page) {
+  //   localStorage.setItem(`table_pagination_${tableName}`, page);
+  // }
+
+  // getCachedRowsPerPage(tableName) {
+  //   localStorage.getItem(`table_pagination_${tableName}`);
+  // }
+
+  cacheRowsPerPage(tableName, rrp) {
+    localStorage.setItem(`table_rowsperpage_${tableName}`, rrp);
+  }
+
+  getCachedRowsPerPage(tableName) {
+    return parseInt(
+      localStorage.getItem(`table_rowsperpage_${tableName}`) || 0
+    );
   }
 
   deleteTableData(hash) {
@@ -91,6 +122,7 @@ class TableStore extends EventEmitter {
    * @param {TableData} tableData
    */
   updateTableData(tableData) {
+    tableData.age = parseInt(new Date() / 1000);
     this.#tables[tableData.hash] = tableData;
     console.log("newTabelData", this.#tables);
   }

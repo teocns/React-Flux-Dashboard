@@ -34,28 +34,30 @@ import {
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import sessionStore from "../store/session";
-import ManagaUrlsTable from "../components/Tables/ManageUrls";
+import ManageUrlsTable from "../components/Tables/ManageUrls";
 import dispatcher from "../dispatcher";
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexShrink: 0,
-    marginLeft: theme.spacing(2.5),
-  },
-}));
 
 function createData(name, calories, fat) {
   return { name, calories, fat };
 }
 
-const useStyles2 = makeStyles({
-  table: {
-    minWidth: 500,
+const useStyles = makeStyles({
+  root: {
+    display: "flex",
+    overflowY: "hidden",
+    padding: 2,
+  },
+  tableContainer: {
+    overflow: "hidden",
+    overflowY: "hidden",
+    display: "flex",
+    flexDirection: "column",
   },
 });
 let filterTimeout = undefined;
 export default function ManageUrlsView() {
   const [Filter, setFilter] = useState("");
-  const classes = useStyles2();
+  const classes = useStyles();
 
   const history = useHistory();
 
@@ -70,46 +72,48 @@ export default function ManageUrlsView() {
   };
 
   return (
-    <TableContainer component={Paper}>
-      <div
-        style={{
-          padding: theme.spacing(2),
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-        }}
-      >
-        <FormControl fullWidth size="small" className={classes.margin}>
-          <OutlinedInput
-            id="standard-adornment-amount"
-            size="small"
-            placeholder="Search URLs"
-            onChange={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            onKeyPress={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-        <Button
-          variant="contained"
-          color="secondary"
-          disableElevation
-          startIcon={<SearchIcon />}
-          style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+    <div className={classes.root}>
+      <TableContainer component={Paper} className={classes.tableContainer}>
+        <div
+          style={{
+            padding: theme.spacing(2),
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+          }}
         >
-          Search
-        </Button>
-      </div>
-      <Divider />
-      <ManagaUrlsTable filter={Filter} />
-    </TableContainer>
+          <FormControl fullWidth size="small" className={classes.margin}>
+            <OutlinedInput
+              id="standard-adornment-amount"
+              size="small"
+              placeholder="Search URLs"
+              onChange={(evt) => {
+                onFilterChanged(evt.target.value);
+              }}
+              onKeyPress={(evt) => {
+                onFilterChanged(evt.target.value);
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+          <Button
+            variant="contained"
+            color="secondary"
+            disableElevation
+            startIcon={<SearchIcon />}
+            style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+          >
+            Search
+          </Button>
+        </div>
+        <Divider />
+        <ManageUrlsTable filter={Filter} />
+      </TableContainer>
+    </div>
   );
 }

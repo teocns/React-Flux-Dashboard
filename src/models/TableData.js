@@ -108,6 +108,10 @@ export default class TableData {
    */
   scrapedJobs;
 
+  /**
+   * @type {number}
+   */
+  age;
   // getSortForColumn(columnName) {
   //   if (this.sortColumns && Array.isArray(this.sortColumns)) {
   //     for (let col of this.sortColumns) {
@@ -127,7 +131,6 @@ export default class TableData {
       this.rowsPerPage,
       this.filter,
       this.page,
-      this.countryFilter.join(),
       Object.values(this.dateRange).join(),
     ].reduce((a, b) => {
       return (a || "").toString() + (b || "").toString();
@@ -178,5 +181,6 @@ export default class TableData {
         : {};
     this.unfilteredRowsCount = unfilteredRowsCount || 0;
     this.hash = this.createHash();
+    this.age = parseInt(new Date() / 1000);
   }
 }

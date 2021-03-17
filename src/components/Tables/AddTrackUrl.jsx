@@ -55,6 +55,9 @@ import ScrapingThread from "../../models/ScrapingThread";
 const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 500,
+    tableLayout: "fixed",
+    display: "block",
+    overflowY: "auto",
   },
   tableRow: {
     height: 70,
@@ -62,6 +65,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.palette.action.hover,
     },
   },
+  tableBody: {},
   emptyRow: {
     height: 70,
     backgroundColor: "white!important",
@@ -69,6 +73,10 @@ const useStyles = makeStyles((theme) => ({
       paddingTop: "8rem",
       paddingBottom: "8rem",
     },
+  },
+
+  columnCheckbox: {
+    width: 64,
   },
 }));
 
@@ -136,6 +144,9 @@ const AddTrackUrlTable = () => {
     }
   };
 
+  const getTableData = () => {
+    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
+  };
   /**
    * @type {Object} obj
    * @type {TableData} obj.tableData
@@ -156,7 +167,7 @@ const AddTrackUrlTable = () => {
       syncTableData({ newPage: 0 });
     });
   };
-  const bindListeners = () => {
+  const registerEventListeners = () => {
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
@@ -267,127 +278,148 @@ const AddTrackUrlTable = () => {
 
     return _createRow();
   };
+
+  const refreshFunc = () => {
+    const _tableData = getTableData();
+
+    if (
+      _tableData.isLoading ||
+      parseInt(new Date() / 1000) - _tableData.age < 10
+    ) {
+      console.log("@@@@@ Skipping REFRESH");
+      return;
+    }
+    syncTableData({});
+  };
   useEffect(() => {
-    // Means data has not yet loaded nor requested
+    // Create an interval that refreshes the page every X
+    const refreshInterval = setInterval(refreshFunc, 5000);
     setTimeout(() => {
       syncTableData({});
     });
 
-    return bindListeners();
+    const revokeEventListeners = registerEventListeners();
+
+    return () => {
+      clearInterval(refreshInterval);
+      revokeEventListeners();
+    };
   }, []);
 
   const theme = useTheme();
   return (
-    <Table
-      className={classes.table}
-      aria-label="custom pagination table"
-      style={{ tableLayout: "fixed" }}
-    >
-      {/* <LinearProgress
-        variant="indeterminate"
-        color="secondary"
-        style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
-      /> */}
-      <TableBody>
-        {isLoadingResults && !hasInheritedRows
-          ? [...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys()].map(
-              (x) => (
-                <TableRow key={x} style={{ height: 56 }}>
-                  {/* {[...Array(3).keys()].map((c) => (
-                  <TableCell key={c} colSpan={6 / c}>
-                    <Skeleton animation="wave" style={{ height: 48 }} />
+    <React.Fragment>
+      <Table className={classes.table} aria-label="custom pagination table">
+        <colgroup>
+          <col style={{ width: "70%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "15%" }} />
+        </colgroup>
+        <TableBody className={classes.tableBody}>
+          {isLoadingResults && !hasInheritedRows
+            ? [
+                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+              ].map((x) => (
+                <TableRow
+                  key={x}
+                  className={classes.tableRow}
+                  style={{ height: 56 }}
+                >
+                  <TableCell>
+                    <Skeleton style={{ width: "100%" }} />
                   </TableCell>
-                ))} */}
-                  <TableCell width="45%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  <TableCell>
+                    <Skeleton style={{ width: "100%" }} />
                   </TableCell>
-                  <TableCell width="27,5%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
+                  <TableCell>
+                    <Skeleton style={{ width: "100%" }} />
                   </TableCell>
-                  <TableCell width="27,5%" align="right">
-                    <Skeleton
-                      animation="wave"
+
+                  <TableCell style={{ opacity: "0" }}>
+                    <Skeleton style={{ width: "100%" }} />
+                  </TableCell>
+                </TableRow>
+              ))
+            : rows.map((row, index) => {
+                const innerRow = (
+                  <React.Fragment>
+                    <TableCell
+                      width="60%"
                       style={{
-                        width: "75%",
-                        display: "inline-block",
+                        width: "60%",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
                       }}
-                    />
-                  </TableCell>
-                </TableRow>
-              )
-            )
-          : rows.map((row, index) => {
-              const innerRow = (
-                <React.Fragment>
-                  <TableCell
-                    width="60%"
-                    style={{
-                      width: "60%",
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Link href={row.url} target="_blank">
-                      {row.url}
-                    </Link>
-                  </TableCell>
-                  <TableCell width="20%" align="left">
-                    <Box
-                      display="inline-flex"
-                      alignItems="center"
-                      justifyContent="start"
                     >
-                      <Today
-                        style={{
-                          width: 18,
-                          height: 18,
-                          color: theme.palette.text.hint,
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        noWrap={true}
-                        style={{ marginLeft: theme.spacing(1) }}
+                      <Link href={row.url} target="_blank">
+                        {row.url}
+                      </Link>
+                    </TableCell>
+                    <TableCell width="20%" align="left">
+                      <Box
+                        display="inline-flex"
+                        alignItems="center"
+                        justifyContent="start"
                       >
-                        {timeSince(row.age)}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell width="20%" align="right">
-                    <ScrapingThreadStatus row={row} />
-                  </TableCell>
-                </React.Fragment>
-              );
-              const wrapComponent = (
-                <TableRow className={classes.tableRow} key={row.uuid}>
-                  {innerRow}
-                </TableRow>
-              );
-              return wrapComponent;
-            })}
-        {!IsLoadingResults && renderEmptyRows()}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          {rowsLength > 0 && (
-            <TablePagination
-              rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-              colSpan={3}
-              count={tableData.totalRowsCount}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              SelectProps={{
-                inputProps: { "aria-label": "rows per page" },
-                native: true,
-              }}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
-              ActionsComponent={TablePaginationActions}
-            />
-          )}
-        </TableRow>
-      </TableFooter>
-    </Table>
+                        <Today
+                          style={{
+                            width: 18,
+                            height: 18,
+                            color: theme.palette.text.hint,
+                          }}
+                        />
+                        <Typography
+                          variant="body2"
+                          noWrap={true}
+                          style={{ marginLeft: theme.spacing(1) }}
+                        >
+                          {timeSince(row.age)}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell width="20%" align="right">
+                      <ScrapingThreadStatus row={row} />
+                    </TableCell>
+                  </React.Fragment>
+                );
+                const wrapComponent = (
+                  <TableRow className={classes.tableRow} key={row.uuid}>
+                    {innerRow}
+                  </TableRow>
+                );
+                return wrapComponent;
+              })}
+          {!IsLoadingResults && renderEmptyRows()}
+        </TableBody>
+      </Table>
+      {rowsLength > 0 && (
+        <div>
+          <TablePagination
+            style={{ width: "100%", float: "right" }}
+            rowsPerPageOptions={[
+              5,
+              8,
+              10,
+              25,
+              50,
+              100,
+              // { label: "All", value: -1 },
+            ]}
+            colSpan={3}
+            count={tableData.totalRowsCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            SelectProps={{
+              inputProps: { "aria-label": "rows per page" },
+              native: true,
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={TablePaginationActions}
+          />
+        </div>
+      )}
+    </React.Fragment>
   );
 };
 

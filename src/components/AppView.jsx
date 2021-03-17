@@ -24,14 +24,15 @@ import CrawlingExtensionView from "../views/CrawlingExtension";
 
 const useStyles = makeStyles((theme) => ({
   appView: {
-    overflowY: "auto",
     display: "flex",
     flexDirection: "column",
     flex: 1,
     background: "rgb(250,250,250)",
-    marginTop: 64,
     padding: theme.spacing(2),
+    paddingTop: 64,
     height: "100%",
+    overflowY: "hidden",
+    maxHeight: "100%",
   },
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
