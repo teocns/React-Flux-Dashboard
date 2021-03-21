@@ -6,7 +6,7 @@ import { sendMessage } from "../socket";
 import statisticsStore from "../store/Statistics";
 const syncStatistics = ({ userFilter, countryFilter, dateRange }) => {
   const _reqData = { userFilter, countryFilter, dateRange };
-  console.log(_reqData);
+
   if (!statisticsStore.canSync(_reqData)) {
     return;
   }

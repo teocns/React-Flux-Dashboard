@@ -47,3 +47,21 @@ export function getTimeRemaining(endtime) {
 export function timeSince(date) {
   return moment((date - 10) * 1000).fromNow();
 }
+
+export function getMonthName(idx) {
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  return monthNames[idx];
+}

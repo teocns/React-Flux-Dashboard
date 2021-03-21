@@ -42,7 +42,17 @@ import statisticsActions from "../actions/Statistics";
 import statisticsStore from "../store/Statistics";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import ActionTypes from "../constants/ActionTypes";
-import LineGraph from "../components/Chart";
+import LineGraph from "../components/Charts/Statistics";
+import {
+  ButtonGroup,
+  Select,
+  MenuItem,
+  Menu,
+  CircularProgress,
+} from "@material-ui/core";
+import DateRanges from "../constants/DateRanges";
+import DateFilter from "../components/Filters/DateFilter";
+import UserFilter from "../components/Filters/UserFilter";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -82,42 +92,37 @@ const useStyles = makeStyles((theme) => ({
     color: "white",
   },
 }));
-
-let filterTimeout = undefined;
+var isLoading = true;
 export default function StatisticsView() {
   const [Statistics, setStatistics] = useState(statisticsStore.getStatistics());
 
-  const [CountryFilter, setCountryFilter] = useState(null);
   //const [UserFilter, setUserFilter] = useState(null);
-  const [DateRangeFilter, setDateRangeFilter] = useState(null);
+  const [DateRangeFilter, setDateRangeFilter] = useState(DateRanges[0]);
 
-  const FilterCountries = Statistics && Statistics.availableCountries;
-  const FilterUsers = Statistics && Statistics.availableUsers;
+  const user = sessionStore.getUser();
 
-  const isLoading = !Statistics;
+  const [SelectedUserFilter, setUserFilter] = useState(null);
 
-  const handleCountryFilterChanged = (countryFilter) => {
-    setCountryFilter(countryFilter);
-  };
   const handleDateFilterChanged = (dateRange) => {
+    if (!dateRange.timeFrame) {
+      dateRange.timeFrame = "DAY";
+    }
     setDateRangeFilter(dateRange);
   };
-  // const handleUserFilterChanged = (userFilter) => {
-  //   setUserFilter(userFilter);
-  // };
   const classes = useStyles();
 
   const bull = <span className={classes.bullet}>•</span>;
 
   const syncStatistics = () => {
+    isLoading = true;
     statisticsActions.syncStatistics({
       dateRange: DateRangeFilter,
-      //userFilter: UserFilter,
-      countryFilter: CountryFilter,
+      userFilter: SelectedUserFilter,
     });
   };
 
   const onStatisticsSynced = () => {
+    isLoading = false;
     setStatistics(statisticsStore.getStatistics());
   };
 
@@ -127,7 +132,6 @@ export default function StatisticsView() {
       ActionTypes.Statistics.STATISTICS_RECEIVED,
       onStatisticsSynced
     );
-
     syncStatistics();
     return () => {
       // Unbind listeners
@@ -140,18 +144,46 @@ export default function StatisticsView() {
 
   const theme = useTheme();
   return (
-    <div>
+    <div style={{ overflowY: "auto" }}>
       <Paper
-        style={{ padding: theme.spacing(2), marginBottom: theme.spacing(4) }}
+        style={{
+          padding: theme.spacing(2),
+          marginBottom: theme.spacing(4),
+          display: "flex",
+          alignItems: "center",
+        }}
       >
-        <MultiFilter
-          //Users={FilterUsers}
-          //Countries={FilterCountries}
-          ///onUserFilterChanged={handleUserFilterChanged}
-          disableUsers={true}
-          onDateRangeChanged={handleDateFilterChanged}
-          onCountriesChanged={handleCountryFilterChanged}
-        />
+        {user.isAdmin ? (
+          <div style={{ marginRight: 12 }}>
+            <UserFilter
+              onUserFilterChanged={(dd) => {
+                console.log(dd);
+                setUserFilter(dd);
+              }}
+            />
+          </div>
+        ) : (
+          ""
+        )}
+        <DateFilter onDateRangeChanged={handleDateFilterChanged} />
+        <ButtonGroup
+          disableElevation
+          style={{ marginLeft: theme.spacing(1) }}
+          variant="text"
+        >
+          {DateRanges.map((date, index) => (
+            <Button
+              variant={DateRangeFilter === date ? "contained" : "text"}
+              color={DateRangeFilter === date ? "secondary" : "primary"}
+              onClick={() => {
+                handleDateFilterChanged(date);
+              }}
+              key={index}
+            >
+              {date.label}
+            </Button>
+          ))}
+        </ButtonGroup>
       </Paper>
       <div
         style={{
@@ -176,7 +208,7 @@ export default function StatisticsView() {
                   ></Skeleton>
                 ) : (
                   <Typography variant="h5" component="h2">
-                    {Statistics.trackedUrls}
+                    {Statistics.summary.trackedUrls}
                   </Typography>
                 )}
               </div>
@@ -214,7 +246,7 @@ export default function StatisticsView() {
                   ></Skeleton>
                 ) : (
                   <Typography variant="h5" component="h2">
-                    {Statistics.scrapedJobs}
+                    {Statistics.summary.scrapedJobs}
                   </Typography>
                 )}
               </div>
@@ -235,7 +267,31 @@ export default function StatisticsView() {
           )}
         </Card>
       </div>
-      <LineGraph />
+
+      {Statistics && (
+        <div
+          style={{
+            margin: 64,
+            minWidth: 480,
+            minHeight: 480,
+            position: "relative",
+          }}
+        >
+          {!isLoading ? (
+            <LineGraph chartData={Statistics.chartData} />
+          ) : (
+            <CircularProgress
+              color="secondary"
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                //transform: "translate(-50%,-50%)",
+              }}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -100,6 +100,7 @@ function MultiFilter({
   onCountriesChanged,
   onDateRangeChanged,
   onUserFilterChanged,
+  mini,
 }) {
   const [DateFilterOpen, setDateFilterOpen] = useState(false);
   const [SelectedCountries, setSelectedCountries] = useState([]);
@@ -265,6 +266,7 @@ function MultiFilter({
     if (!dateRange.startDate && !dateRange.endDate) {
       setDateRange(null);
     } else {
+      console.log(dateRange);
       setDateRange(dateRange);
     }
 
@@ -337,44 +339,25 @@ function MultiFilter({
           />
         </div>
       </div>
-      <ButtonGroup variant="outlined" style={{ marginLeft: theme.spacing(1) }}>
+      <ButtonGroup
+        variant={!mini ? "outlined" : "text"}
+        // style={{ marginLeft: theme.spacing(1) }}
+      >
         <Button
           startIcon={
-            <FilterListIcon style={{ color: theme.palette.text.disabled }} />
+            !mini && (
+              <FilterListIcon style={{ color: theme.palette.text.disabled }} />
+            )
           }
-          endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+          endIcon={!mini && <KeyboardArrowDownIcon fontSize="small" />}
           onClick={toggleDateRangeFilter}
         >
-          {renderFilteringDateValue()}
-        </Button>
-        {!disableCountries &&
-          (Countries ? (
-            <Button
-              aria-controls="countries-menu"
-              aria-haspopup="true"
-              onClick={toggleCountriesMenu}
-              ref={anchorRef}
-              startIcon={
-                <Public
-                  style={{ color: theme.palette.text.disabled }}
-                  fontSize="small"
-                />
-              }
-              endIcon={<KeyboardArrowDownIcon fontSize="small" />}
-            >
-              {SelectedCountries.length > 0
-                ? `Within ${SelectedCountries.length} countries`
-                : "Countries"}
-            </Button>
+          {!mini ? (
+            renderFilteringDateValue()
           ) : (
-            <Button variant="outlined">
-              <Skeleton
-                variant="rect"
-                style={{ padding: 4, width: 124 }}
-                animation="wave"
-              />
-            </Button>
-          ))}
+            <FilterListIcon style={{ color: theme.palette.text.disabled }} />
+          )}
+        </Button>
 
         {!disableUsers &&
           (Users ? (
@@ -384,16 +367,27 @@ function MultiFilter({
               onClick={toggleUsersMenu}
               ref={usersAnchorRef}
               startIcon={
+                !mini && (
+                  <PersonIcon
+                    style={{ color: theme.palette.text.disabled }}
+                    fontSize="small"
+                  />
+                )
+              }
+              endIcon={!mini && <Search fontSize="small" />}
+            >
+              {!mini ? (
+                SelectedUsers.length > 0 ? (
+                  `Within ${SelectedUsers.length} users`
+                ) : (
+                  "Users"
+                )
+              ) : (
                 <PersonIcon
                   style={{ color: theme.palette.text.disabled }}
                   fontSize="small"
                 />
-              }
-              endIcon={<Search fontSize="small" />}
-            >
-              {SelectedUsers.length > 0
-                ? `Within ${SelectedUsers.length} users`
-                : "Users"}
+              )}
             </Button>
           ) : (
             <Button variant="outlined">

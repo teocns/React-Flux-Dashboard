@@ -434,17 +434,6 @@ function AppContents() {
                       </ListItem>
                       <ListItem
                         button
-                        key={"countries"}
-                        component={Link}
-                        to="/countries"
-                      >
-                        <ListItemIcon>
-                          <GlobeIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"Countries"} />
-                      </ListItem>
-                      <ListItem
-                        button
                         key={"users"}
                         selected={location.pathname === "/manage-users"}
                         component={Link}

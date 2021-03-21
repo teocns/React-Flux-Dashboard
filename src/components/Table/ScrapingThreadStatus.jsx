@@ -76,7 +76,7 @@ const ScrapingThreadTableStatus = ({ row }) => {
         );
         break;
       case Statuses.SEARCHING_PAGE:
-        innerText = "SCANNING URL";
+        innerText = "CRAWLING URL";
         icon = (
           <BugReport
             color="primary"

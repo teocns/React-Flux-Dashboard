@@ -110,15 +110,22 @@ const AddTrackUrlTable = () => {
   //   rowsPerPage - Math.min(rowsPerPage, rowsLength - page * rowsPerPage);
 
   const syncTableData = ({ newPage, newRowsPerPage }) => {
+    const _tableData = getTableData();
+
     tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
+      rowsPerPage:
+        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
       page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
+        newRowsPerPage !== -1
+          ? newPage !== undefined
+            ? newPage
+            : _tableData.page
+          : 0,
       filter: "",
       tableName: THIS_TABLE_NAME,
       previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
+        _tableData && _tableData.totalRowsCount
+          ? _tableData.totalRowsCount
           : undefined,
     });
   };

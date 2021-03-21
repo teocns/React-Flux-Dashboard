@@ -42,7 +42,7 @@ import statisticsActions from "../actions/Statistics";
 import statisticsStore from "../store/Statistics";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import ActionTypes from "../constants/ActionTypes";
-import LineGraph from "../components/Chart";
+import StatisticsChart from "../components/Charts/Statistics";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -234,7 +234,7 @@ export default function StatisticsAdminView() {
           )}
         </Card>
       </div>
-      <LineGraph />
+      <StatisticsChart />
     </div>
   );
 }

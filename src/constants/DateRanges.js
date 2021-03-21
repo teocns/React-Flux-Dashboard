@@ -8,37 +8,54 @@ function getMonday() {
 // eslint-disable-next-line import/no-anonymous-default-export
 export default [
   {
-    label: "Clear",
-    startDate: null,
-    endDate: null,
-  },
-  {
     label: "Today",
-    startDate: new Date().setDate(new Date().getDate() - 1),
-    endDate: new Date().setDate(new Date().getDate()),
+    startDate: (() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })(),
+    endDate: (() => {
+      const d = new Date();
+      d.setDate(new Date().getDate() + 1);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })(),
+    dateFormat: "%Y-%m-%d %H",
+    timeFrame: "HOUR",
   },
   {
     label: "Yesterday",
-    startDate: new Date().setDate(new Date().getDate() - 2),
-    endDate: new Date().setDate(new Date().getDate() - 1),
+    startDate: (() => {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })(),
+    endDate: (() => {
+      const d = new Date();
+
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })(),
+    dateFormat: "%Y-%m-%d %H",
+    timeFrame: "HOUR",
   },
   {
     label: "This week",
     startDate: getMonday(),
-    endDate: new Date(),
+    endDate: new Date().setDate(new Date().getDate() + 1),
+    timeFrame: "DAY",
+    dateFormat: "%Y-%m-%d",
   },
   {
     label: "Last 7 days",
     startDate: new Date().setDate(new Date().getDate() - 7),
-    endDate: new Date(),
+    endDate: new Date().setDate(new Date().getDate() + 1),
+    timeFrame: "DAY",
+    dateFormat: "%Y-%m-%d",
   },
   {
     label: "This month",
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date(),
-  },
-  {
-    label: "Last month",
     startDate: (() => {
       const date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       date.setMonth(date.getMonth() - 1);
@@ -55,5 +72,14 @@ export default [
       date.setDate(daysInMonth(mnow, ynow));
       return date;
     })(),
+    dateFormat: "%Y-%m-%d",
+    timeFrame: "DAY",
+  },
+  {
+    label: "MAX",
+    timeFrame: "MONTH",
+    startDate: null,
+    endDate: null,
+    dateFormat: "%Y-%m",
   },
 ];
