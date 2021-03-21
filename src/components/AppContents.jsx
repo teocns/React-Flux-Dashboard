@@ -395,17 +395,6 @@ function AppContents() {
                     <List>
                       <ListItem
                         button
-                        key={"user-stats"}
-                        component={Link}
-                        to="/user-statistics"
-                      >
-                        <ListItemIcon>
-                          <SupervisedUserCircleIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"User Statistics"} />
-                      </ListItem>
-                      <ListItem
-                        button
                         key={"tracked-urls"}
                         component={Link}
                         to={"/tracked-urls"}
