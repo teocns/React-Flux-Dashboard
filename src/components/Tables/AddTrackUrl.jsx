@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { prettyTimelapse, timeSince } from "../../helpers/time";
-import { Statuses } from "../../constants/ScrapingThread";
+import { Statuses } from "../../constants/CrawlerThreadsStatuses";
 import clsx from "clsx";
 import {
   Box,
@@ -80,7 +80,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const THIS_TABLE_NAME = TableNames.ADD_TRACK_URL;
+const THIS_TABLE_NAME = TableNames.TRACKED_URLS;
 var TRIGGER_ROW_ADDED_ANIMATION = false;
 const AddTrackUrlTable = () => {
   let [tableData, setTableData] = useState(

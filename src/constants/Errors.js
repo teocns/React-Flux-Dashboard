@@ -23,6 +23,7 @@ const Errors = {
   ERR_URL_SCRAPED_RECENTLY:
     "The URL has already been scraped in the past 24 hours",
   ERR_HOST_BANNED: "Domain is banned by administrators",
+  ERR_URL_ALREADY_TRACKED: "URL has already been tracked",
 };
 
 export default Errors;

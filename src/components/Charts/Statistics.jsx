@@ -1,7 +1,5 @@
-import React, { useRef, useEffect } from "react";
 import Chart from "chart.js";
-import { FreeBreakfastOutlined } from "@material-ui/icons";
-import { getMonthName } from "../../helpers/time";
+import React, { useEffect, useRef } from "react";
 
 export default function LineGraph({ chartData }) {
   const chartRef = useRef(null);
@@ -95,12 +93,7 @@ export default function LineGraph({ chartData }) {
             {
               ticks: {
                 //stepSize: 50,
-                callback: function (value, index) {
-                  if (value > 0) return value;
-                  /* OR *
-                  if (value === 0) return 100 + '%';
-                  else return value + '%'; */
-                },
+                callback: (value, index) => value > 0 && value,
                 beginAtZero: true,
               },
               suggestedMin: 0,
@@ -110,9 +103,7 @@ export default function LineGraph({ chartData }) {
       },
     });
 
-    return () => {
-      chart.destroy();
-    };
+    return chart.destroy;
   }, [chartData]);
 
   return (
