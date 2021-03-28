@@ -142,7 +142,7 @@ const ManageUrlsTable = ({ filter }) => {
       setSelectedRows([]);
     } else if (checked) {
       if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
+        setSelectedRows(rows.map((row) => row.trackedUrlId));
       }
     }
   };
@@ -229,7 +229,7 @@ const ManageUrlsTable = ({ filter }) => {
   };
 
   const _createRowActionsButton = (row) => {
-    const key = row.threadId;
+    const key = row.trackedUrlId;
     return (
       <React.Fragment>
         <IconButton
@@ -247,7 +247,7 @@ const ManageUrlsTable = ({ filter }) => {
     );
   };
   const retryThread = () => {
-    let threadId = RowActionObject.threadId;
+    let threadId = RowActionObject.trackedUrlId;
     setTimeout(() => {
       scrapingThreadsActions.retryThread(threadId);
     });
@@ -461,9 +461,9 @@ const ManageUrlsTable = ({ filter }) => {
                     <TableCell className={classes.columnCheckbox}>
                       <Checkbox
                         size="small"
-                        checked={SelectedRows.includes(row.threadId)}
+                        checked={SelectedRows.includes(row.trackedUrlId)}
                         onChange={(evt) => {
-                          onRowSelectionChanged(row.threadId);
+                          onRowSelectionChanged(row.trackedUrlId);
                         }}
                       />
                     </TableCell>

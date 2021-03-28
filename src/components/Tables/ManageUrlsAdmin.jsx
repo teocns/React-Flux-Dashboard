@@ -143,7 +143,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
       setSelectedRows([]);
     } else if (checked) {
       if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
+        setSelectedRows(rows.map((row) => row.trackedUrlId));
       }
     }
   };
@@ -232,7 +232,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
     }
   };
   const retryThread = () => {
-    let threadId = RowActionObject.threadId;
+    let threadId = RowActionObject.trackedUrlId;
     setTimeout(() => {
       scrapingThreadsActions.retryThread(threadId);
     });
@@ -390,7 +390,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
     return _createRow();
   };
   const _createRowActionsButton = (row) => {
-    const key = row.threadId;
+    const key = row.trackedUrlId;
     return (
       <React.Fragment>
         <IconButton
@@ -461,9 +461,9 @@ const ManageUrlsAdminTable = ({ filter }) => {
                     <TableCell width="64px">
                       <Checkbox
                         size="small"
-                        checked={SelectedRows.includes(row.threadId)}
+                        checked={SelectedRows.includes(row.trackedUrlId)}
                         onChange={(evt) => {
-                          onRowSelectionChanged(row.threadId);
+                          onRowSelectionChanged(row.trackedUrlId);
                         }}
                       />
                     </TableCell>
