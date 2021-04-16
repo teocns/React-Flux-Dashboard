@@ -206,7 +206,7 @@ export default function StatisticsView() {
       return 0;
     }
     let acc = 0;
-    for (let x of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph) {
+    for (let x of Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS].graph) {
       acc += x.y;
     }
     return acc;
