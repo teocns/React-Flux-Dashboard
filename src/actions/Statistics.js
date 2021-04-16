@@ -10,9 +10,9 @@ import statisticsStore from "../store/Statistics";
  * @param {StatisticsSyncRequest} request
  */
 const syncStatistics = (request) => {
-  // if (!statisticsStore.canSync(request)) {
-  //   return;
-  // }
+  if (!statisticsStore.canSync(request)) {
+    return;
+  }
   setTimeout(() => {
     dispatcher.dispatch({
       actionType: ActionTypes.Statistics.STATISTICS_SYNC,
