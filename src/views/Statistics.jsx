@@ -31,18 +31,24 @@ import dispatcher from "../dispatcher";
 
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
+import Grid from "@material-ui/core/Grid";
 import CardContent from "@material-ui/core/CardContent";
+
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import { Skeleton } from "@material-ui/lab";
 import MultiFilter from "../components/Filters/MultiFilter";
 
-import Statistics from "../models/Statistics";
+import Statistics, { StatisticsSyncRequest } from "../models/Statistics";
 import statisticsActions from "../actions/Statistics";
 import statisticsStore from "../store/Statistics";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import ActionTypes from "../constants/ActionTypes";
-import LineGraph from "../components/Charts/Statistics";
+import StatisticsGraph from "../components/Charts/CrawlerThreads";
+import ChartViewModeSelect from "../components/Selects/ChartViewMode";
+import CrawlerThreadsChart from "../components/Charts/CrawlerThreads";
+import TrackedUrlsChart from "../components/Charts/TrackedUrls";
+
 import {
   ButtonGroup,
   Select,
@@ -53,6 +59,9 @@ import {
 import DateRanges from "../constants/DateRanges";
 import DateFilter from "../components/Filters/DateFilter";
 import UserFilter from "../components/Filters/UserFilter";
+import KeyMirror from "keymirror";
+import { ViewCarousel, ViewModule } from "@material-ui/icons";
+import { STATISTICS_TYPES } from "../constants/Statistics";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -93,8 +102,32 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 var isLoading = true;
+
+const CHART_VIEW_MODES = KeyMirror({
+  SINGLE: null,
+  PUZZLE: null,
+});
+
 export default function StatisticsView() {
   const [Statistics, setStatistics] = useState(statisticsStore.getStatistics());
+
+  console.log(Statistics);
+  const [ChartViewMode, setChartViewMode] = useState(CHART_VIEW_MODES.PUZZLE);
+
+  const [AnchorElements, setAnchorElements] = useState({
+    CHART_VIEW_MODE: null,
+  });
+
+  const [ActiveStatisticTypes, setActiveStatisticsTypes] = useState(
+    Object.values(STATISTICS_TYPES)
+  );
+
+  const setAnchorElement = (key, val) => {
+    AnchorElements[key] = val;
+    setAnchorElements({ ...AnchorElements });
+  };
+
+  const [ViewMode, setViewMode] = useState();
 
   //const [UserFilter, setUserFilter] = useState(null);
   const [DateRangeFilter, setDateRangeFilter] = useState(DateRanges[0]);
@@ -111,14 +144,16 @@ export default function StatisticsView() {
   };
   const classes = useStyles();
 
-  const bull = <span className={classes.bullet}>•</span>;
-
   const syncStatistics = () => {
     isLoading = true;
-    statisticsActions.syncStatistics({
-      dateRange: DateRangeFilter,
-      userFilter: SelectedUserFilter,
-    });
+
+    statisticsActions.syncStatistics(
+      new StatisticsSyncRequest(
+        DateRangeFilter,
+        SelectedUserFilter,
+        ActiveStatisticTypes
+      )
+    );
   };
 
   const onStatisticsSynced = () => {
@@ -143,8 +178,43 @@ export default function StatisticsView() {
   });
 
   const theme = useTheme();
+
+  const changeChartView = (view_mode) => {
+    if (!view_mode) {
+      return;
+    }
+    // Close the menu by removing the anchor mode
+    setAnchorElement("CHART_VIEW_MODE", null);
+
+    setTimeout(() => {
+      setChartViewMode(view_mode);
+    });
+  };
+
+  const calculateTotalScrapedJobs = () => {
+    if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS]) {
+      return 0;
+    }
+    return (
+      Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph.reduce(
+        (a, b) => a.y2 + b.y2,
+        0
+      ) || ""
+    );
+  };
+  const calculateTotalTrackedUrls = () => {
+    if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS]) {
+      return 0;
+    }
+    return (
+      Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS].graph.reduce(
+        (a, b) => a.y + b.y,
+        0
+      ) || ""
+    );
+  };
   return (
-    <div style={{ overflowY: "auto" }}>
+    <div style={{ overflow: "hidden" }}>
       <Paper
         style={{
           padding: theme.spacing(2),
@@ -184,13 +254,15 @@ export default function StatisticsView() {
             </Button>
           ))}
         </ButtonGroup>
+
+        <ChartViewModeSelect />
       </Paper>
       <div
         style={{
           display: "flex",
         }}
       >
-        <Card className={classes.card}>
+        {/* <Card className={classes.card}>
           <CardContent>
             <Box display="flex" flexDirection="row" alignItems="center">
               <div style={{ flex: 1 }}>
@@ -199,7 +271,7 @@ export default function StatisticsView() {
                   color="textSecondary"
                   gutterBottom
                 >
-                  Total tracked URLs
+                  Newly added URLs
                 </Typography>
                 {isLoading ? (
                   <Skeleton
@@ -208,7 +280,7 @@ export default function StatisticsView() {
                   ></Skeleton>
                 ) : (
                   <Typography variant="h5" component="h2">
-                    {Statistics.summary.trackedUrls}
+                    {calculateTotalTrackedUrls()}
                   </Typography>
                 )}
               </div>
@@ -237,7 +309,7 @@ export default function StatisticsView() {
                   color="textSecondary"
                   gutterBottom
                 >
-                  Inserted Jobs
+                  Jobs scraped
                 </Typography>
                 {isLoading ? (
                   <Skeleton
@@ -246,7 +318,7 @@ export default function StatisticsView() {
                   ></Skeleton>
                 ) : (
                   <Typography variant="h5" component="h2">
-                    {Statistics.summary.scrapedJobs}
+                    {calculateTotalScrapedJobs()}
                   </Typography>
                 )}
               </div>
@@ -265,33 +337,80 @@ export default function StatisticsView() {
               <Button size="small">Learn More</Button>
             </CardActions>
           )}
-        </Card>
+        </Card> */}
       </div>
+      <Grid container spacing={2} style={{ overflow: "hidden" }}>
+        {Statistics &&
+          ActiveStatisticTypes.map((statistics_type) => {
+            let title;
+            let sumFunc;
 
-      {Statistics && (
-        <div
-          style={{
-            margin: 64,
-            minWidth: 480,
-            minHeight: 480,
-            position: "relative",
-          }}
-        >
-          {!isLoading ? (
-            <LineGraph chartData={Statistics.chartData} />
-          ) : (
-            <CircularProgress
-              color="secondary"
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                //transform: "translate(-50%,-50%)",
-              }}
-            />
-          )}
-        </div>
-      )}
+            let chart;
+            switch (statistics_type) {
+              case STATISTICS_TYPES.TRACKED_URLS:
+                title = "Newly added URLs";
+                sumFunc = calculateTotalTrackedUrls;
+                chart = () => (
+                  <TrackedUrlsChart
+                    chartData={Statistics.graphs[statistics_type]}
+                  />
+                );
+                break;
+              case STATISTICS_TYPES.SCRAPED_JOBS:
+                title = "Jobs scraped";
+                sumFunc = calculateTotalScrapedJobs;
+                chart = () => (
+                  <CrawlerThreadsChart
+                    chartData={Statistics.graphs[statistics_type]}
+                  />
+                );
+                break;
+              default:
+                return "fuck";
+            }
+            return (
+              <Grid
+                item={true}
+                xs={6}
+                style={{
+                  minWidth: 480,
+                  minHeight: 480,
+                  position: "relative",
+                  overflow: "hidden",
+                  padding: theme.spacing(2),
+                }}
+              >
+                <Paper
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    style={{ padding: theme.spacing(2) }}
+                  >
+                    {title} {sumFunc()}
+                  </Typography>
+                  {!isLoading && !!Statistics.graphs[statistics_type] ? (
+                    chart()
+                  ) : (
+                    <CircularProgress
+                      color="secondary"
+                      style={{
+                        position: "absolute",
+                        left: "50%",
+                        top: "50%",
+                        //transform: "translate(-50%,-50%)",
+                      }}
+                    />
+                  )}
+                </Paper>
+              </Grid>
+            );
+          })}
+      </Grid>
     </div>
   );
 }

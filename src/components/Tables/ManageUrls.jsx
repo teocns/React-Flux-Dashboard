@@ -34,11 +34,15 @@ import ScrapingThreadTableStatus from "../Table/ScrapingThreadStatus";
 import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({
+  tableContainer: {
+    overflowY: "scroll",
+    overflowX: "hidden",
+  },
   table: {
     minWidth: 500,
     tableLayout: "fixed",
-    display: "block",
     overflowY: "auto",
+    overflowX: "hidden",
   },
   tableRow: {
     height: 70,
@@ -146,6 +150,7 @@ const ManageUrlsTable = ({ filter }) => {
       }
     }
   };
+
   const getTableData = () => {
     return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
   };
@@ -267,7 +272,7 @@ const ManageUrlsTable = ({ filter }) => {
           //   //toggleCountryRenameDialog();
           // }}
           component={RouterLink}
-          to={`/url-details/${RowActionObject.groupId}`}
+          to={`/url-details/`}
         >
           View details
         </MenuItem>
@@ -415,112 +420,110 @@ const ManageUrlsTable = ({ filter }) => {
         IsLoading={isLoadingResults}
         theme={theme}
       />
-      <Table className={classes.table} aria-label="custom pagination table">
-        <colgroup>
-          <col style={{ width: 64 }} />
-          <col style={{ width: "70%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: 64 }} />
-        </colgroup>
-        {/* <LinearProgress
+      <div className={classes.tableContainer}>
+        <Table className={classes.table} aria-label="custom pagination table">
+          <colgroup>
+            <col style={{ width: 64 }} />
+            <col style={{ width: "70%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: 64 }} />
+          </colgroup>
+          {/* <LinearProgress
         variant="indeterminate"
         color="secondary"
         style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
       /> */}
 
-        <TableBody className={classes.tableBody}>
-          {isLoadingResults && !hasInheritedRows
-            ? [
-                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
-              ].map((x) => (
-                <TableRow
-                  key={x}
-                  style={{ height: 56 }}
-                  className={classes.tableRow}
-                >
-                  {/* <TableCell>
-                    <Skeleton  />
-                  </TableCell> */}
-                  <div></div>
-                  <TableCell>
-                    <Skeleton />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton />
-                  </TableCell>
-                  <div></div>
-                </TableRow>
-              ))
-            : rows.map((row, index) => {
-                const innerRow = (
-                  <React.Fragment>
-                    <TableCell className={classes.columnCheckbox}>
-                      <Checkbox
-                        size="small"
-                        checked={SelectedRows.includes(row.trackedUrlId)}
-                        onChange={(evt) => {
-                          onRowSelectionChanged(row.trackedUrlId);
-                        }}
-                      />
+          <TableBody className={classes.tableBody}>
+            {isLoadingResults && !hasInheritedRows
+              ? [
+                  ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+                ].map((x) => (
+                  <TableRow
+                    key={x}
+                    style={{ height: 56 }}
+                    className={classes.tableRow}
+                  >
+                    <div></div>
+                    <TableCell>
+                      <Skeleton />
                     </TableCell>
-                    <TableCell
-                      style={{
-                        width: "auto",
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                      }}
-                      align="left"
-                    >
-                      <Link href={row.url} target="_blank">
-                        {row.url}
-                      </Link>
+                    <TableCell>
+                      <Skeleton />
                     </TableCell>
-                    <TableCell align="left">
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        justifyContent="start"
-                      >
-                        <Today
-                          style={{
-                            width: 18,
-                            height: 18,
-                            color: theme.palette.text.hint,
-                          }}
-                          //style={{ color: theme.palette.text.hint }}
-                        />
-                        <Typography
-                          variant="body2"
-                          noWrap={true}
-                          style={{ marginLeft: theme.spacing(1) }}
-                        >
-                          {timeSince(row.age)}
-                        </Typography>
-                      </Box>
+                    <TableCell>
+                      <Skeleton />
                     </TableCell>
-                    <TableCell align="right">
-                      <ScrapingThreadTableStatus row={row} />
-                    </TableCell>
-                    <TableCell align="right">
-                      {_createRowActionsButton(row)}
-                    </TableCell>
-                  </React.Fragment>
-                );
-                const wrapComponent = (
-                  <TableRow className={classes.tableRow} key={row.uuid}>
-                    {innerRow}
+                    <div></div>
                   </TableRow>
-                );
-                return wrapComponent;
-              })}
-          {!IsLoadingResults && renderEmptyRows()}
-          {RowActionObject && _attachRowActionsMenu()}
-        </TableBody>
-      </Table>
+                ))
+              : rows.map((row, index) => {
+                  const innerRow = (
+                    <React.Fragment>
+                      <TableCell className={classes.columnCheckbox}>
+                        <Checkbox
+                          size="small"
+                          checked={SelectedRows.includes(row.trackedUrlId)}
+                          onChange={(evt) => {
+                            onRowSelectionChanged(row.trackedUrlId);
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                        }}
+                        align="left"
+                      >
+                        <Link href={row.url} target="_blank">
+                          {row.url}
+                        </Link>
+                      </TableCell>
+                      <TableCell align="left">
+                        <Box
+                          display="inline-flex"
+                          alignItems="center"
+                          justifyContent="start"
+                        >
+                          <Today
+                            style={{
+                              width: 18,
+                              height: 18,
+                              color: theme.palette.text.hint,
+                            }}
+                            //style={{ color: theme.palette.text.hint }}
+                          />
+                          <Typography
+                            variant="body2"
+                            noWrap={true}
+                            style={{ marginLeft: theme.spacing(1) }}
+                          >
+                            {timeSince(row.age)}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <ScrapingThreadTableStatus row={row} />
+                      </TableCell>
+                      <TableCell align="right">
+                        {_createRowActionsButton(row)}
+                      </TableCell>
+                    </React.Fragment>
+                  );
+                  const wrapComponent = (
+                    <TableRow className={classes.tableRow} key={row.uuid}>
+                      {innerRow}
+                    </TableRow>
+                  );
+                  return wrapComponent;
+                })}
+            {!IsLoadingResults && renderEmptyRows()}
+            {RowActionObject && _attachRowActionsMenu()}
+          </TableBody>
+        </Table>
+      </div>
       {rowsLength > 0 && (
         <div>
           <TablePagination

@@ -53,11 +53,15 @@ import FindInPageIcon from "@material-ui/icons/FindInPage";
 import Search from "@material-ui/icons/Search";
 import ScrapingThread from "../../models/ScrapingThread";
 const useStyles = makeStyles((theme) => ({
+  tableContainer: {
+    overflowY: "scroll",
+    overflowX: "hidden",
+  },
   table: {
     minWidth: 500,
     tableLayout: "fixed",
-    display: "block",
     overflowY: "auto",
+    overflowX: "hidden",
   },
   tableRow: {
     height: 70,
@@ -316,89 +320,91 @@ const AddTrackUrlTable = () => {
   const theme = useTheme();
   return (
     <React.Fragment>
-      <Table className={classes.table} aria-label="custom pagination table">
-        <colgroup>
-          <col style={{ width: "70%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "15%" }} />
-        </colgroup>
-        <TableBody className={classes.tableBody}>
-          {isLoadingResults && !hasInheritedRows
-            ? [
-                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
-              ].map((x) => (
-                <TableRow
-                  key={x}
-                  className={classes.tableRow}
-                  style={{ height: 56 }}
-                >
-                  <TableCell>
-                    <Skeleton style={{ width: "100%" }} />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton style={{ width: "100%" }} />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton style={{ width: "100%" }} />
-                  </TableCell>
+      <div className={classes.tableContainer}>
+        <Table className={classes.table} aria-label="custom pagination table">
+          <colgroup>
+            <col style={{ width: "70%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "15%" }} />
+          </colgroup>
+          <TableBody className={classes.tableBody}>
+            {isLoadingResults && !hasInheritedRows
+              ? [
+                  ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+                ].map((x) => (
+                  <TableRow
+                    key={x}
+                    className={classes.tableRow}
+                    style={{ height: 56 }}
+                  >
+                    <TableCell>
+                      <Skeleton style={{ width: "100%" }} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton style={{ width: "100%" }} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton style={{ width: "100%" }} />
+                    </TableCell>
 
-                  <TableCell style={{ opacity: "0" }}>
-                    <Skeleton style={{ width: "100%" }} />
-                  </TableCell>
-                </TableRow>
-              ))
-            : rows.map((row, index) => {
-                const innerRow = (
-                  <React.Fragment>
-                    <TableCell
-                      width="60%"
-                      style={{
-                        width: "60%",
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Link href={row.url} target="_blank">
-                        {row.url}
-                      </Link>
+                    <TableCell style={{ opacity: "0" }}>
+                      <Skeleton style={{ width: "100%" }} />
                     </TableCell>
-                    <TableCell width="20%" align="left">
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        justifyContent="start"
-                      >
-                        <Today
-                          style={{
-                            width: 18,
-                            height: 18,
-                            color: theme.palette.text.hint,
-                          }}
-                        />
-                        <Typography
-                          variant="body2"
-                          noWrap={true}
-                          style={{ marginLeft: theme.spacing(1) }}
-                        >
-                          {timeSince(row.age)}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell width="20%" align="right">
-                      <ScrapingThreadStatus row={row} />
-                    </TableCell>
-                  </React.Fragment>
-                );
-                const wrapComponent = (
-                  <TableRow className={classes.tableRow} key={row.uuid}>
-                    {innerRow}
                   </TableRow>
-                );
-                return wrapComponent;
-              })}
-          {!IsLoadingResults && renderEmptyRows()}
-        </TableBody>
-      </Table>
+                ))
+              : rows.map((row, index) => {
+                  const innerRow = (
+                    <React.Fragment>
+                      <TableCell
+                        width="60%"
+                        style={{
+                          width: "60%",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Link href={row.url} target="_blank">
+                          {row.url}
+                        </Link>
+                      </TableCell>
+                      <TableCell width="20%" align="left">
+                        <Box
+                          display="inline-flex"
+                          alignItems="center"
+                          justifyContent="start"
+                        >
+                          <Today
+                            style={{
+                              width: 18,
+                              height: 18,
+                              color: theme.palette.text.hint,
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            noWrap={true}
+                            style={{ marginLeft: theme.spacing(1) }}
+                          >
+                            {timeSince(row.age)}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell width="20%" align="right">
+                        <ScrapingThreadStatus row={row} />
+                      </TableCell>
+                    </React.Fragment>
+                  );
+                  const wrapComponent = (
+                    <TableRow className={classes.tableRow} key={row.uuid}>
+                      {innerRow}
+                    </TableRow>
+                  );
+                  return wrapComponent;
+                })}
+            {!IsLoadingResults && renderEmptyRows()}
+          </TableBody>
+        </Table>
+      </div>
       {rowsLength > 0 && (
         <div>
           <TablePagination

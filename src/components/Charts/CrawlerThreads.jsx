@@ -17,7 +17,7 @@ export default function LineGraph({ chartData }) {
   );
 
   let dataset_tracked_urls = {
-    label: "Tracked URLs",
+    label: "Crawler requests",
     borderColor: "blue",
     data: [],
   };
@@ -74,6 +74,8 @@ export default function LineGraph({ chartData }) {
         datasets,
       },
       options: {
+        animation: false,
+        spanGaps: true, // enable for all datasets
         tooltips: {
           mode: "index",
           intersect: false,
@@ -108,7 +110,7 @@ export default function LineGraph({ chartData }) {
 
   return (
     <canvas
-      style={{ width: "100%", height: "100%", minHeight: 480, minWidth: 720 }}
+      style={{ width: "100%", height: "100%", minHeight: 480, maxHeight: 480 }}
       id="myChart"
       ref={chartRef}
     />

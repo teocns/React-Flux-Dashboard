@@ -5,7 +5,7 @@ import {
 } from "@material-ui/core/styles";
 const theme = createMuiTheme({
   typography: {
-    fontSize: 14,
+    fontSize: 12,
   },
   palette: {
     primary: {

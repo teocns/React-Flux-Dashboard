@@ -19,7 +19,7 @@ import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import LastPageIcon from "@material-ui/icons/LastPage";
 import LinkIcon from "@material-ui/icons/Link";
 import { useHistory } from "react-router-dom";
-
+import TrackedUrlsTable from "../components/Tables/TrackedUrls";
 import {
   Divider,
   Input,
@@ -112,7 +112,7 @@ export default function ManageUrlsView() {
           </Button>
         </div>
         <Divider />
-        <ManageUrlsTable filter={Filter} />
+        <TrackedUrlsTable filter={Filter} />
       </TableContainer>
     </div>
   );

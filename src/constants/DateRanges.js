@@ -58,22 +58,9 @@ export default [
     label: "This month",
     startDate: (() => {
       const date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      date.setMonth(date.getMonth() - 1);
       return date;
     })(),
-    endDate: (() => {
-      function daysInMonth(month, year) {
-        return new Date(year, month, 0).getDate();
-      }
-      const ynow = new Date().getFullYear();
-      const mnow = new Date().getMonth();
-      const date = new Date(ynow, mnow, 1);
-      date.setMonth(date.getMonth() - 1);
-      date.setDate(daysInMonth(mnow, ynow));
-      return date;
-    })(),
-    dateFormat: "%Y-%m-%d",
-    timeFrame: "DAY",
+    endDate: null,
   },
   {
     label: "MAX",

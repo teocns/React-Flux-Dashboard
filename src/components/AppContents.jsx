@@ -122,10 +122,12 @@ const useStyles = makeStyles((theme) => ({
     // necessary for content to be below app bar
     ...theme.mixins.toolbar,
   },
-  content: {
+  appContent: {
     flexGrow: 1,
+    display: "contents",
     padding: theme.spacing(3),
   },
+  contentDrawerOpen: {},
   orange: {
     color: theme.palette.getContrastText(deepOrange[500]),
     backgroundColor: deepOrange[500],
@@ -150,7 +152,7 @@ const useStyles = makeStyles((theme) => ({
 function AppContents() {
   const classes = useStyles();
   const theme = useTheme();
-  const [open, setOpen] = React.useState(true);
+  const [drawerOpen, setDrawerOpen] = React.useState(true);
 
   const [User, setUser] = useState(sessionStore.getUser());
   const IsAdmin = (User && User.isAdmin) || false;
@@ -175,7 +177,7 @@ function AppContents() {
   });
 
   const handleDrawerOpen = () => {
-    setOpen(!open);
+    setDrawerOpen(!drawerOpen);
   };
 
   const location = useLocation();
@@ -205,7 +207,7 @@ function AppContents() {
           <AppBar
             position="fixed"
             className={clsx(classes.appBar, {
-              [classes.appBarShift]: isAuthenticated && open,
+              [classes.appBarShift]: isAuthenticated && drawerOpen,
             })}
           >
             <Toolbar>
@@ -267,14 +269,14 @@ function AppContents() {
           <Drawer
             variant="permanent"
             className={clsx(classes.drawer, {
-              [classes.drawerOpen]: open,
-              [classes.drawerClose]: !open,
+              [classes.drawerOpen]: drawerOpen,
+              [classes.drawerClose]: !drawerOpen,
               [classes.hide]: !isAuthenticated,
             })}
             classes={{
               paper: clsx({
-                [classes.drawerOpen]: open,
-                [classes.drawerClose]: !open,
+                [classes.drawerOpen]: drawerOpen,
+                [classes.drawerClose]: !drawerOpen,
                 [classes.drawerPaper]: true,
               }),
             }}
@@ -364,7 +366,7 @@ function AppContents() {
                     </ListItemIcon>
                     <ListItemText primary={"Statistics"} />
                   </ListItem>
-                  <ListItem
+                  {/* <ListItem
                     button
                     key={"FAQ"}
                     component={Link}
@@ -375,8 +377,8 @@ function AppContents() {
                       <HelpIcon />
                     </ListItemIcon>
                     <ListItemText primary={"FAQ"} />
-                  </ListItem>
-                  <ListItem
+                  </ListItem> */}
+                  {/* <ListItem
                     button
                     key={"Extension"}
                     component={Link}
@@ -387,7 +389,7 @@ function AppContents() {
                       <ExtensionIcon />
                     </ListItemIcon>
                     <ListItemText primary={"Crawling Extension"} />
-                  </ListItem>
+                  </ListItem> */}
                 </List>
                 <Divider />
                 {IsAdmin && (
@@ -452,8 +454,8 @@ function AppContents() {
       )}
 
       <main
-        className={clsx(classes.content, {
-          [classes.contentShift]: open,
+        className={clsx({
+          [classes.appContent]: true,
         })}
       >
         <AppView />

@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
     flex: 1,
     background: "rgb(250,250,250)",
     padding: theme.spacing(2),
-    paddingTop: 64,
+    paddingTop: 86,
     height: "100%",
     overflowY: "hidden",
     maxHeight: "100%",

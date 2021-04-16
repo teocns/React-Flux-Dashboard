@@ -42,7 +42,7 @@ import statisticsActions from "../actions/Statistics";
 import statisticsStore from "../store/Statistics";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import ActionTypes from "../constants/ActionTypes";
-import StatisticsChart from "../components/Charts/Statistics";
+import StatisticsChart from "../components/Charts/CrawlerThreads";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,

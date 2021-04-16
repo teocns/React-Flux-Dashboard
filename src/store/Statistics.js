@@ -91,9 +91,8 @@ class StatisticsStore extends EventEmitter {
    * @param {Statistics} statistics
    */
   storeStats(statistics) {
-    const { availableCountries, availableUsers } = statistics;
+    const { availableUsers } = statistics;
     this.#statistics = statistics;
-    this.#availableCountries = availableCountries;
     this.#availableUsers = availableUsers;
   }
 

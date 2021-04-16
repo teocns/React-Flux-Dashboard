@@ -179,7 +179,7 @@ function UserFilter({ onUserFilterChanged }) {
             SelectedUsers && SelectedUsers.length ? SelectedUsers.length : ""
           }
           color="secondary"
-          size="small"
+          variant="dot"
         >
           <IconButton
             size="small"

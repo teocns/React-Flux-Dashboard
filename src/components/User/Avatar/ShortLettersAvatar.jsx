@@ -107,11 +107,16 @@ const UserShortLettersAvatar = ({ username, fullname }) => {
     const _targetName = fullname || username;
     let shortLetters = "";
     const nameParts = _targetName.toUpperCase().split(" ");
-    if (nameParts.length >= 2) {
-      shortLetters =
-        nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
+    if (true) {
+      shortLetters = nameParts[0].substring(0, 1);
     } else {
-      shortLetters = nameParts[0].substring(0, 2);
+      // Apply for two letters
+      if (nameParts.length >= 2) {
+        shortLetters =
+          nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
+      } else {
+        shortLetters = nameParts[0].substring(0, 2);
+      }
     }
     const src = null;
     const backgroundColor = getColor(_targetName[1]);

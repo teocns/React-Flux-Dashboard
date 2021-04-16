@@ -1,29 +1,25 @@
-class Statistics {
-  userId;
+export class StatisticsSyncRequest {
   dateRange;
-  countryFilter;
-  trackedUrls;
-  scrapedJobs;
+  userFilter;
+  types;
 
-  /**
-   *
-   */
-  loading = true;
-  constructor(obj) {
-    if (typeof obj === "object") {
-      for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          this[key] = obj[key];
-        }
-      }
-    }
-  }
-
-  static loading() {
-    let _stats = new Statistics();
-    _stats.isLoading = true;
-    return _stats;
+  constructor(dateRange, userFilter, types) {
+    this.dateRange = dateRange;
+    this.userFilter = userFilter;
+    this.types = types;
   }
 }
 
-export default Statistics;
+export default class Statistics {
+  userFilter;
+
+  dateRange;
+
+  chartData;
+
+  summary;
+
+  age;
+
+  type;
+}

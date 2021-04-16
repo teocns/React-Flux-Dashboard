@@ -1,42 +1,54 @@
+import React, { useState, useEffect } from "react";
+import clsx from "clsx";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { Link as RouterLink } from "react-router-dom";
+import { useConfirm } from "material-ui-confirm";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
+import countriesActions from "../../actions/Countries";
+import hostsActions from "../../actions/Hosts";
+import DEFAULT_PARSING_REGEX from "../../constants/Scraper";
 import {
   Badge,
   Box,
   Checkbox,
   IconButton,
-  Link,
-  Menu,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TablePagination,
   TableRow,
   Tooltip,
+  Menu,
+  MenuItem,
+  Link,
   Typography,
 } from "@material-ui/core";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { Delete, Search, Today } from "@material-ui/icons";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
-import { Skeleton } from "@material-ui/lab";
-import clsx from "clsx";
-import { useConfirm } from "material-ui-confirm";
-import React, { useEffect, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
-import tableActions from "../../actions/Table";
+
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import ManageUrlsHeader from "../../components/Table/Headers/ManageUrls";
-import UserAvatar from "../../components/User/Avatar/ShortLettersAvatar";
-import ActionTypes from "../../constants/ActionTypes";
-import TableNames from "../../constants/Tables";
-import { timeSince } from "../../helpers/time";
-import TableData from "../../models/TableData";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
 import tableStore from "../../store/Tables";
-import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
+import scrapingThreadsStore from "../../store/ScrapingThreads";
 import TablePaginationActions from "./Pagination";
+
+import { Skeleton } from "@material-ui/lab";
+import ActionTypes from "../../constants/ActionTypes";
+import EditHostParsingRegexDialog from "../Dialogs/EditHostParsingRegex";
+import {
+  Delete,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  Search,
+  MoreVert,
+  Edit,
+} from "@material-ui/icons";
+
+import tableActions from "../../actions/Table";
+import TableNames from "../../constants/Tables";
+import TableData from "../../models/TableData";
+import MultiFilter from "../Filters/MultiFilter";
+import Country from "../../models/Country";
+import { timeSince } from "../../helpers/time";
 
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
@@ -49,13 +61,19 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "auto",
     overflowX: "hidden",
   },
+
+  editRegexIcon: {
+    opacity: 0,
+  },
   tableRow: {
     height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
     },
+    '&:hover [name="editRegexIcon"]': {
+      opacity: 1,
+    },
   },
-  tableBody: {},
   emptyRow: {
     height: 70,
     backgroundColor: "white!important",
@@ -64,33 +82,56 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "8rem",
     },
   },
-
-  columnCheckbox: {
-    width: 64,
-  },
 }));
 
-const THIS_TABLE_NAME = TableNames.MANAGE_URLS_ADMIN;
+const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
+const COLUMNS = [
+  {
+    name: "age",
+    label: "Age",
+    align: "right",
+  },
+  {
+    name: "url",
+    label: "URL",
+    sortable: false,
+  },
 
-const ManageUrlsAdminTable = ({ filter }) => {
-  const [tableData, setTableData] = useState(
+  {
+    name: "total_scraped_jobs",
+    label: "Jobs scraped",
+    align: "right",
+  },
+  {
+    name: "crawler_threads_cnt",
+    label: "Times crawled",
+    align: "right",
+  },
+  {
+    name: "Score",
+    label: "URL Score",
+    align: "right",
+  },
+  {
+    name: "actions",
+    label: "",
+    sortable: false,
+  },
+];
+const ManageUrlsTable = ({ filter }) => {
+  let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
-  const [SelectedRows, setSelectedRows] = useState([]);
-  const [DateRange, setDateRange] = useState(null);
+
   const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
-  const HasTableData = tableData !== undefined;
 
-  const confirm = useConfirm();
-  const rowsPerPage = tableData.rowsPerPage;
-  const page = tableData.page;
-  const countryFilter = tableData.countryFilter;
-  const dateRange = tableData.dateRange;
-  let rows = tableData.rows;
-  const toggleRowMenuOpen = (event, row) => {
+  const [SelectedRows, setSelectedRows] = useState([]);
+  const [DateRange, setDateRange] = useState(null);
+
+  const toggleRowMenuOpen = (event, country) => {
+    setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
-    setRowActionObject(row);
   };
 
   const handleRowMenuClose = (event) => {
@@ -103,6 +144,19 @@ const ManageUrlsAdminTable = ({ filter }) => {
 
     setRowMenuAnchorRef(null);
   };
+
+  const HasTableData = tableData !== undefined;
+
+  if (!HasTableData) {
+    tableData = TableData.defaults(THIS_TABLE_NAME);
+  }
+  const confirm = useConfirm();
+  const rowsPerPage = tableData.rowsPerPage;
+  const page = tableData.page;
+  const countryFilter = tableData.countryFilter;
+  const dateRange = tableData.dateRange;
+  let rows = tableData.rows;
+
   const IsLoadingResults = tableData.isLoading;
   let hasInheritedRows = false;
   if (IsLoadingResults && tableData.previousTableData) {
@@ -117,6 +171,7 @@ const ManageUrlsAdminTable = ({ filter }) => {
     rowsPerPage -
     Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
     (rowsLength > 1 ? 0 : 1);
+
   const deleteSelectedRows = () => {
     if (SelectedRows.length) {
       confirm({
@@ -147,9 +202,13 @@ const ManageUrlsAdminTable = ({ filter }) => {
       setSelectedRows([]);
     } else if (checked) {
       if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.trackedUrlId));
+        setSelectedRows(rows.map((row) => row.threadId));
       }
     }
+  };
+
+  const getTableData = () => {
+    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
   };
   const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
     const _tableData = getTableData();
@@ -197,15 +256,26 @@ const ManageUrlsAdminTable = ({ filter }) => {
   };
   console.log("rendering", tableData);
 
-  const onScrapingThreadCreated = () => {
+  // const onScrapingThreadCreated = () => {
+  //   setTimeout(() => {
+  //     syncTableData({ newPage: 0 });
+  //   });
+  // };
+
+  const reSync = () => {
     setTimeout(() => {
-      syncTableData({ newPage: 0 });
+      syncTableData({});
     });
   };
-  const registerEventListeners = () => {
+
+  const bindListeners = () => {
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
+    );
+    tableStore.addChangeListener(
+      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+      reSync
     );
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_UPDATED,
@@ -216,6 +286,10 @@ const ManageUrlsAdminTable = ({ filter }) => {
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_CREATED,
         onTableRowsDataUpdated
+      );
+      tableStore.removeChangeListener(
+        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+        reSync
       );
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
@@ -235,79 +309,14 @@ const ManageUrlsAdminTable = ({ filter }) => {
       setSelectedRows([id, ...SelectedRows]);
     }
   };
-  const retryThread = () => {
-    let threadId = RowActionObject.trackedUrlId;
-    setTimeout(() => {
-      scrapingThreadsActions.retryThread(threadId);
-    });
-  };
-  const _attachRowActionsMenu = () => {
-    return (
-      <Menu
-        id={`row-actions-menu`}
-        anchorEl={rowMenuAnchorRef}
-        // keepMounted
-        open={Boolean(rowMenuAnchorRef)}
-        onClose={handleRowMenuClose}
-      >
-        <MenuItem
-          // onClick={() => {
-          //   handleRowMenuClose();
-          //   //toggleCountryRenameDialog();
-          // }}
-          component={RouterLink}
-          to={`/url-details/${RowActionObject.groupId}`}
-        >
-          View details
-        </MenuItem>
 
-        <MenuItem
-          onClick={() => {
-            confirm({
-              title: "Confirm to retry crawling URL?",
-              description:
-                "If you proceed some of the scraped data will be deleted. Make sure you know what you're doing.",
-            }).then(() => {
-              retryThread();
-              handleRowMenuClose();
-            });
-
-            //toggleCountryPickerDialog();
-          }}
-        >
-          Retry
-        </MenuItem>
-      </Menu>
-    );
-  };
-  const getTableData = () => {
-    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
-  };
-  const refreshFunc = () => {
-    const _tableData = getTableData();
-
-    if (
-      _tableData.isLoading ||
-      parseInt(new Date() / 1000) - _tableData.age < 10
-    ) {
-      console.log("@@@@@ Skipping REFRESH");
-      return;
-    }
-    syncTableData({});
-  };
   useEffect(() => {
-    // Create an interval that refreshes the page every X
-    const refreshInterval = setInterval(refreshFunc, 5000);
+    // Means data has not yet loaded nor requested
     setTimeout(() => {
       syncTableData({});
     });
 
-    const revokeEventListeners = registerEventListeners();
-
-    return () => {
-      clearInterval(refreshInterval);
-      revokeEventListeners();
-    };
+    return bindListeners();
   }, []);
 
   const handleCountryFilterChanged = (_countryFilter) => {
@@ -393,71 +402,127 @@ const ManageUrlsAdminTable = ({ filter }) => {
 
     return _createRow();
   };
-  const _createRowActionsButton = (row) => {
-    const key = row.trackedUrlId;
+
+  const viewJobYieldingLinksExample = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/job-yielding-sample`,
+      "_blank"
+    );
+    handle.focus();
+  };
+
+  const viewHtmlSample = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/view-html-sample`,
+      "_blank"
+    );
+    handle.focus();
+  };
+
+  const testRegex = () => {
+    let hostId = RowActionObject.hostId;
+    let handle = window.open(
+      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
+      "_blank"
+    );
+    handle.focus();
+  };
+
+  const _createRowActionsButton = (country) => {
+    const key = country.countryId;
     return (
       <React.Fragment>
         <IconButton
-          key={key}
           size="small"
           aria-haspopup="true"
           onClick={(event) => {
-            toggleRowMenuOpen(event, row);
+            toggleRowMenuOpen(event, country);
           }}
           aria-controls={`row-actions-menu`}
         >
-          <MoreVertIcon />
+          <MoreVert />
         </IconButton>
       </React.Fragment>
     );
   };
+
+  const _attachRowActionsMenu = () => {
+    return (
+      <Menu
+        id={`row-actions-menu`}
+        anchorEl={rowMenuAnchorRef}
+        // keepMounted
+        open={Boolean(rowMenuAnchorRef)}
+        onClose={handleRowMenuClose}
+      >
+        <MenuItem
+          // onClick={() => {
+          //   handleRowMenuClose();
+          //   //toggleCountryRenameDialog();
+          // }}
+          component={RouterLink}
+          to={`/url-details/`}
+        >
+          View details
+        </MenuItem>
+      </Menu>
+    );
+  };
+
+  const onSortChanged = ({ name, sort }) => {
+    syncTableData({ newSort: { name, sort } });
+  };
+
   return (
     <React.Fragment>
-      <ManageUrlsHeader
-        rows={rows}
-        SelectedRows={SelectedRows}
-        selectAllRowsFunc={selectAllRows}
-        deleteSelectedRowsFunc={deleteSelectedRows}
-        refreshFunc={() => {
-          syncTableData({ keepCurrentSettings: true });
-        }}
-        IsLoading={isLoadingResults}
-        theme={theme}
-      />
       <div className={classes.tableContainer}>
         <Table className={classes.table} aria-label="custom pagination table">
-          {/* <LinearProgress
-        variant="indeterminate"
-        color="secondary"
-        style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
-      /> */}
           <colgroup>
-            <col style={{ width: 64 }} />
-            <col style={{ width: "70%" }} />
+            <col style={{ width: 54 }} />
+            <col style={{ width: 100 }} />
+            <col style={{ width: "50%" }} />
             <col style={{ width: "15%" }} />
-            <col style={{ width: "15%" }} />
-            <col style={{ width: 64 }} />
           </colgroup>
-          <TableBody className={classes.tableBody}>
+          <MultifunctionalHeading
+            columns={COLUMNS}
+            sort={tableData && tableData.sort}
+            onSortChanged={onSortChanged}
+          />
+          <TableBody>
             {isLoadingResults && !hasInheritedRows
               ? [
                   ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
                 ].map((x) => (
                   <TableRow key={x} style={{ height: 56 }}>
-                    {/* <TableCell>
-                  <Skeleton animation="wave" />
-                </TableCell> */}
-                    <div></div>
-                    <TableCell>
-                      <Skeleton animation="wave" />
+                    <TableCell width="5%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
                     </TableCell>
-                    <TableCell>
-                      <Skeleton animation="wave" />
+                    <TableCell width="50%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
                     </TableCell>
-                    <TableCell>
-                      <Skeleton animation="wave" />
+                    <TableCell width="15%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
                     </TableCell>
-                    <div></div>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))
               : rows.map((row, index) => {
@@ -466,62 +531,51 @@ const ManageUrlsAdminTable = ({ filter }) => {
                       <TableCell width="64px">
                         <Checkbox
                           size="small"
-                          checked={SelectedRows.includes(row.trackedUrlId)}
+                          checked={SelectedRows.includes(row.threadId)}
                           onChange={(evt) => {
-                            onRowSelectionChanged(row.trackedUrlId);
+                            onRowSelectionChanged(row.threadId);
                           }}
                         />
                       </TableCell>
-                      <TableCell component="th" scope="row">
-                        <Box display="flex" alignItems="center">
-                          <UserAvatar
-                            username={row.username}
-                            fullname={row.fullname}
-                          />
-                          <Box
-                            display="flex"
-                            flexDirection="column"
-                            style={{ marginLeft: theme.spacing(1) }}
-                          >
-                            <Typography
-                              variant="caption"
-                              style={{ color: theme.palette.text.hint }}
-                            >
-                              {row.username}
-                            </Typography>
-                            <Link href={row.url} target="_blank">
-                              {row.url}
-                            </Link>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell style={{ width: 160 }} align="left">
-                        <Box
-                          display="inline-flex"
-                          alignItems="center"
-                          justifyContent="start"
+                      <TableCell align="right">
+                        <Typography
+                          variant="caption"
+                          style={{ color: theme.palette.text.disabled }}
                         >
-                          <Today
-                            style={{
-                              width: 18,
-                              height: 18,
-                              color: theme.palette.text.hint,
-                            }}
-                            //style={{ color: theme.palette.text.hint }}
-                          />
-                          <Typography
-                            variant="body2"
-                            noWrap={true}
-                            style={{ marginLeft: theme.spacing(1) }}
+                          {timeSince(row.age)}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell scope="row">
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            overflow: "hidden",
+                            display: "block",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          <Link
+                            href={"https://" + row.url}
+                            target="_blank"
+                            style={{ textOverflow: "ellipsis" }}
                           >
-                            {timeSince(row.age)}
-                          </Typography>
-                        </Box>
+                            {row.url}
+                          </Link>
+                        </div>
                       </TableCell>
-                      <TableCell style={{ width: 160 }} align="right">
-                        <ScrapingThreadStatus row={row} />
+
+                      <TableCell align="right">
+                        {row.total_scraped_jobs}
                       </TableCell>
-                      <TableCell component="th" scope="row" align="right">
+                      <TableCell align="right">
+                        {row.crawler_threads_cnt}
+                      </TableCell>
+
+                      <TableCell align="right">{"TBD"}</TableCell>
+
+                      <TableCell component="th" align="right">
                         {_createRowActionsButton(row)}
                       </TableCell>
                     </React.Fragment>
@@ -534,15 +588,17 @@ const ManageUrlsAdminTable = ({ filter }) => {
                   return wrapComponent;
                 })}
             {!IsLoadingResults && renderEmptyRows()}
-            {RowActionObject && _attachRowActionsMenu()}
+            {/* Row actions menu */}
+            {_attachRowActionsMenu()}
+            {/* Row actions menu */}
           </TableBody>
         </Table>
       </div>
+
       {rowsLength > 0 && (
         <div>
           <TablePagination
-            style={{ width: "100%", float: "right" }}
-            rowsPerPageOptions={[5, 8, 10, 25, 50, 100]}
+            rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
             colSpan={3}
             count={tableData.totalRowsCount}
             rowsPerPage={rowsPerPage}
@@ -561,4 +617,4 @@ const ManageUrlsAdminTable = ({ filter }) => {
   );
 };
 
-export default ManageUrlsAdminTable;
+export default ManageUrlsTable;
