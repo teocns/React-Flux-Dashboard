@@ -92,8 +92,11 @@ export default function LineGraph({ chartData }) {
         },
       },
     });
-
-    return chart.destroy;
+    return () => {
+      try {
+        chart.destroy();
+      } catch (e) {}
+    };
   }, [chartData]);
 
   return (

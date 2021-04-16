@@ -146,7 +146,7 @@ export default function StatisticsView() {
 
   const syncStatistics = () => {
     isLoading = true;
-
+    console.log("Syncing statistics bitchj");
     statisticsActions.syncStatistics(
       new StatisticsSyncRequest(
         DateRangeFilter,
