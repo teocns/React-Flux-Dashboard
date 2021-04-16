@@ -255,7 +255,7 @@ export default function StatisticsView() {
           ))}
         </ButtonGroup>
 
-        <ChartViewModeSelect />
+        {/* <ChartViewModeSelect /> */}
       </Paper>
       <div
         style={{
