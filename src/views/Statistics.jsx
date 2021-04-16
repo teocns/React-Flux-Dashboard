@@ -195,23 +195,21 @@ export default function StatisticsView() {
     if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS]) {
       return 0;
     }
-    return (
-      Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph.reduce(
-        (a, b) => a.y2 + b.y2,
-        0
-      ) || ""
-    );
+    let acc = 0;
+    for (let x of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph) {
+      acc += x.y2;
+    }
+    return acc;
   };
   const calculateTotalTrackedUrls = () => {
     if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS]) {
       return 0;
     }
-    return (
-      Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS].graph.reduce(
-        (a, b) => a.y + b.y,
-        0
-      ) || ""
-    );
+    let acc = 0;
+    for (let x of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph) {
+      acc += x.y;
+    }
+    return acc;
   };
   return (
     <div style={{ overflow: "hidden" }}>

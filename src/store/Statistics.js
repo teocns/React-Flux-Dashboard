@@ -71,7 +71,7 @@ class StatisticsStore extends EventEmitter {
   canSync(syncStatisticsData) {
     // If 5 seconds have not passed and requesting data was unaltered, leave it for the same
     if (
-      parseInt(Date.now() / 1000) - this.#lastSync < 5000 &&
+      parseInt(Date.now() / 1000) - this.#lastSync < 500 &&
       this.#lastRequestData &&
       syncStatisticsData
     ) {
