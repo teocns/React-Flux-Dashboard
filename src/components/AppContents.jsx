@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+import LanguageIcon from "@material-ui/icons/Language";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import faviconIconPng from "../assets/favicon128.png";
 import ExtensionIcon from "@material-ui/icons/Extension";
@@ -406,12 +407,6 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText primary={"Tracked URLs"} />
                       </ListItem>
-                      <ListItem button key={"xml"} component={Link} to="/xml">
-                        <ListItemIcon>
-                          <CodeIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"XML"} />
-                      </ListItem>
                       <ListItem
                         button
                         key={"domains"}
@@ -419,9 +414,9 @@ function AppContents() {
                         to="/domains"
                       >
                         <ListItemIcon>
-                          <Domain />
+                          <LanguageIcon />
                         </ListItemIcon>
-                        <ListItemText primary={"Domains"} />
+                        <ListItemText primary={"Target websites"} />
                       </ListItem>
                       <ListItem
                         button

@@ -82,7 +82,7 @@ const COLUMNS = [
   },
   {
     name: "totalLinks",
-    label: "Total parsed links",
+    label: "Tracked URLs",
     align: "right",
   },
   {
@@ -91,8 +91,8 @@ const COLUMNS = [
     align: "right",
   },
   {
-    name: "linksWithoutJobSchema",
-    label: "Links without jobs",
+    name: "crawlerThreadsCount",
+    label: "Times crawled",
     align: "right",
   },
   // {
@@ -585,8 +585,8 @@ const DomainsManagementTable = ({ filter }) => {
                     </TableCell>
                     <TableCell scope="row">
                       <Box display="inline-flex" alignItems="center">
-                        <Link href={"https://" + row.host} target="_blank">
-                          {row.host}
+                        <Link href={"https://" + row.domain} target="_blank">
+                          {row.domain}
                         </Link>
                       </Box>
                     </TableCell>
@@ -594,7 +594,7 @@ const DomainsManagementTable = ({ filter }) => {
                     <TableCell align="right">{row.totalLinks}</TableCell>
                     <TableCell align="right">{row.scrapedJobs}</TableCell>
                     <TableCell align="right">
-                      {row.linksWithoutJobSchema}
+                      {row.crawlerThreadsCount}
                     </TableCell>
 
                     {/* <TableCell component="th" scope="row">

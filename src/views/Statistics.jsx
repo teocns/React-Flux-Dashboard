@@ -1,67 +1,24 @@
-import React, { useState, useEffect } from "react";
-import Chart from "chart.js";
-
-import clsx from "clsx";
-import PropTypes from "prop-types";
-
-import SearchIcon from "@material-ui/icons/Search";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableFooter from "@material-ui/core/TableFooter";
-import TablePagination from "@material-ui/core/TablePagination";
-import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
-import Box from "@material-ui/core/Box";
-import IconButton from "@material-ui/core/IconButton";
-import FirstPageIcon from "@material-ui/icons/FirstPage";
-import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
-import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import LastPageIcon from "@material-ui/icons/LastPage";
-
-import { useHistory } from "react-router-dom";
-
-import AddIcon from "@material-ui/icons/Add";
-import LinkIcon from "@material-ui/icons/Link";
-import sessionStore from "../store/session";
-import ManagaUrlsTable from "../components/Tables/ManageUrls";
-import dispatcher from "../dispatcher";
-
-import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
-import Grid from "@material-ui/core/Grid";
-import CardContent from "@material-ui/core/CardContent";
-
+import { ButtonGroup, CircularProgress } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import Grid from "@material-ui/core/Grid";
+import Paper from "@material-ui/core/Paper";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import { Skeleton } from "@material-ui/lab";
-import MultiFilter from "../components/Filters/MultiFilter";
-
-import Statistics, { StatisticsSyncRequest } from "../models/Statistics";
+import { DateRange } from "@material-ui/icons";
+import KeyMirror from "keymirror";
+import React, { useEffect, useState } from "react";
 import statisticsActions from "../actions/Statistics";
-import statisticsStore from "../store/Statistics";
-import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
-import ActionTypes from "../constants/ActionTypes";
-import StatisticsGraph from "../components/Charts/CrawlerThreads";
-import ChartViewModeSelect from "../components/Selects/ChartViewMode";
 import CrawlerThreadsChart from "../components/Charts/CrawlerThreads";
 import TrackedUrlsChart from "../components/Charts/TrackedUrls";
-
-import {
-  ButtonGroup,
-  Select,
-  MenuItem,
-  Menu,
-  CircularProgress,
-} from "@material-ui/core";
-import DateRanges from "../constants/DateRanges";
 import DateFilter from "../components/Filters/DateFilter";
 import UserFilter from "../components/Filters/UserFilter";
-import KeyMirror from "keymirror";
-import { ViewCarousel, ViewModule } from "@material-ui/icons";
+import ActionTypes from "../constants/ActionTypes";
+import DateRanges from "../constants/DateRanges";
 import { STATISTICS_TYPES } from "../constants/Statistics";
+import { StatisticsSyncRequest } from "../models/Statistics";
+import sessionStore from "../store/session";
+import statisticsStore from "../store/Statistics";
+
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -108,6 +65,8 @@ const CHART_VIEW_MODES = KeyMirror({
   PUZZLE: null,
 });
 
+var lastRequestedFilterB64 = "";
+
 export default function StatisticsView() {
   const [Statistics, setStatistics] = useState(statisticsStore.getStatistics());
 
@@ -144,9 +103,27 @@ export default function StatisticsView() {
   };
   const classes = useStyles();
 
+  const getFilter = (syncRequest) => {
+    if (!syncRequest)
+      return {
+        dateRange: DateRangeFilter,
+        types: ActiveStatisticTypes,
+        userFilter: SelectedUserFilter,
+      };
+
+    return {
+      dateRange: syncRequest.dateRange,
+      types: syncRequest.types,
+      userFilter: syncRequest.userFilter,
+    };
+  };
+
   const syncStatistics = () => {
     isLoading = true;
     console.log("Syncing statistics bitchj");
+
+    lastRequestedFilterB64 = btoa(JSON.stringify(getFilter()));
+
     statisticsActions.syncStatistics(
       new StatisticsSyncRequest(
         DateRangeFilter,
@@ -157,6 +134,15 @@ export default function StatisticsView() {
   };
 
   const onStatisticsSynced = () => {
+    // Verify that the received statistics match the requested ones
+    const statsb64 = btoa(
+      JSON.stringify(getFilter(statisticsStore.getStatistics().syncRequest))
+    );
+
+    if (statsb64 !== lastRequestedFilterB64) {
+      return false;
+    }
+
     isLoading = false;
     setStatistics(statisticsStore.getStatistics());
   };
@@ -259,84 +245,7 @@ export default function StatisticsView() {
         style={{
           display: "flex",
         }}
-      >
-        {/* <Card className={classes.card}>
-          <CardContent>
-            <Box display="flex" flexDirection="row" alignItems="center">
-              <div style={{ flex: 1 }}>
-                <Typography
-                  className={classes.title}
-                  color="textSecondary"
-                  gutterBottom
-                >
-                  Newly added URLs
-                </Typography>
-                {isLoading ? (
-                  <Skeleton
-                    variant="rect"
-                    style={{ width: 120, marginTop: 8 }}
-                  ></Skeleton>
-                ) : (
-                  <Typography variant="h5" component="h2">
-                    {calculateTotalTrackedUrls()}
-                  </Typography>
-                )}
-              </div>
-              <div
-                className={clsx({
-                  [classes.circle]: true,
-                  [classes.circleOrange]: true,
-                })}
-              >
-                <LinkIcon className={classes.cardIcon} />
-              </div>
-            </Box>
-          </CardContent>
-          {false && (
-            <CardActions>
-              <Button size="small">Learn More</Button>
-            </CardActions>
-          )}
-        </Card>
-        <Card className={classes.card}>
-          <CardContent>
-            <Box display="flex" flexDirection="row" alignItems="center">
-              <div style={{ flex: 1 }}>
-                <Typography
-                  className={classes.title}
-                  color="textSecondary"
-                  gutterBottom
-                >
-                  Jobs scraped
-                </Typography>
-                {isLoading ? (
-                  <Skeleton
-                    variant="rect"
-                    style={{ width: 120, marginTop: 8 }}
-                  ></Skeleton>
-                ) : (
-                  <Typography variant="h5" component="h2">
-                    {calculateTotalScrapedJobs()}
-                  </Typography>
-                )}
-              </div>
-              <div
-                className={clsx({
-                  [classes.circle]: true,
-                  [classes.circleBlue]: true,
-                })}
-              >
-                <AssignmentTurnedInIcon className={classes.cardIcon} />
-              </div>
-            </Box>
-          </CardContent>
-          {false && (
-            <CardActions>
-              <Button size="small">Learn More</Button>
-            </CardActions>
-          )}
-        </Card> */}
-      </div>
+      ></div>
       <Grid container spacing={2} style={{ overflow: "hidden" }}>
         {Statistics &&
           ActiveStatisticTypes.map((statistics_type) => {
