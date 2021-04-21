@@ -1,56 +1,45 @@
-import React, { useState, useEffect } from "react";
-import clsx from "clsx";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { useConfirm } from "material-ui-confirm";
-import MultifunctionalHeading from "../Table/MultifunctionalHeading";
-import countriesActions from "../../actions/Countries";
-import hostsActions from "../../actions/Hosts";
-import DEFAULT_PARSING_REGEX from "../../constants/Scraper";
 import {
-  Badge,
   Box,
   Checkbox,
   IconButton,
+  Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  TableFooter,
-  TableHead,
   TablePagination,
   TableRow,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Link,
   Typography,
 } from "@material-ui/core";
-
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { MoreVert, Search } from "@material-ui/icons";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import hostsActions from "../../actions/Hosts";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
+import ActionTypes from "../../constants/ActionTypes";
+import TableNames from "../../constants/Tables";
+import Country from "../../models/Country";
+import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
 
-import { Skeleton } from "@material-ui/lab";
-import ActionTypes from "../../constants/ActionTypes";
-import EditHostParsingRegexDialog from "../Dialogs/EditHostParsingRegex";
-import {
-  Delete,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Search,
-  MoreVert,
-  Edit,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
-import TableNames from "../../constants/Tables";
-import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
-import Country from "../../models/Country";
-
 const useStyles = makeStyles((theme) => ({
+  tableContainer: {
+    overflowY: "scroll",
+    overflowX: "hidden",
+  },
   table: {
     minWidth: 500,
+    tableLayout: "fixed",
+    overflowY: "auto",
+    overflowX: "hidden",
   },
   editRegexIcon: {
     opacity: 0,
@@ -95,11 +84,7 @@ const COLUMNS = [
     label: "Times crawled",
     align: "right",
   },
-  // {
-  //   name: "link_parsing_regex",
-  //   label: "External link parsing regex",
-  //   sortable: false,
-  // },
+
   {
     name: "actions",
     label: "",
@@ -147,7 +132,7 @@ const DomainsManagementTable = ({ filter }) => {
   const confirm = useConfirm();
   const rowsPerPage = tableData.rowsPerPage;
   const page = tableData.page;
-  const countryFilter = tableData.countryFilter;
+
   const dateRange = tableData.dateRange;
   let rows = tableData.rows;
 
@@ -185,10 +170,6 @@ const DomainsManagementTable = ({ filter }) => {
         .catch();
     }
   };
-  const handleUserFilterChanged = (userFilter) => {
-    return;
-    //setUserFilter(userFilter);
-  };
 
   const selectAllRows = (evt) => {
     const checked = evt.target.checked;
@@ -219,8 +200,6 @@ const DomainsManagementTable = ({ filter }) => {
           ? tableData.totalRowsCount
           : undefined,
       dateRange: newDateRange !== undefined ? newDateRange : dateRange,
-      countryFilter:
-        newCountryFilter !== undefined ? newCountryFilter : countryFilter,
     });
   };
   const handleChangePage = (event, newPage) => {
@@ -263,10 +242,7 @@ const DomainsManagementTable = ({ filter }) => {
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
     );
-    tableStore.addChangeListener(
-      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-      reSync
-    );
+
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
@@ -277,10 +253,7 @@ const DomainsManagementTable = ({ filter }) => {
         ActionTypes.Table.DATA_CREATED,
         onTableRowsDataUpdated
       );
-      tableStore.removeChangeListener(
-        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-        reSync
-      );
+
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
@@ -303,17 +276,12 @@ const DomainsManagementTable = ({ filter }) => {
   useEffect(() => {
     // Means data has not yet loaded nor requested
     setTimeout(() => {
-      if (!HasTableData || filter !== tableData.filter) {
-        syncTableData({});
-      }
+      syncTableData({});
     });
 
     return bindListeners();
-  }, []);
+  }, [filter]);
 
-  const handleCountryFilterChanged = (_countryFilter) => {
-    syncTableData({ newCountryFilter: _countryFilter });
-  };
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
   };
@@ -341,7 +309,7 @@ const DomainsManagementTable = ({ filter }) => {
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Add some links to get started
+            Try changing filter settings
           </Typography>
         );
     };
@@ -372,7 +340,7 @@ const DomainsManagementTable = ({ filter }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} links found
+              No{rowsLength > 0 ? " more" : ""} portals found
             </Typography>
           </Box>
           {_renderHint()}
@@ -525,79 +493,83 @@ const DomainsManagementTable = ({ filter }) => {
 
   return (
     <React.Fragment>
-      <Table className={classes.table} aria-label="custom pagination table">
-        {/* <LinearProgress
-        variant="indeterminate"
-        color="secondary"
-        style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
-      /> */}
-        <MultifunctionalHeading
-          columns={COLUMNS}
-          sort={tableData && tableData.sort}
-          onSortChanged={onSortChanged}
-        />
-        <TableBody>
-          {isLoadingResults && !hasInheritedRows
-            ? [
-                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
-              ].map((x) => (
-                <TableRow key={x} style={{ height: 56 }}>
-                  <TableCell width="5%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
-                  </TableCell>
-                  <TableCell width="50%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
-                  </TableCell>
-                  <TableCell width="15%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
-                  </TableCell>
-                  <TableCell width="15%" align="right">
-                    <Skeleton
-                      animation="wave"
-                      style={{
-                        width: "75%",
-                        display: "inline-block",
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell width="15%" align="right">
-                    <Skeleton
-                      animation="wave"
-                      style={{
-                        width: "75%",
-                        display: "inline-block",
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            : rows.map((row, index) => {
-                const innerRow = (
-                  <React.Fragment>
-                    <TableCell width="64px">
-                      <Checkbox
-                        size="small"
-                        checked={SelectedRows.includes(row.threadId)}
-                        onChange={(evt) => {
-                          onRowSelectionChanged(row.threadId);
+      <div className={classes.tableContainer}>
+        <Table className={classes.table} aria-label="custom pagination table">
+          <colgroup>
+            <col style={{ width: 64 }} />
+            <col style={{ width: "40%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: 128 }} />
+          </colgroup>
+          <MultifunctionalHeading
+            columns={COLUMNS}
+            sort={tableData && tableData.sort}
+            onSortChanged={onSortChanged}
+          />
+          <TableBody>
+            {isLoadingResults && !hasInheritedRows
+              ? [
+                  ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+                ].map((x) => (
+                  <TableRow key={x} style={{ height: 56 }}>
+                    <TableCell width="5%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="50%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="15%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
                         }}
                       />
                     </TableCell>
-                    <TableCell scope="row">
-                      <Box display="inline-flex" alignItems="center">
-                        <Link href={"https://" + row.domain} target="_blank">
-                          {row.domain}
-                        </Link>
-                      </Box>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
                     </TableCell>
+                  </TableRow>
+                ))
+              : rows.map((row, index) => {
+                  const innerRow = (
+                    <React.Fragment>
+                      <TableCell width="64px">
+                        <Checkbox
+                          size="small"
+                          checked={SelectedRows.includes(row.threadId)}
+                          onChange={(evt) => {
+                            onRowSelectionChanged(row.threadId);
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell scope="row">
+                        <Box display="inline-flex" alignItems="center">
+                          <Link href={"https://" + row.domain} target="_blank">
+                            {row.domain}
+                          </Link>
+                        </Box>
+                      </TableCell>
 
-                    <TableCell align="right">{row.totalLinks}</TableCell>
-                    <TableCell align="right">{row.scrapedJobs}</TableCell>
-                    <TableCell align="right">
-                      {row.crawlerThreadsCount}
-                    </TableCell>
+                      <TableCell align="right">{row.totalLinks}</TableCell>
+                      <TableCell align="right">{row.scrapedJobs}</TableCell>
+                      <TableCell align="right">
+                        {row.crawlerThreadsCount}
+                      </TableCell>
 
-                    {/* <TableCell component="th" scope="row">
+                      {/* <TableCell component="th" scope="row">
                       <Box display="inline-flex" alignItems="center">
                         <Box display="flex" flexDirection="column">
                           <code style={{ fontWeight: "400" }}>
@@ -623,50 +595,43 @@ const DomainsManagementTable = ({ filter }) => {
                         </IconButton>
                       </Box>
                     </TableCell> */}
-                    <TableCell component="th" align="right">
-                      {_createRowActionsButton(row)}
-                    </TableCell>
-                  </React.Fragment>
-                );
-                const wrapComponent = (
-                  <TableRow className={classes.tableRow} key={row.uuid}>
-                    {innerRow}
-                  </TableRow>
-                );
-                return wrapComponent;
-              })}
-          {!IsLoadingResults && renderEmptyRows()}
-          {/* Row actions menu */}
-          {_attachRowActionsMenu()}
-          {/* Row actions menu */}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            {rowsLength > 0 && (
-              <TablePagination
-                rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-                colSpan={3}
-                count={tableData.totalRowsCount}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: { "aria-label": "rows per page" },
-                  native: true,
-                }}
-                onChangePage={handleChangePage}
-                onChangeRowsPerPage={handleChangeRowsPerPage}
-                ActionsComponent={TablePaginationActions}
-              />
-            )}
-          </TableRow>
-        </TableFooter>
-      </Table>
-      <EditHostParsingRegexDialog
-        open={HostParsingRegexDialogOpen}
-        onClose={onHostParsingRegexDialogClosed}
-        host={RowActionObject && RowActionObject.host}
-        originalRegex={RowActionObject && RowActionObject.link_parsing_regex}
-      />
+                      <TableCell component="th" align="right">
+                        {_createRowActionsButton(row)}
+                      </TableCell>
+                    </React.Fragment>
+                  );
+                  const wrapComponent = (
+                    <TableRow className={classes.tableRow} key={row.uuid}>
+                      {innerRow}
+                    </TableRow>
+                  );
+                  return wrapComponent;
+                })}
+            {!IsLoadingResults && renderEmptyRows()}
+            {/* Row actions menu */}
+            {_attachRowActionsMenu()}
+            {/* Row actions menu */}
+          </TableBody>
+        </Table>
+      </div>
+      {rowsLength > 0 && (
+        <div>
+          <TablePagination
+            rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
+            colSpan={3}
+            count={tableData.totalRowsCount}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            SelectProps={{
+              inputProps: { "aria-label": "rows per page" },
+              native: true,
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={TablePaginationActions}
+          />
+        </div>
+      )}
     </React.Fragment>
   );
 };

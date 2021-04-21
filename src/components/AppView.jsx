@@ -21,7 +21,7 @@ import CountriesManagementView from "../views/CountriesManagement";
 import ScrapingThreadDetailsView from "../views/ScrapingThreadDetails";
 import DomainsManagementView from "../views/DomainsManagement";
 import CrawlingExtensionView from "../views/CrawlingExtension";
-
+import BlacklistView from "../views/BlacklistView";
 const useStyles = makeStyles((theme) => ({
   appView: {
     display: "flex",
@@ -55,10 +55,9 @@ const AppView = () => {
         <Route exact path="/add-user" component={AddUsersView} />
         <Route exact path="/statistics" component={StatisticsView} />
         <Route exact path="/user-statistics" component={StatisticsAdminView} />
-        <Route exact path="/xml" component={XmlManagementView} />
         <Route exact path="/countries" component={CountriesManagementView} />
         <Route exact path="/domains" component={DomainsManagementView} />
-        <Route exact path="/extension" component={CrawlingExtensionView} />
+        <Route exact path="/blacklist" component={BlacklistView} />
         <Route
           path="/url-details/:threadId"
           render={(props) => <ScrapingThreadDetailsView {...props} />}

@@ -48,6 +48,7 @@ import {
   AddCircleOutline as AddCircleOutlineIcon,
   Public as GlobeIcon,
   Domain,
+  Block,
 } from "@material-ui/icons";
 import AppView from "./AppView";
 import sessionStore from "../store/session";
@@ -417,6 +418,17 @@ function AppContents() {
                           <LanguageIcon />
                         </ListItemIcon>
                         <ListItemText primary={"Target websites"} />
+                      </ListItem>
+                      <ListItem
+                        button
+                        key={"blacklist"}
+                        component={Link}
+                        to="/blacklist"
+                      >
+                        <ListItemIcon>
+                          <Block />
+                        </ListItemIcon>
+                        <ListItemText primary={"Blacklist"} />
                       </ListItem>
                       <ListItem
                         button

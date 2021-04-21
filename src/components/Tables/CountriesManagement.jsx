@@ -1,80 +1,42 @@
-import React, { useState, useEffect } from "react";
-import WarningIcon from "@material-ui/icons/Warning";
-import Chip from "@material-ui/core/Chip";
-import Paper from "@material-ui/core/Paper";
-
-import CountryPickerDialog from "../Dialogs/CountryPicker";
-import RenameDialog from "../Dialogs/Rename";
-import PropTypes from "prop-types";
-import clsx from "clsx";
-import DateRangeIcon from "@material-ui/icons/DateRange";
-import AssignmentTurnedIn from "@material-ui/icons/AssignmentTurnedIn";
-import { DateRangePicker, DateRange } from "materialui-daterange-picker";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { useConfirm } from "material-ui-confirm";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import GlobeIcon from "@material-ui/icons/Public";
-import { prettyTimelapse, timeSince } from "../../helpers/time";
-import UserAvatar from "../User/Avatar/ShortLettersAvatar";
-import countriesActions from "../../actions/Countries";
 import {
   Badge,
   Box,
-  Button,
   Checkbox,
-  Divider,
   IconButton,
-  LinearProgress,
-  Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  CircularProgress,
-  TableContainer,
   TableFooter,
   TableHead,
   TablePagination,
   TableRow,
   Tooltip,
-  Menu,
-  MenuItem,
   Typography,
-  ButtonGroup,
 } from "@material-ui/core";
-
-import FilterListIcon from "@material-ui/icons/FilterList";
+import Chip from "@material-ui/core/Chip";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { Delete, MoreVert, Search } from "@material-ui/icons";
+import AssignmentTurnedIn from "@material-ui/icons/AssignmentTurnedIn";
+import WarningIcon from "@material-ui/icons/Warning";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import countriesActions from "../../actions/Countries";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import { motion } from "framer-motion";
-import { Link as RouterLink } from "react-router-dom";
-import sessionStore from "../../store/session";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import CountryFilter from "../Filters/CountryFilter";
-import TablePaginationActions from "./Pagination";
-import EmptyTablePlaceholder from "./EmptyPlaceholder";
-
-import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
-import {
-  Add,
-  AddCircle,
-  Delete,
-  Today,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Public,
-  RssFeedTwoTone,
-  Search,
-  MoreVert,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
-import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
-import LinkIcon from "@material-ui/icons/Link";
 import Country from "../../models/Country";
+import TableData from "../../models/TableData";
+import tableStore from "../../store/Tables";
+import CountryPickerDialog from "../Dialogs/CountryPicker";
+import RenameDialog from "../Dialogs/Rename";
+import MultiFilter from "../Filters/MultiFilter";
+import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({
   table: {

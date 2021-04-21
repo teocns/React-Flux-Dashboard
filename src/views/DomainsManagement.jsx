@@ -1,43 +1,27 @@
-import React, { useState, useEffect } from "react";
-
-import PropTypes from "prop-types";
-
-import SearchIcon from "@material-ui/icons/Search";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableFooter from "@material-ui/core/TableFooter";
-import TablePagination from "@material-ui/core/TablePagination";
-import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
-import IconButton from "@material-ui/core/IconButton";
-import FirstPageIcon from "@material-ui/icons/FirstPage";
-import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
-import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import LastPageIcon from "@material-ui/icons/LastPage";
-import LinkIcon from "@material-ui/icons/Link";
-import { useHistory } from "react-router-dom";
-
 import {
-  Divider,
-  Input,
-  TableHead,
-  TextField,
   Button,
+  Divider,
   FormControl,
-  InputLabel,
   InputAdornment,
-  ButtonGroup,
   OutlinedInput,
 } from "@material-ui/core";
-
+import Paper from "@material-ui/core/Paper";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import TableContainer from "@material-ui/core/TableContainer";
+import SearchIcon from "@material-ui/icons/Search";
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import DomainsManagementTable from "../components/Tables/DomainsManagement";
 
 const useStyles = makeStyles({
   table: {
     minWidth: 500,
+  },
+  tableContainer: {
+    overflow: "hidden",
+    overflowY: "hidden",
+    display: "flex",
+    flexDirection: "column",
   },
 });
 let filterTimeout = undefined;
@@ -58,7 +42,7 @@ export default function DomainsManagementView() {
   };
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} className={classes.tableContainer}>
       <div
         style={{
           padding: theme.spacing(2),
@@ -97,7 +81,7 @@ export default function DomainsManagementView() {
         </Button>
       </div>
       <Divider />
-      <DomainsManagementTable />
+      <DomainsManagementTable filter={Filter} />
     </TableContainer>
   );
 }

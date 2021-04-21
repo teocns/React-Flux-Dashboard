@@ -102,15 +102,15 @@ export default function Snackbars() {
             horizontal: "center",
           }}
           open={open}
-          autoHideDuration={2750}
+          autoHideDuration={5000}
           onClose={handleClose}
           onExited={handleExited}
           message={messageInfo ? messageInfo.message : undefined}
           action={
             <React.Fragment>
-              <Button color="secondary" size="small" onClick={handleClose}>
+              {/* <Button color="secondary" size="small" onClick={handleClose}>
                 UNDO
-              </Button>
+              </Button> */}
               <IconButton
                 aria-label="close"
                 color="inherit"
