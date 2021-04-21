@@ -24,6 +24,11 @@ const Errors = {
     "The URL has already been scraped in the past 24 hours",
   ERR_HOST_BANNED: "Domain is banned by administrators",
   ERR_URL_ALREADY_TRACKED: "URL has already been tracked",
+  ERR_RULE_TYPE_CURRENTLY_UNSUPPORTED:
+    "Rule type is not supported at the moment",
+  ERR_RULE_INVALID: "The rule is not valid",
+  ERR_SAME_RULE_ALREADY_EXIST: "A rule with the same criteria already exists",
+  ERR_BLACKLISTED_URL: "URL blacklisted by the administration",
 };
 
 export default Errors;

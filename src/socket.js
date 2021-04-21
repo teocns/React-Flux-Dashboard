@@ -40,4 +40,14 @@ export function sendMessage(event, data) {
   socketInstance.emit(event, data);
 }
 
+export const waitForEvent = (eventName) => {
+  return new Promise((cb) => {
+    const handle = (event, message) => {
+      socketInstance.removeEventListener(eventName, handle);
+      cb(event, message);
+    };
+    socketInstance.addEventListener(eventName, handle);
+  });
+};
+
 export default socketInstance;

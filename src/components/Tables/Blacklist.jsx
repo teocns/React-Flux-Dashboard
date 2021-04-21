@@ -1,6 +1,8 @@
 import {
   Box,
+  Button,
   Checkbox,
+  Divider,
   IconButton,
   Link,
   Menu,
@@ -12,14 +14,20 @@ import {
   TableRow,
   Typography,
 } from "@material-ui/core";
+import {
+  BLACKLIST_RULE_TYPES,
+  BLACKLIST_RULE_TYPES_NICE_NAMES,
+} from "../../constants/Blacklist";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { MoreVert, Search } from "@material-ui/icons";
+import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
 import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
 import hostsActions from "../../actions/Hosts";
 import tableActions from "../../actions/Table";
+import blacklistActions from "../../actions/Blacklist";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
 import ActionTypes from "../../constants/ActionTypes";
@@ -29,7 +37,7 @@ import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
-
+import { timeSince } from "../../helpers/time";
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     //overflowY: "scroll",
@@ -63,34 +71,38 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const THIS_TABLE_NAME = TableNames.DOMAINS_MANAGEMENT;
+const THIS_TABLE_NAME = TableNames.BLACKLIST;
 const COLUMNS = [
   {
-    name: "RUlke",
+    name: "rule",
     label: "Rule",
   },
   {
-    name: "totalLinks",
+    name: "reason",
+    label: "Reason and notes",
+  },
+  {
+    name: "rule_type_id",
     label: "Type",
     align: "right",
   },
   {
-    name: "scrapedJobs",
+    name: "username",
     label: "Added by",
     align: "right",
   },
   {
-    name: "crawlerThreadsCount",
-    label: "Actions",
+    name: "age",
+    label: "Live since",
     align: "right",
   },
   {
-    name: "crawlerThreadsCount",
-    label: "",
+    name: "affected_urls",
+    label: "Tracked URL(s) affected by rule",
     align: "right",
   },
 ];
-const BlacklistTable = ({ filter }) => {
+const BlacklistTable = ({ filter, refreshControl }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -153,30 +165,26 @@ const BlacklistTable = ({ filter }) => {
   const deleteSelectedRows = () => {
     if (SelectedRows.length) {
       confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} links?`,
-        title: `Delete ${SelectedRows.length} links`,
+        description: `Are you sure you want to delete ${SelectedRows.length} rules?`,
+        title: `Delete ${SelectedRows.length} rules`,
       })
         .then(async () => {
-          const res = await ScrapingThreadApi.Delete(SelectedRows);
-          if (res && res.success) {
-            uiActions.showSnackbar(`Links deleted successfully`, "success");
-            setSelectedRows([]);
-            setTimeout(() => {
-              syncTableData({});
-            });
-          }
+          await blacklistActions.removeRules(SelectedRows);
+          setSelectedRows([]);
+          setTimeout(() => {
+            syncTableData({});
+          });
         })
         .catch();
     }
   };
 
-  const selectAllRows = (evt) => {
-    const checked = evt.target.checked;
+  const selectAllRows = (checked) => {
     if (!checked) {
       setSelectedRows([]);
     } else if (checked) {
       if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
+        setSelectedRows(rows.map((row) => row.item_id));
       }
     }
   };
@@ -187,7 +195,6 @@ const BlacklistTable = ({ filter }) => {
     newDateRange,
     newCountryFilter,
   }) => {
-    return false;
     tableActions.createTableData({
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
@@ -223,13 +230,6 @@ const BlacklistTable = ({ filter }) => {
       setTableData(foundTable);
     }
   };
-  console.log("rendering", tableData);
-
-  // const onScrapingThreadCreated = () => {
-  //   setTimeout(() => {
-  //     syncTableData({ newPage: 0 });
-  //   });
-  // };
 
   const reSync = () => {
     setTimeout(() => {
@@ -280,7 +280,7 @@ const BlacklistTable = ({ filter }) => {
     });
 
     return bindListeners();
-  }, [filter]);
+  }, [filter, refreshControl]);
 
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
@@ -309,12 +309,12 @@ const BlacklistTable = ({ filter }) => {
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Start adding some
+            Try changing filter
           </Typography>
         );
     };
     const _emptyRowContent = () => (
-      <TableCell colspan="6">
+      <TableCell colspan="7">
         <Box
           display="flex"
           justifyContent="center"
@@ -340,7 +340,7 @@ const BlacklistTable = ({ filter }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} blacklisted rules
+              No{rowsLength > 0 ? " more" : ""} blacklisted rules found
             </Typography>
           </Box>
           {_renderHint()}
@@ -413,14 +413,7 @@ const BlacklistTable = ({ filter }) => {
     );
     handle.focus();
   };
-  const testRegex = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
-      "_blank"
-    );
-    handle.focus();
-  };
+
   const _createRowActionsButton = (country) => {
     const key = country.countryId;
     return (
@@ -438,6 +431,8 @@ const BlacklistTable = ({ filter }) => {
       </React.Fragment>
     );
   };
+
+  const deleteRule = () => {};
 
   const _attachRowActionsMenu = () => {
     return (
@@ -493,20 +488,65 @@ const BlacklistTable = ({ filter }) => {
 
   return (
     <React.Fragment>
+      <AnimatePresence>
+        {SelectedRows.length > 0 && (
+          <React.Fragment>
+            <motion.div
+              initial={{
+                opacity: 0,
+                scaleY: 0,
+              }}
+              animate={{
+                scaleY: 1,
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+                scaleY: 0,
+              }}
+              transition={{
+                duration: 0.125,
+                type: "tween",
+              }}
+            >
+              <div
+                style={{
+                  padding: theme.spacing(2),
+                  paddingBottom: theme.spacing(2),
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Button onClick={deleteSelectedRows}>
+                  Deleted selected rules
+                </Button>
+              </div>
+            </motion.div>
+            <Divider />
+          </React.Fragment>
+        )}
+      </AnimatePresence>
+
       <div className={classes.tableContainer}>
         <Table className={classes.table} aria-label="custom pagination table">
           <colgroup>
             <col style={{ width: 64 }} />
-            <col style={{ width: "40%" }} />
             <col style={{ width: "20%" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: 128 }} />
+            <col style={{ width: "30%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "10%" }} />
           </colgroup>
           <MultifunctionalHeading
             columns={COLUMNS}
             sort={tableData && tableData.sort}
             onSortChanged={onSortChanged}
+            onCheckedChanged={selectAllRows}
+            disableChecker={!rows.length}
+            allRowsChecked={
+              SelectedRows.length && SelectedRows.length === rows.length
+            }
           />
           <TableBody>
             {isLoadingResults && !hasInheritedRows ? (
@@ -518,25 +558,21 @@ const BlacklistTable = ({ filter }) => {
                     <TableCell width="64px">
                       <Checkbox
                         size="small"
-                        checked={SelectedRows.includes(row.threadId)}
+                        checked={SelectedRows.includes(row.item_id)}
                         onChange={(evt) => {
-                          onRowSelectionChanged(row.threadId);
+                          onRowSelectionChanged(row.item_id);
                         }}
                       />
                     </TableCell>
-                    <TableCell scope="row">
-                      <Box display="inline-flex" alignItems="center">
-                        <Link href={"https://" + row.domain} target="_blank">
-                          {row.domain}
-                        </Link>
-                      </Box>
-                    </TableCell>
+                    <TableCell scope="row">{row.rule}</TableCell>
+                    <TableCell scope="row">{row.reason}</TableCell>
 
-                    <TableCell align="right">{row.totalLinks}</TableCell>
-                    <TableCell align="right">{row.scrapedJobs}</TableCell>
                     <TableCell align="right">
-                      {row.crawlerThreadsCount}
+                      {BLACKLIST_RULE_TYPES_NICE_NAMES[row.rule_type_id]}
                     </TableCell>
+                    <TableCell align="right">{row.username}</TableCell>
+                    <TableCell align="right">{timeSince(row.age)}</TableCell>
+                    <TableCell align="right">{row.affected_urls}</TableCell>
 
                     {/* <TableCell component="th" scope="row">
                       <Box display="inline-flex" alignItems="center">
@@ -564,9 +600,6 @@ const BlacklistTable = ({ filter }) => {
                         </IconButton>
                       </Box>
                     </TableCell> */}
-                    <TableCell component="th" align="right">
-                      {_createRowActionsButton(row)}
-                    </TableCell>
                   </React.Fragment>
                 );
                 const wrapComponent = (
@@ -579,7 +612,7 @@ const BlacklistTable = ({ filter }) => {
             )}
             {renderEmptyRows()}
             {/* Row actions menu */}
-            {_attachRowActionsMenu()}
+
             {/* Row actions menu */}
           </TableBody>
         </Table>

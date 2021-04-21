@@ -24,6 +24,8 @@ const SocketEvents = keyMirror({
   RENAME_COUNTRY: null,
   HOST_SYNC: null,
   RETRY_THREAD: null,
+  ADD_BLACKLIST_RULE: null,
+  DELETE_BLACKLIST_RULE: null,
 });
 
 export default SocketEvents;

@@ -4,6 +4,7 @@ import {
   FormControl,
   InputAdornment,
   OutlinedInput,
+  Typography,
 } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -11,6 +12,7 @@ import TableContainer from "@material-ui/core/TableContainer";
 import { Domain, Language, TextFields } from "@material-ui/icons";
 import LinkIcon from "@material-ui/icons/Link";
 import SearchIcon from "@material-ui/icons/Search";
+
 import React, { useState } from "react";
 import AddToBlacklist from "../components/AddToBlacklist";
 import BlacklistTable from "../components/Tables/Blacklist";
@@ -38,6 +40,7 @@ var BLACKLIST_RULE_TYPES = {
 export default function BlacklistView() {
   const [Filter, setFilter] = useState("");
 
+  const [refreshControl, setrefreshControl] = useState();
   const [FormBlacklistRuleType, setFormBlacklistRuleType] = useState(
     BLACKLIST_RULE_TYPES.PORTAL
   );
@@ -56,8 +59,18 @@ export default function BlacklistView() {
 
   return (
     <div>
-      <AddToBlacklist />
+      <AddToBlacklist
+        onRuleAdded={() => {
+          setrefreshControl(Math.random());
+        }}
+      />
       <Paper>
+        <Typography
+          style={{ padding: theme.spacing(2), paddingBottom: 0 }}
+          variant="h6"
+        >
+          Live rules
+        </Typography>
         <TableContainer className={classes.tableContainer}>
           <div
             style={{
@@ -98,7 +111,8 @@ export default function BlacklistView() {
             </Button>
           </div>
           <Divider />
-          <BlacklistTable filter={Filter} />
+
+          <BlacklistTable filter={Filter} refreshControl={refreshControl} />
         </TableContainer>
       </Paper>
     </div>

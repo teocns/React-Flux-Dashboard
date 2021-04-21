@@ -87,8 +87,8 @@ function onApiError(apiError) {
 
 function onApiSuccess(successMessage) {
   dispatcher.dispatch({
-    actionType: ActionTypes.Session.API_ERROR,
-    data: successMessage,
+    actionType: ActionTypes.UI.SHOW_SNACKBAR,
+    data: { message: successMessage, severity: "success" },
   });
 }
 function tryAuthentication() {

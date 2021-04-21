@@ -15,12 +15,18 @@ import Paper from "@material-ui/core/Paper";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { Domain, Language, TextFields } from "@material-ui/icons";
 import LinkIcon from "@material-ui/icons/Link";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { capitalizeFirstLetter } from "../helpers/strings";
 import { isDomain, isHostname, isUrl } from "../helpers/url";
 import { isRegex } from "../helpers/strings";
 import uiActions from "../actions/UI";
 import KeyboardIcon from "@material-ui/icons/Keyboard";
+import blacklistActions from "../actions/Blacklist";
+
+import {
+  BLACKLIST_RULE_TYPES,
+  BLACKLIST_RULE_TYPES_NICE_NAMES,
+} from "../constants/Blacklist";
 const useStyles = makeStyles({
   table: {
     minWidth: 500,
@@ -49,28 +55,16 @@ const useStyles = makeStyles({
 });
 let filterTimeout = undefined;
 
-var BLACKLIST_RULE_TYPES = {
-  PORTAL: 1,
-  DOMAIN: 2,
-  URL: 3,
-  REGEX: 4,
-};
-
-var BLACKLIST_RULE_TYPES_NICE_NAMES = {
-  [BLACKLIST_RULE_TYPES.PORTAL]: "Portal",
-  [BLACKLIST_RULE_TYPES.DOMAIN]: "Portal domain",
-  [BLACKLIST_RULE_TYPES.URL]: "Full URL match",
-  [BLACKLIST_RULE_TYPES.REGEX]: "Regular expression",
-};
-
 var HasEverTypedAnything = false;
 
-const AddToBlacklist = () => {
+const AddToBlacklist = ({ onRuleAdded }) => {
   const [FormBlacklistRuleType, setFormBlacklistRuleType] = useState(-1);
-
+  const [Rule, setRule] = useState();
   const classes = useStyles();
 
   const theme = useTheme();
+
+  const ruleInput = useRef(null);
 
   const onAddBlacklistTypeChange = (event) => {
     // Don't allow manual change of type
@@ -79,8 +73,18 @@ const AddToBlacklist = () => {
     showSnackbar("The type will be auto-identified as you input the rule.");
   };
 
-  const addRule = () => {
-    uiActions.showSnackbar("Feature under development", "warning");
+  const addRule = async () => {
+    const reason = prompt(
+      "What is the reason for the blacklist rule? Note that you could leave empty"
+    );
+    if (reason === null) {
+      return false;
+    }
+
+    await blacklistActions.addRule(Rule, reason);
+
+    onRuleAdded && onRuleAdded();
+    //uiActions.showSnackbar("Feature under development", "warning");
   };
 
   const getBlacklistRuleIcon = () => {
@@ -95,7 +99,6 @@ const AddToBlacklist = () => {
         return <LinkIcon />;
       default:
         return <KeyboardIcon />;
-        break;
     }
   };
 
@@ -111,8 +114,6 @@ const AddToBlacklist = () => {
         return "Example:\thttp://glassdoor.com/about";
       default:
         return "Type something to auto identify the rule type";
-        // Really big wtf?
-        break;
     }
   };
 
@@ -140,11 +141,14 @@ const AddToBlacklist = () => {
   const onInputChanged = (val) => {
     HasEverTypedAnything = true;
     const guessedType = guessType(val);
-    console.log("guessedType", guessedType);
 
     if (guessedType !== FormBlacklistRuleType) {
       setFormBlacklistRuleType(guessedType);
     }
+
+    setTimeout(() => {
+      setRule(val);
+    });
   };
 
   return (
@@ -190,6 +194,7 @@ const AddToBlacklist = () => {
 
         <FormControl fullWidth size="small" className={classes.margin}>
           <TextField
+            ref={ruleInput}
             id="standard-adornment-amount"
             size="small"
             //label=
@@ -206,10 +211,11 @@ const AddToBlacklist = () => {
               onInputChanged(evt.target.value);
             }}
             className={classes.bigRippleInput}
-            // onKeyPress={(evt) => {
-            //   onInputChanged(evt.target.value);
-            // }}
-
+            onKeyPress={(evt) => {
+              if (evt.key === "Enter") {
+                addRule();
+              }
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

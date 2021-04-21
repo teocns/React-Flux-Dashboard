@@ -2,7 +2,11 @@ import ActionTypes from "../constants/ActionTypes";
 import SocketEvents from "../constants/SocketEvents";
 import dispatcher from "../dispatcher";
 import { sendMessage } from "../socket";
+/**
+ * @deprecated
+ */
 const sync = () => {
+  //
   sendMessage(SocketEvents.COUNTRIES_FILTER_SYNC);
 };
 

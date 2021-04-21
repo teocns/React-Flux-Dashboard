@@ -48,12 +48,13 @@ const MultifunctionalTableHeading = ({
   sort,
   allRowsChecked = false,
   disableChecker = false,
+  hideChecker = false,
 }) => {
   const classes = useStyles();
   return (
     <TableHead>
       <TableRow>
-        {!disableChecker && (
+        {!hideChecker && (
           <TableCell>
             <Checkbox
               size="small"

@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     paddingTop: 86,
     height: "100%",
-    overflowY: "hidden",
+    overflowY: "auto",
     maxHeight: "100%",
   },
   backdrop: {

@@ -9,4 +9,5 @@ export default keymirror({
   XML_FEEDS: null,
   COUNTRIES_MANAGEMENT: null,
   DOMAINS_MANAGEMENT: null,
+  BLACKLIST: null,
 });
