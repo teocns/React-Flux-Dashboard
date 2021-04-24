@@ -18,6 +18,7 @@ import Select from "@material-ui/core/Select";
 import Checkbox from "@material-ui/core/Checkbox";
 import Chip from "@material-ui/core/Chip";
 import userFilterStore from "../../store/UserFilter";
+import userFilterActions from "../../actions/UserFilter";
 import { Skeleton } from "@material-ui/lab";
 import {
   Menu,
@@ -39,6 +40,7 @@ import {
 import DateRanges from "../../constants/DateRanges";
 import countryFilterStore from "../../store/CountryFilter";
 import ActionTypes from "../../constants/ActionTypes";
+import dispatcher from "../../dispatcher";
 const useStyles = makeStyles((theme) => ({
   select: {
     "&:before": {
@@ -95,9 +97,11 @@ function getStyles(name, personName, theme) {
 }
 
 function UserFilter({ onUserFilterChanged }) {
-  const [SelectedUsers, setSelectedUsers] = useState([]);
-
   const [Users, setUsers] = useState(userFilterStore.get());
+
+  const [SelectedUsers, setSelectedUsers] = useState(
+    Users ? Object.keys(Users) : []
+  );
 
   const [DateRange, setDateRange] = useState(null);
 
@@ -157,8 +161,8 @@ function UserFilter({ onUserFilterChanged }) {
     }
   };
 
-  const clearUsersFilter = () => {
-    handleUsersFilterChanged([]);
+  const selectAllUsers = () => {
+    handleUsersFilterChanged(Object.keys(Users));
     setTimeout(() => {
       setUserMenuOpen(false);
     });
@@ -166,6 +170,7 @@ function UserFilter({ onUserFilterChanged }) {
 
   const handleUsersFilterChanged = (selectedUsers) => {
     setSelectedUsers(selectedUsers);
+    userFilterActions.userFilterChanged(selectedUsers);
     if (isFunction(onUserFilterChanged)) {
       onUserFilterChanged(selectedUsers);
     }
@@ -179,7 +184,7 @@ function UserFilter({ onUserFilterChanged }) {
             SelectedUsers && SelectedUsers.length ? SelectedUsers.length : ""
           }
           color="secondary"
-          variant="dot"
+          variant={SelectedUsers.length ? "standard" : "dot"}
         >
           <IconButton
             size="small"
@@ -188,7 +193,10 @@ function UserFilter({ onUserFilterChanged }) {
             onClick={toggleUsersMenu}
             ref={usersAnchorRef}
           >
-            <PersonIcon style={{ color: theme.palette.text.disabled }} />
+            <PersonIcon
+              style={{ color: theme.palette.text.disabled }}
+              size={SelectedUsers.length ? "medium" : "small"}
+            />
           </IconButton>
         </Badge>
       )}
@@ -202,7 +210,7 @@ function UserFilter({ onUserFilterChanged }) {
         anchorEl={usersAnchorRef.current}
         style={{ paddingTop: 0 }}
       >
-        <MenuItem button onClick={clearUsersFilter}>
+        <MenuItem button onClick={selectAllUsers}>
           <Button
             disableRipple={true}
             disableFocusRipple={true}
@@ -210,7 +218,7 @@ function UserFilter({ onUserFilterChanged }) {
             variant="small"
             startIcon={<ClearAllIcon />}
           >
-            Clear and show all
+            Select all
           </Button>
         </MenuItem>
         <Divider />

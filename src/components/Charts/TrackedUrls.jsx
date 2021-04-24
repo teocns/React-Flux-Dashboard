@@ -1,60 +1,67 @@
 import Chart from "chart.js";
 import React, { useEffect, useRef } from "react";
+import { getRandomColor } from "../../helpers/colors";
+
+const insertIgnore = (array, item) => {
+  if (!array.includes(item)) {
+    array.push(item);
+  }
+};
 
 export default function LineGraph({ chartData }) {
   const chartRef = useRef(null);
   const datasets = [];
   const labels = [];
 
-  const { graph, timeFrame, dateRange } = chartData;
+  let yAxes = [];
 
-  let dateDiff = Math.abs(
-    dateRange.endDate
-      ? dateRange.endDate
-      : 0 - dateRange.startDate
-      ? dateRange.startDate
-      : 0
-  );
+  for (let dataset of chartData) {
+    const { graph, syncRequest, userName } = dataset;
 
-  let dataset_tracked_urls = {
-    label: "Newly added URLs",
-    borderColor: "blue",
-    data: [],
-  };
+    const timeFrame = syncRequest.dateRange.timeFrame;
 
-  let yMinTimestamp = "";
-  let yMaxTimestamp = "";
+    let dataset_tracked_urls = {
+      label: userName,
+      borderColor: getRandomColor(userName[1]),
+      borderWidth: 2,
+      data: [],
+    };
 
-  for (let axes of graph) {
-    let x = axes.x;
-    let y = axes.y;
-    x.replace("-", "/");
-    let t = new Date(axes.timestamp);
-    if (!yMinTimestamp || t < yMinTimestamp) {
-      yMinTimestamp = t;
+    let yMinTimestamp = "";
+    let yMaxTimestamp = "";
+
+    for (let axes of graph) {
+      let x = axes.x;
+      let y = axes.y;
+      x.replace("-", "/");
+      let t = new Date(axes.timestamp);
+      if (!yMinTimestamp || t < yMinTimestamp) {
+        yMinTimestamp = t;
+      }
+      if (!yMaxTimestamp || t > yMaxTimestamp) {
+        yMaxTimestamp = t;
+      }
+      switch (timeFrame) {
+        case "HOUR":
+          insertIgnore(labels, `${x.slice(11, 13)}:00`);
+          break;
+        case "DAY":
+          insertIgnore(labels, `${x.slice(5, 10)}`);
+          break;
+        case "MONTH":
+          insertIgnore(labels, `${x.slice(0, 7)}`);
+          break;
+
+        default:
+          insertIgnore(labels, `${x}`);
+          break;
+      }
+
+      dataset_tracked_urls.data.push(y);
     }
-    if (!yMaxTimestamp || t > yMaxTimestamp) {
-      yMaxTimestamp = t;
-    }
-    switch (timeFrame) {
-      case "HOUR":
-        labels.push(`${x.slice(11, 13)}:00`);
-        break;
-      case "DAY":
-        labels.push(`${x.slice(5, 10)}`);
-        break;
-      case "MONTH":
-        labels.push(`${x.slice(0, 7)}`);
-        break;
 
-      default:
-        labels.push(`${x}`);
-        break;
-    }
-
-    dataset_tracked_urls.data.push(y);
+    datasets.push(dataset_tracked_urls);
   }
-  datasets.push(dataset_tracked_urls);
 
   useEffect(() => {
     const myChartRef = chartRef.current.getContext("2d");

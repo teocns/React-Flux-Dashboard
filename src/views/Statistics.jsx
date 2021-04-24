@@ -88,12 +88,11 @@ export default function StatisticsView() {
 
   const [ViewMode, setViewMode] = useState();
 
-  //const [UserFilter, setUserFilter] = useState(null);
   const [DateRangeFilter, setDateRangeFilter] = useState(DateRanges[0]);
 
   const user = sessionStore.getUser();
 
-  const [SelectedUserFilter, setUserFilter] = useState(null);
+  const [SelectedUserFilter, setUserFilter] = useState([]);
 
   const handleDateFilterChanged = (dateRange) => {
     if (!dateRange.timeFrame) {
@@ -182,8 +181,8 @@ export default function StatisticsView() {
       return 0;
     }
     let acc = 0;
-    for (let x of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS].graph) {
-      acc += x.y2;
+    for (let dataset of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS]) {
+      acc += dataset.summary.scrapedJobs;
     }
     return acc;
   };
@@ -192,8 +191,8 @@ export default function StatisticsView() {
       return 0;
     }
     let acc = 0;
-    for (let x of Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS].graph) {
-      acc += x.y;
+    for (let dataset of Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS]) {
+      acc += dataset.summary.trackedUrls;
     }
     return acc;
   };
@@ -211,8 +210,7 @@ export default function StatisticsView() {
           <div style={{ marginRight: 12 }}>
             <UserFilter
               onUserFilterChanged={(dd) => {
-                console.log(dd);
-                setUserFilter(dd);
+                setUserFilter(dd.map((c) => parseInt(c)));
               }}
             />
           </div>
@@ -257,11 +255,13 @@ export default function StatisticsView() {
               case STATISTICS_TYPES.TRACKED_URLS:
                 title = "Newly added URLs";
                 sumFunc = calculateTotalTrackedUrls;
-                chart = () => (
-                  <TrackedUrlsChart
-                    chartData={Statistics.graphs[statistics_type]}
-                  />
-                );
+                chart = () => {
+                  return (
+                    <TrackedUrlsChart
+                      chartData={Statistics.graphs[statistics_type]}
+                    />
+                  );
+                };
                 break;
               case STATISTICS_TYPES.SCRAPED_JOBS:
                 title = "Jobs scraped";
@@ -273,7 +273,7 @@ export default function StatisticsView() {
                 );
                 break;
               default:
-                return "fuck";
+                break;
             }
             return (
               <Grid

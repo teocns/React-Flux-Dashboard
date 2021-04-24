@@ -1,68 +1,65 @@
 import Chart from "chart.js";
 import React, { useEffect, useRef } from "react";
 
+import { getRandomColor } from "../../helpers/colors";
+
+const insertIgnore = (array, item) => {
+  if (!array.includes(item)) {
+    array.push(item);
+  }
+};
+
 export default function LineGraph({ chartData }) {
   const chartRef = useRef(null);
   const datasets = [];
   const labels = [];
 
-  const { graph, timeFrame, dateRange } = chartData;
+  for (let dataset of chartData) {
+    const { graph, syncRequest, userName } = dataset;
 
-  let dateDiff = Math.abs(
-    dateRange.endDate
-      ? dateRange.endDate
-      : 0 - dateRange.startDate
-      ? dateRange.startDate
-      : 0
-  );
+    const timeFrame = syncRequest.dateRange.timeFrame;
 
-  let dataset_tracked_urls = {
-    label: "Crawler requests",
-    borderColor: "blue",
-    data: [],
-  };
+    let dataset_scraped_jobs = {
+      label: userName,
+      borderColor: getRandomColor(userName[1]),
+      borderWidth: 2,
+      data: [],
+    };
 
-  let dataset_scraped_jobs = {
-    label: "Scraped jobs",
-    borderColor: "green",
-    data: [],
-  };
+    let yMinTimestamp = "";
+    let yMaxTimestamp = "";
 
-  let yMinTimestamp = "";
-  let yMaxTimestamp = "";
+    for (let axes of graph) {
+      let x = axes.x;
+      x.replace("-", "/");
+      let t = new Date(axes.timestamp);
+      if (!yMinTimestamp || t < yMinTimestamp) {
+        yMinTimestamp = t;
+      }
+      if (!yMaxTimestamp || t > yMaxTimestamp) {
+        yMaxTimestamp = t;
+      }
+      switch (timeFrame) {
+        case "HOUR":
+          insertIgnore(labels, `${x.slice(11, 13)}:00`);
+          break;
+        case "DAY":
+          insertIgnore(labels, `${x.slice(5, 10)}`);
+          break;
+        case "MONTH":
+          insertIgnore(labels, `${x.slice(0, 7)}`);
+          break;
 
-  for (let axes of graph) {
-    let x = axes.x;
-    let y = axes.y;
-    x.replace("-", "/");
-    let t = new Date(axes.timestamp);
-    if (!yMinTimestamp || t < yMinTimestamp) {
-      yMinTimestamp = t;
-    }
-    if (!yMaxTimestamp || t > yMaxTimestamp) {
-      yMaxTimestamp = t;
-    }
-    switch (timeFrame) {
-      case "HOUR":
-        labels.push(`${x.slice(11, 13)}:00`);
-        break;
-      case "DAY":
-        labels.push(`${x.slice(5, 10)}`);
-        break;
-      case "MONTH":
-        labels.push(`${x.slice(0, 7)}`);
-        break;
-
-      default:
-        labels.push(`${x}`);
-        break;
+        default:
+          insertIgnore(labels, `${x}`);
+          break;
+      }
+      console.log(dataset_scraped_jobs.borderColor);
+      dataset_scraped_jobs.data.push(axes.y2);
     }
 
-    dataset_tracked_urls.data.push(y);
-    dataset_scraped_jobs.data.push(axes.y2);
+    datasets.push(dataset_scraped_jobs);
   }
-  datasets.push(dataset_tracked_urls);
-  datasets.push(dataset_scraped_jobs);
 
   useEffect(() => {
     const myChartRef = chartRef.current.getContext("2d");

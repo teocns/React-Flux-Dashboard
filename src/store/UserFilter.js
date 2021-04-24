@@ -38,6 +38,20 @@ class UserFilterStore extends EventEmitter {
     this.#available_users = available_users;
     this.#lastSync = parseInt(Date.now() / 1000);
   }
+
+  cacheSelectedUser(userFilter) {
+    localStorage.setItem("userFilter", JSON.stringify(userFilter));
+  }
+
+  getCachedSelectedUser() {
+    const cached = localStorage.getItem("userFilter");
+    try {
+      return JSON.parse(cached);
+    } catch (e) {
+      return null;
+    }
+  }
+
   lastSync() {
     return this.#lastSync;
   }
@@ -53,6 +67,9 @@ userFilterStore.dispatchToken = dispatcher.register((event) => {
   switch (event.actionType) {
     case ActionTypes.UserFilter.USER_FILTER_SYNC:
       userFilterStore.set(event.data.availableUsers);
+      break;
+    case ActionTypes.UserFilter.USER_FILTER_CHANGED:
+      userFilterStore.cacheSelectedUser(event.data.userFilter);
       break;
     default:
       willEmit = false;

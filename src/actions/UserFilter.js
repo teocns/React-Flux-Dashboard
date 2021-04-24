@@ -13,4 +13,11 @@ const onSyncReceived = (availableUsers) => {
   });
 };
 
-export default { sync, onSyncReceived };
+const userFilterChanged = (userFilter) => {
+  dispatcher.dispatch({
+    actionType: ActionTypes.UserFilter.USER_FILTER_CHANGED,
+    data: { userFilter },
+  });
+};
+
+export default { sync, onSyncReceived, userFilterChanged };
