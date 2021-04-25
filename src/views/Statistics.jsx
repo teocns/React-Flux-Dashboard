@@ -70,7 +70,6 @@ var lastRequestedFilterB64 = "";
 export default function StatisticsView() {
   const [Statistics, setStatistics] = useState(statisticsStore.getStatistics());
 
-  console.log(Statistics);
   const [ChartViewMode, setChartViewMode] = useState(CHART_VIEW_MODES.PUZZLE);
 
   const [AnchorElements, setAnchorElements] = useState({
@@ -92,7 +91,9 @@ export default function StatisticsView() {
 
   const user = sessionStore.getUser();
 
-  const [SelectedUserFilter, setUserFilter] = useState([]);
+  const [SelectedUserFilter, setUserFilter] = useState(
+    user.isAdmin ? [] : [user.id]
+  );
 
   const handleDateFilterChanged = (dateRange) => {
     if (!dateRange.timeFrame) {
