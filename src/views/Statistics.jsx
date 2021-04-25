@@ -119,7 +119,7 @@ export default function StatisticsView() {
 
   const syncStatistics = () => {
     isLoading = true;
-    console.log("Syncing statistics bitchj");
+    console.log("Syncing statistics");
 
     lastRequestedFilterB64 = btoa(JSON.stringify(getFilter()));
 
@@ -152,6 +152,7 @@ export default function StatisticsView() {
       ActionTypes.Statistics.STATISTICS_RECEIVED,
       onStatisticsSynced
     );
+
     syncStatistics();
     return () => {
       // Unbind listeners

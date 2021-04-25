@@ -65,16 +65,20 @@ class StatisticsStore extends EventEmitter {
 
   onSyncRequested(requestData) {
     this.#lastRequestData = requestData;
-    this.#lastSync = parseInt(Date.now() / 1000);
+    this.#lastSync = parseInt(Date.now());
   }
 
   canSync(syncStatisticsData) {
     // If 5 seconds have not passed and requesting data was unaltered, leave it for the same
     if (
-      parseInt(Date.now() / 1000) - this.#lastSync < 500 &&
+      parseInt(Date.now()) - this.#lastSync < 500 &&
       this.#lastRequestData &&
       syncStatisticsData
     ) {
+      console.log(
+        "TIme passed since last sync: ",
+        parseInt(Date.now()) - this.#lastSync
+      );
       let a = JSON.stringify(this.#lastRequestData);
 
       let b = JSON.stringify(syncStatisticsData);
