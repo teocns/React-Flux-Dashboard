@@ -1,11 +1,12 @@
+//@ts-check
+import { Badge, IconButton } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
-
-import { IconButton } from "@material-ui/core";
-import { FastForward, FilterList as FilterListIcon } from "@material-ui/icons";
-import { DateRangePicker } from "materialui-daterange-picker";
+import { FastForward } from "@material-ui/icons";
+import DateRangeIcon from "@material-ui/icons/DateRange";
 import React, { useEffect, useState } from "react";
-import DateRanges from "../../constants/DateRanges";
 import { isFunction } from "../../helpers/utils";
+import { DateRangePicker } from "materialui-daterange-picker";
+import DateRanges from "../../constants/DateRanges";
 const useStyles = makeStyles((theme) => ({
   select: {
     "&:before": {
@@ -46,9 +47,6 @@ function DateFilter({ onDateRangeChanged }) {
 
   const [DateRange, setDateRange] = useState(null);
 
-  const anchorRef = React.useRef(null);
-  const usersAnchorRef = React.useRef(null);
-
   const classes = useStyles();
   const theme = useTheme();
 
@@ -61,7 +59,6 @@ function DateFilter({ onDateRangeChanged }) {
   useEffect(() => {
     return bindListeners();
   });
-
   const handleChangeDateRange = (dateRange) => {
     if (!dateRange.startDate && !dateRange.endDate) {
       setDateRange(null);
@@ -74,7 +71,6 @@ function DateFilter({ onDateRangeChanged }) {
       onDateRangeChanged(dateRange);
     }
   };
-
   const renderFilteringDateValue = () => {
     const def = "Filter by date";
     if (DateRange) {
@@ -114,20 +110,27 @@ function DateFilter({ onDateRangeChanged }) {
   };
 
   return (
-    <div style={{ display: "inline-flex", alignItems: "center" }}>
-      <div style={{ postiion: "relative" }}>
-        <div style={{ position: "fixed", zIndex: 129831298319 }}>
-          <DateRangePicker
-            open={DateFilterOpen}
-            definedRanges={DateRanges}
-            toggle={toggleDateRangeFilter}
-            onChange={handleChangeDateRange}
-          />
-        </div>
-      </div>
-
+    <div
+      style={{ paddingLeft: theme.spacing(1), paddingRight: theme.spacing(1) }}
+    >
       <IconButton size="small" onClick={toggleDateRangeFilter}>
-        <FilterListIcon style={{ color: theme.palette.text.disabled }} />
+        <Badge color="secondary" variant={DateRange && "dot"}>
+          <DateRangeIcon
+            size="small"
+            style={{ color: theme.palette.text.disabled }}
+          />
+          <div style={{ postiion: "relative" }}>
+            <div style={{ position: "fixed", zIndex: 129831298319 }}>
+              <DateRangePicker
+                closeOnClickOutside
+                open={DateFilterOpen}
+                definedRanges={DateRanges}
+                toggle={toggleDateRangeFilter}
+                onChange={handleChangeDateRange}
+              />
+            </div>
+          </div>
+        </Badge>
       </IconButton>
     </div>
   );

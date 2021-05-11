@@ -28,12 +28,23 @@ export const prettyTimelapse = (date) => {
  * @param {number} endtime
  * @returns {TimeRemaining}
  */
-export function getTimeRemaining(endtime) {
+export function getTimeRemaining(endtime, asString = false) {
   const total = endtime - parseInt(Date.now() / 1000);
   const seconds = Math.floor(total % 60);
   const minutes = Math.floor((total / 60) % 60);
   const hours = Math.floor((total / (60 * 60)) % 24);
   const days = Math.floor(total / (60 * 60 * 24));
+
+  if (asString) {
+    const _days = days ? `${days}d ` : "";
+    const _hours = hours ? `${hours}h ` : "";
+    let _minutes = minutes ? `${minutes}m ` : "";
+    const _seconds = seconds ? `${seconds}s` : "";
+    if (minutes === 0) {
+      _minutes = "<1m";
+    }
+    return `${_days}${_hours}${_minutes}`;
+  }
 
   return {
     total,
@@ -64,4 +75,8 @@ export function getMonthName(idx) {
     "December",
   ];
   return monthNames[idx];
+}
+
+export function prettyPrintDate(timestamp) {
+  return moment(timestamp * 1000).format("YYYY-MM-DD HH:ss");
 }

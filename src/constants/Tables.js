@@ -10,4 +10,7 @@ export default keymirror({
   COUNTRIES_MANAGEMENT: null,
   DOMAINS_MANAGEMENT: null,
   BLACKLIST: null,
+  CRAWLER_THREADS: null,
+  CRAWLER_THREADS_DOMAIN: null,
+  CRAWLER_THREADS_URL: null,
 });

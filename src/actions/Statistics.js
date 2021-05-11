@@ -1,7 +1,7 @@
 import ActionTypes from "../constants/ActionTypes";
 import SocketEvents from "../constants/SocketEvents";
 import dispatcher from "../dispatcher";
-import Statistics, { StatisticsSyncRequest } from "../models/Statistics";
+
 import { sendMessage } from "../socket";
 import statisticsStore from "../store/Statistics";
 

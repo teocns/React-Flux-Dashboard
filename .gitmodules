@@ -1,0 +1,6 @@
+[submodule "src/Shared/BBE-CRWL.WebApp.Shared.Models"]
+	path = src/Shared/BBE-CRWL.WebApp.Shared.Models
+	url = https://github.com/teocns/BBE-CRWL.WebApp.Shared.Models
+[submodule "Shared/BBE-CRWL.WebApp.Shared.Models"]
+	path = Shared/BBE-CRWL.WebApp.Shared.Models
+	url = https://github.com/teocns/BBE-CRWL.WebApp.Shared.Models

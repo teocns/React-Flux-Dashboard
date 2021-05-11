@@ -12,6 +12,14 @@ export const isRegex = (string) => {
   }
 };
 
+export const isWildcardRule = (string) => {
+  try {
+    return string.match(/^(\*|(\*|\*\.)?\w+(\.\w+)*(\.\*|\*)?)$/);
+  } catch (e) {
+    return false;
+  }
+};
+
 export const hasSlashAfterDot = (string) => {
   const hasAnotherDotBeforeSlash = (string) => {
     let slashIndex = 0;

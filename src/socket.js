@@ -10,6 +10,7 @@ import bindStatisticsSocketHandler from "./socket-handlers/Statistics";
 import bindUserFilter from "./socket-handlers/UserFilter";
 import bindCountryFilter from "./socket-handlers/CountryFilter";
 import bindHostsSocketInterface from "./socket-handlers/Hosts";
+import bindBlacklistSocketInterface from "./socket-handlers/Blacklist";
 
 var socketInstance = initialize();
 
@@ -29,6 +30,7 @@ export function initialize() {
   bindUserFilter(socket);
   bindCountryFilter(socket);
   bindHostsSocketInterface(socket);
+  bindBlacklistSocketInterface(socket);
 
   socket.on("disconnect", async () => {
     window.location.reload();

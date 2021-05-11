@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Divider,
   IconButton,
   Link,
@@ -18,6 +19,8 @@ import {
   BLACKLIST_RULE_TYPES,
   BLACKLIST_RULE_TYPES_NICE_NAMES,
 } from "../../constants/Blacklist";
+import { Link as RouterLink } from "react-router-dom";
+import EnvironmentConstants from "../../constants/Environment";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { MoreVert, Search } from "@material-ui/icons";
 import { AnimatePresence, motion } from "framer-motion";
@@ -96,9 +99,10 @@ const COLUMNS = [
     label: "Live since",
     align: "right",
   },
+
   {
     name: "affected_urls",
-    label: "Tracked URL(s) affected by rule",
+    label: "URL(s) affected",
     align: "right",
   },
 ];
@@ -486,6 +490,7 @@ const BlacklistTable = ({ filter, refreshControl }) => {
     syncTableData({ newSort: { name, sort } });
   };
 
+  const showAffectedUrls = () => {};
   return (
     <React.Fragment>
       <AnimatePresence>
@@ -528,7 +533,11 @@ const BlacklistTable = ({ filter, refreshControl }) => {
       </AnimatePresence>
 
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
             <col style={{ width: 64 }} />
             <col style={{ width: "20%" }} />
@@ -564,7 +573,7 @@ const BlacklistTable = ({ filter, refreshControl }) => {
                         }}
                       />
                     </TableCell>
-                    <TableCell scope="row">{row.rule}</TableCell>
+                    <TableCell scope="row">{row.unaltered_rule}</TableCell>
                     <TableCell scope="row">{row.reason}</TableCell>
 
                     <TableCell align="right">
@@ -572,34 +581,38 @@ const BlacklistTable = ({ filter, refreshControl }) => {
                     </TableCell>
                     <TableCell align="right">{row.username}</TableCell>
                     <TableCell align="right">{timeSince(row.age)}</TableCell>
-                    <TableCell align="right">{row.affected_urls}</TableCell>
 
-                    {/* <TableCell component="th" scope="row">
-                      <Box display="inline-flex" alignItems="center">
-                        <Box display="flex" flexDirection="column">
-                          <code style={{ fontWeight: "400" }}>
-                            {row.link_parsing_regex
-                              ? row.link_parsing_regex
-                              : DEFAULT_PARSING_REGEX}
-                          </code>
-                        </Box>
-                        <IconButton
-                          name="editRegexIcon"
-                          className={classes.editRegexIcon}
-                          size="small"
-                          style={{ marginLeft: theme.spacing(1) }}
-                          onClick={(event) => {
-                            setRowActionObject(row);
-
-                            setTimeout(() => {
-                              toggleHostParsingRegexDialog();
-                            });
-                          }}
-                        >
-                          <Edit style={{ height: 16, width: 16 }} />
-                        </IconButton>
-                      </Box>
-                    </TableCell> */}
+                    <TableCell align="right">
+                      {(() => {
+                        if (!!row.rule_applied) {
+                          return (
+                            <RouterLink to={`/blacklist/${row.item_id}/impact`}>
+                              {row.affected_urls}
+                            </RouterLink>
+                          );
+                        } else {
+                          return (
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                alignItems: "center",
+                              }}
+                            >
+                              <CircularProgress
+                                style={{
+                                  width: 14,
+                                  height: 14,
+                                  color: theme.palette.text.disabled,
+                                  marginRight: theme.spacing(1),
+                                }}
+                              />
+                              Calculating...
+                            </div>
+                          );
+                        }
+                      })()}
+                    </TableCell>
                   </React.Fragment>
                 );
                 const wrapComponent = (

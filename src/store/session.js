@@ -95,6 +95,10 @@ class SessionStore extends EventEmitter {
   logout() {
     this.setAuthenticationToken("");
   }
+
+  isAdmin() {
+    return this.user && !!this.user.isAdmin;
+  }
 }
 
 const sessionStore = new SessionStore();

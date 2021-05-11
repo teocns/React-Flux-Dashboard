@@ -14,7 +14,7 @@ import { Statuses } from "../../constants/CrawlerThreadsStatuses";
  * @param {Object} param0
  * @param {ScrapingThread} param0.row
  */
-const ScrapingThreadTableStatus = ({ row }) => {
+const CrawlerThreadStatus = ({ row }) => {
   const theme = useTheme();
 
   let icon = undefined;
@@ -23,9 +23,15 @@ const ScrapingThreadTableStatus = ({ row }) => {
   let status = Statuses.QUEUED;
 
   const renderGeneralStatus = () => {
+    // Has never been crawled, so just return SCHEDULED FOR CRAWLING
     if (row.crawler_threads_cnt === 0) {
       return "Scheduled for crawling";
     }
+
+    if (row.crawler_threads_last_completed_age < 0) {
+      return "Currently scraping";
+    }
+
     let ret = `${row.total_scraped_jobs} jobs`;
     return ret;
   };
@@ -70,4 +76,4 @@ const ScrapingThreadTableStatus = ({ row }) => {
   );
 };
 
-export default ScrapingThreadTableStatus;
+export default CrawlerThreadStatus;

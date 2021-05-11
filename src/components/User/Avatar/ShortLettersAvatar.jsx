@@ -24,9 +24,15 @@ import { Avatar, Tooltip } from "@material-ui/core";
 import robotSvg from "../../../assets/robot.svg";
 const useStyles = makeStyles((theme) => ({
   avatar: {
-    height: 32,
-    width: 32,
-    fontSize: 12,
+    fontSize: 11,
+  },
+  small: {
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+  },
+  large: {
+    width: theme.spacing(7),
+    height: theme.spacing(7),
   },
 }));
 
@@ -128,7 +134,7 @@ const UserShortLettersAvatar = ({ username, fullname }) => {
     : makeUserProps();
   return (
     <Avatar
-      className={[classes.avatar]}
+      className={[classes.avatar, classes.small]}
       style={{
         color: "white",
         backgroundColor: backgroundColor,

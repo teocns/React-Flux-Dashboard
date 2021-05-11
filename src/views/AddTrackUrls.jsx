@@ -1,9 +1,11 @@
+//@ts-check
 import {
   Button,
   Divider,
   FormControl,
   InputAdornment,
   OutlinedInput,
+  Typography,
 } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -65,65 +67,64 @@ export default function CustomPaginationActionsTable() {
   };
 
   return (
-    <TableContainer component={Paper} className={classes.tableContainer}>
-      <div
-        style={{
-          padding: theme.spacing(2),
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-        }}
-      >
-        {/* <ButtonGroup>
-            <TextField
-              size="small"
-              variant="outlined"
-              placeholder="URL to track"
-            ></TextField>
-            <Button>Track</Button>
-          </ButtonGroup> */}
-        <FormControl fullWidth size="small" className={classes.margin}>
-          <OutlinedInput
-            id="standard-adornment-amount"
-            size="small"
-            placeholder="URL to track"
-            value={UrlInputValue.inputValue}
-            onChange={(evt) => {
-              const inputValue = evt.target.value;
-              setUrlInputValue({
-                inputValue,
-                hostName: urlHelpers.parseHostname(inputValue),
-              });
-            }}
-            onKeyPress={(evt) => {
-              if (evt.key === "Enter") {
-                createThread();
-              }
-            }}
-            startAdornment={
-              <InputAdornment position="start">
-                <LinkIcon />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-        <Button
-          variant="contained"
-          color="secondary"
-          disableElevation
-          startIcon={<AddCircleIcon />}
-          endIcon={<SpinnerGrow />}
-          onClick={createThread}
-          style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+    <React.Fragment>
+      <Paper style={{ marginBottom: theme.spacing(3) }}>
+        <div
+          style={{
+            padding: theme.spacing(2),
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+          }}
         >
-          Add URL
-        </Button>
-      </div>
+          <FormControl fullWidth size="small" className={classes.margin}>
+            <OutlinedInput
+              id="standard-adornment-amount"
+              size="small"
+              placeholder="URL to track"
+              value={UrlInputValue.inputValue}
+              onChange={(evt) => {
+                const inputValue = evt.target.value;
+                setUrlInputValue({
+                  inputValue,
+                  hostName: urlHelpers.parseHostname(inputValue),
+                });
+              }}
+              onKeyPress={(evt) => {
+                if (evt.key === "Enter") {
+                  createThread();
+                }
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <LinkIcon />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+          <Button
+            variant="contained"
+            color="secondary"
+            disableElevation
+            startIcon={<AddCircleIcon />}
+            endIcon={<SpinnerGrow />}
+            onClick={createThread}
+            style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+          >
+            Add URL
+          </Button>
+        </div>
+      </Paper>
       {/* {hostName && <HostPatternInputComponent hostName={hostName} />} */}
 
       <Divider />
-      <AddTrackUrlTable />
-    </TableContainer>
+      <TableContainer component={Paper} className={classes.tableContainer}>
+        <Typography variant="h6" style={{ padding: theme.spacing(2) }}>
+          Recently Tracked URLs
+        </Typography>
+        <AddTrackUrlTable />
+      </TableContainer>
+    </React.Fragment>
   );
 }

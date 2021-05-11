@@ -30,8 +30,9 @@ import TableNames from "../../constants/Tables";
 import { timeSince } from "../../helpers/time";
 import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
-import ScrapingThreadTableStatus from "../Table/ScrapingThreadStatus";
+import ScrapingThreadTableStatus from "../Table/CrawlerThreadStatus";
 import TablePaginationActions from "./Pagination";
+import { prettyPrintDate } from "../../helpers/time";
 
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
@@ -418,10 +419,14 @@ const ManageUrlsTable = ({ filter }) => {
           syncTableData({ newPage: tableData.page });
         }}
         IsLoading={isLoadingResults}
-        theme={theme}
+        themme={theme}
       />
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
             <col style={{ width: 64 }} />
             <col style={{ width: "70%" }} />
@@ -429,11 +434,6 @@ const ManageUrlsTable = ({ filter }) => {
             <col style={{ width: "15%" }} />
             <col style={{ width: 64 }} />
           </colgroup>
-          {/* <LinearProgress
-        variant="indeterminate"
-        color="secondary"
-        style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
-      /> */}
 
           <TableBody className={classes.tableBody}>
             {isLoadingResults && !hasInheritedRows
@@ -500,7 +500,7 @@ const ManageUrlsTable = ({ filter }) => {
                             noWrap={true}
                             style={{ marginLeft: theme.spacing(1) }}
                           >
-                            {timeSince(row.age)}
+                            {prettyPrintDate(row.age)}
                           </Typography>
                         </Box>
                       </TableCell>

@@ -12,7 +12,9 @@ import SearchIcon from "@material-ui/icons/Search";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import DomainsManagementTable from "../components/Tables/DomainsManagement";
-
+import UserFilterComponent from "../components/Filters/UserFilter";
+import sessionStore from "../store/session";
+import MultiFilter from "../components/Filters/MultiFilter";
 const useStyles = makeStyles({
   table: {
     minWidth: 500,
@@ -27,6 +29,10 @@ const useStyles = makeStyles({
 let filterTimeout = undefined;
 export default function DomainsManagementView() {
   const [Filter, setFilter] = useState("");
+
+  const user = sessionStore.getUser();
+
+  const [UserFilter, setUserFilter] = useState(user.isAdmin ? [] : [user.id]);
   const classes = useStyles();
 
   const history = useHistory();
@@ -43,43 +49,8 @@ export default function DomainsManagementView() {
 
   return (
     <TableContainer component={Paper} className={classes.tableContainer}>
-      <div
-        style={{
-          padding: theme.spacing(2),
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-        }}
-      >
-        <FormControl fullWidth size="small" className={classes.margin}>
-          <OutlinedInput
-            id="standard-adornment-amount"
-            size="small"
-            placeholder="Search URLs"
-            onChange={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            onKeyPress={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-        <Button
-          variant="contained"
-          color="secondary"
-          disableElevation
-          startIcon={<SearchIcon />}
-          style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
-        >
-          Search
-        </Button>
-      </div>
+      <MultiFilter mini />
+
       <Divider />
       <DomainsManagementTable filter={Filter} />
     </TableContainer>

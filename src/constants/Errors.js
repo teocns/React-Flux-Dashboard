@@ -29,6 +29,9 @@ const Errors = {
   ERR_RULE_INVALID: "The rule is not valid",
   ERR_SAME_RULE_ALREADY_EXIST: "A rule with the same criteria already exists",
   ERR_BLACKLISTED_URL: "URL blacklisted by the administration",
+  ERR_MAX_URLS_PER_DOMAIN_HIT: "No more URLs can be added for this website",
+  ERR_NO_JOBS_PER_DOMAIN_THROTTLE:
+    "Please wait for the previous URLs of this website to be crawled before adding more",
 };
 
 export default Errors;

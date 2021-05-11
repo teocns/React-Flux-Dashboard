@@ -1,67 +1,50 @@
-import React, { useState, useEffect } from "react";
-import clsx from "clsx";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { Link as RouterLink } from "react-router-dom";
-import { useConfirm } from "material-ui-confirm";
-import MultifunctionalHeading from "../Table/MultifunctionalHeading";
-import countriesActions from "../../actions/Countries";
-import hostsActions from "../../actions/Hosts";
-import DEFAULT_PARSING_REGEX from "../../constants/Scraper";
 import {
-  Badge,
   Box,
   Checkbox,
   IconButton,
+  Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  TableFooter,
-  TableHead,
   TablePagination,
   TableRow,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Link,
   Typography,
 } from "@material-ui/core";
-
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { MoreVert, Search } from "@material-ui/icons";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import hostsActions from "../../actions/Hosts";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import TablePaginationActions from "./Pagination";
-
-import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
-import EditHostParsingRegexDialog from "../Dialogs/EditHostParsingRegex";
-import {
-  Delete,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Search,
-  MoreVert,
-  Edit,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
-import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
 import Country from "../../models/Country";
+import TableData from "../../models/TableData";
+import tableStore from "../../store/Tables";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
+import TablePaginationActions from "./Pagination";
+import moment from "moment";
+import ReplyIcon from "@material-ui/icons/Reply";
+import { Link as RouterLink } from "react-router-dom";
 import { timeSince } from "../../helpers/time";
-
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
     overflowX: "hidden",
   },
+
   table: {
     minWidth: 500,
     tableLayout: "fixed",
     overflowY: "auto",
     overflowX: "hidden",
   },
-
   editRegexIcon: {
     opacity: 0,
   },
@@ -82,34 +65,46 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "8rem",
     },
   },
+
+  rowHover: {
+    "& a": {
+      textDecoration: "none",
+    },
+    "&:hover a": {
+      textDecoration: "underline",
+    },
+  },
 }));
 
-const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 const COLUMNS = [
   {
     name: "age",
-    label: "Age",
-    align: "right",
+    label: "Crawled at",
   },
   {
     name: "url",
     label: "URL",
-    sortable: false,
+    hint: "Comes from Tracked URLs",
+  },
+  {
+    name: "totalLinks",
+    label: "Scraped href links",
+    align: "right",
+  },
+  {
+    name: "totalLinks",
+    label: "Duplicate links",
+    align: "right",
+  },
+  {
+    name: "totalLinks",
+    label: "Jobs extracted",
+    align: "right",
   },
 
   {
-    name: "total_scraped_jobs",
-    label: "Jobs scraped",
-    align: "right",
-  },
-  {
-    name: "crawler_threads_cnt",
-    label: "Times crawled",
-    align: "right",
-  },
-  {
-    name: "Score",
-    label: "URL Score",
+    name: "crawlerThreadsCount",
+    label: "Crawled (x) times",
     align: "right",
   },
   {
@@ -118,16 +113,24 @@ const COLUMNS = [
     sortable: false,
   },
 ];
-const ManageUrlsTable = ({ filter }) => {
-  let [tableData, setTableData] = useState(
-    tableStore.getTableData(THIS_TABLE_NAME)
+const CrawlerThreadsTable = ({ domain, tracked_url_id }) => {
+  const THIS_TABLE_NAME = domain
+    ? TableNames.CRAWLER_THREADS_DOMAIN
+    : TableNames.CRAWLER_THREADS_URL;
+
+  let [tableData, setTableData] = useState(undefined);
+
+  /**
+   * @type {Array.<Country,CallableFunction>}
+   */
+  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] = useState(
+    false
   );
 
   const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
 
   const [SelectedRows, setSelectedRows] = useState([]);
-  const [DateRange, setDateRange] = useState(null);
 
   const toggleRowMenuOpen = (event, country) => {
     setRowActionObject(country);
@@ -145,6 +148,10 @@ const ManageUrlsTable = ({ filter }) => {
     setRowMenuAnchorRef(null);
   };
 
+  const prettyPrintDate = (timestamp) => {
+    return moment(timestamp * 1000).format("YYYY-MM-DD HH:ss");
+  };
+
   const HasTableData = tableData !== undefined;
 
   if (!HasTableData) {
@@ -153,20 +160,21 @@ const ManageUrlsTable = ({ filter }) => {
   const confirm = useConfirm();
   const rowsPerPage = tableData.rowsPerPage;
   const page = tableData.page;
-  const countryFilter = tableData.countryFilter;
+
   const dateRange = tableData.dateRange;
   let rows = tableData.rows;
 
   const IsLoadingResults = tableData.isLoading;
   let hasInheritedRows = false;
   if (IsLoadingResults && tableData.previousTableData) {
-    rows = tableData.previousTableData.rows;
-    hasInheritedRows = true;
+    // rows = tableData.previousTableData.rows;
+    // hasInheritedRows = true;
   }
 
   const isLoadingResults = tableData ? tableData.isLoading : true;
   const rowsLength = Array.isArray(rows) ? rows.length : 0;
   const classes = useStyles();
+
   const emptyRows =
     rowsPerPage -
     Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
@@ -191,10 +199,6 @@ const ManageUrlsTable = ({ filter }) => {
         .catch();
     }
   };
-  const handleUserFilterChanged = (userFilter) => {
-    return;
-    //setUserFilter(userFilter);
-  };
 
   const selectAllRows = (evt) => {
     const checked = evt.target.checked;
@@ -206,31 +210,27 @@ const ManageUrlsTable = ({ filter }) => {
       }
     }
   };
-
-  const getTableData = () => {
-    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
-  };
-  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
-    const _tableData = getTableData();
-
+  const syncTableData = ({
+    newPage,
+    newSort,
+    newRowsPerPage,
+    newDateRange,
+  }) => {
     tableActions.createTableData({
-      rowsPerPage:
-        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
-      totalRowsCount: _tableData.totalRowsCount,
+      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
-        newRowsPerPage !== -1
-          ? newPage !== undefined
-            ? newPage
-            : _tableData.page
-          : 0,
-      filter: filter || "",
+        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
+      filter: {
+        domain,
+        tracked_url_id,
+      },
       tableName: THIS_TABLE_NAME,
+      sort: newSort,
       previousRowCount:
-        _tableData && _tableData.totalRowsCount
-          ? _tableData.totalRowsCount
+        tableData && tableData.totalRowsCount
+          ? tableData.totalRowsCount
           : undefined,
-      dateRange:
-        newDateRange !== undefined ? newDateRange : _tableData.dateRange,
+      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
     });
   };
   const handleChangePage = (event, newPage) => {
@@ -254,13 +254,6 @@ const ManageUrlsTable = ({ filter }) => {
       setTableData(foundTable);
     }
   };
-  console.log("rendering", tableData);
-
-  // const onScrapingThreadCreated = () => {
-  //   setTimeout(() => {
-  //     syncTableData({ newPage: 0 });
-  //   });
-  // };
 
   const reSync = () => {
     setTimeout(() => {
@@ -273,10 +266,7 @@ const ManageUrlsTable = ({ filter }) => {
       ActionTypes.Table.DATA_CREATED,
       onTableRowsDataUpdated
     );
-    tableStore.addChangeListener(
-      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-      reSync
-    );
+
     tableStore.addChangeListener(
       ActionTypes.Table.DATA_UPDATED,
       onTableRowsDataUpdated
@@ -287,10 +277,7 @@ const ManageUrlsTable = ({ filter }) => {
         ActionTypes.Table.DATA_CREATED,
         onTableRowsDataUpdated
       );
-      tableStore.removeChangeListener(
-        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-        reSync
-      );
+
       tableStore.removeChangeListener(
         ActionTypes.Table.DATA_UPDATED,
         onTableRowsDataUpdated
@@ -309,7 +296,16 @@ const ManageUrlsTable = ({ filter }) => {
       setSelectedRows([id, ...SelectedRows]);
     }
   };
+  if (tracked_url_id) {
+    // Remove "Crawled (x) times"
+    const deleteIndex = COLUMNS.indexOf(
+      COLUMNS.find((x) => x.name === "crawlerThreadsCount")
+    );
 
+    if (deleteIndex !== -1) {
+      COLUMNS.splice(deleteIndex, 1);
+    }
+  }
   useEffect(() => {
     // Means data has not yet loaded nor requested
     setTimeout(() => {
@@ -317,11 +313,8 @@ const ManageUrlsTable = ({ filter }) => {
     });
 
     return bindListeners();
-  }, []);
+  }, [domain, tracked_url_id]);
 
-  const handleCountryFilterChanged = (_countryFilter) => {
-    syncTableData({ newCountryFilter: _countryFilter });
-  };
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
   };
@@ -349,7 +342,7 @@ const ManageUrlsTable = ({ filter }) => {
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Add some links to get started
+            Try changing filter settings
           </Typography>
         );
     };
@@ -380,7 +373,7 @@ const ManageUrlsTable = ({ filter }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} links found
+              No{rowsLength > 0 ? " more" : ""} portals found
             </Typography>
           </Box>
           {_renderHint()}
@@ -403,6 +396,39 @@ const ManageUrlsTable = ({ filter }) => {
     return _createRow();
   };
 
+  const toggleHostParsingRegexDialog = () => {
+    setHostParsingRegexDialogOpen(!HostParsingRegexDialogOpen);
+  };
+
+  const onHostParsingRegexDialogClosed = (regex) => {
+    const hostId = RowActionObject.hostId;
+    setHostParsingRegexDialogOpen(false);
+    setTimeout(() => {
+      setRowActionObject(null);
+    }, 275);
+
+    if (regex && regex !== setRowActionObject.link_parsing_regex) {
+      hostsActions.changeRegex(hostId, regex);
+    }
+
+    // Handle chosenCountry
+  };
+  // const onCountryRenameDialogClosed = (newCountryName) => {
+  //   setCountryRenameDialogOpen(false);
+  //   if (
+  //     typeof newCountryName === "string" &&
+  //     newCountryName &&
+  //     newCountryName.trim().toLowerCase() !== newCountryName
+  //   ) {
+  //     countriesActions.renameCountry(
+  //       RowActionCountryObject.countryId,
+  //       newCountryName.trim()
+  //     );
+  //   }
+  //   setRowActionCountryObject(null);
+  //   // Handle chosenCountry
+  // };
+
   const viewJobYieldingLinksExample = () => {
     let hostId = RowActionObject.hostId;
     let handle = window.open(
@@ -420,7 +446,6 @@ const ManageUrlsTable = ({ filter }) => {
     );
     handle.focus();
   };
-
   const testRegex = () => {
     let hostId = RowActionObject.hostId;
     let handle = window.open(
@@ -429,7 +454,6 @@ const ManageUrlsTable = ({ filter }) => {
     );
     handle.focus();
   };
-
   const _createRowActionsButton = (country) => {
     const key = country.countryId;
     return (
@@ -457,15 +481,40 @@ const ManageUrlsTable = ({ filter }) => {
         open={Boolean(rowMenuAnchorRef)}
         onClose={handleRowMenuClose}
       >
-        <MenuItem
-          // onClick={() => {
-          //   handleRowMenuClose();
-          //   //toggleCountryRenameDialog();
-          // }}
-          component={RouterLink}
-          to={`/url-details/`}
+        {/* <MenuItem
+          onClick={() => {
+            handleRowMenuClose();
+            HostParsingRegexDialog();
+          }}
         >
-          View details
+          Rename
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            handleRowMenuClose();
+            toggleHostParsingRegexDialog();
+          }}
+        >
+          Mark as alias of..
+        </MenuItem> */}
+        <MenuItem onClick={handleRowMenuClose}>Generate XML</MenuItem>
+        <MenuItem
+          onClick={() => {
+            viewJobYieldingLinksExample();
+            handleRowMenuClose();
+          }}
+        >
+          View links with job schema
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            viewHtmlSample();
+            handleRowMenuClose();
+          }}
+        >
+          View HTML sample
         </MenuItem>
       </Menu>
     );
@@ -478,17 +527,26 @@ const ManageUrlsTable = ({ filter }) => {
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          stickyHeader
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
+            <col style={{ width: 128 }} />
+            <col style={{ width: "100%" }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 132 }} />
+            {!tracked_url_id ? <col style={{ width: 132 }} /> : null}
             <col style={{ width: 54 }} />
-            <col style={{ width: 100 }} />
-            <col style={{ width: "50%" }} />
-            <col style={{ width: "15%" }} />
           </colgroup>
           <MultifunctionalHeading
             columns={COLUMNS}
             sort={tableData && tableData.sort}
             onSortChanged={onSortChanged}
+            hideChecker={true}
           />
           <TableBody>
             {isLoadingResults && !hasInheritedRows
@@ -526,9 +584,11 @@ const ManageUrlsTable = ({ filter }) => {
                   </TableRow>
                 ))
               : rows.map((row, index) => {
+                  const rowHasError = row.total_scraped_jobs === 0;
+
                   const innerRow = (
                     <React.Fragment>
-                      <TableCell width="64px">
+                      {/* <TableCell width="64px">
                         <Checkbox
                           size="small"
                           checked={SelectedRows.includes(row.threadId)}
@@ -536,52 +596,102 @@ const ManageUrlsTable = ({ filter }) => {
                             onRowSelectionChanged(row.threadId);
                           }}
                         />
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell align="right">
                         <Typography
                           variant="caption"
                           style={{ color: theme.palette.text.disabled }}
                         >
-                          {timeSince(row.age)}
+                          {prettyPrintDate(row.age)}
                         </Typography>
                       </TableCell>
-
                       <TableCell scope="row">
                         <div
                           style={{
-                            display: "inline-flex",
                             alignItems: "center",
                             overflow: "hidden",
                             display: "block",
                             textOverflow: "ellipsis",
                           }}
                         >
-                          <Link
-                            href={"https://" + row.url}
-                            target="_blank"
-                            style={{ textOverflow: "ellipsis" }}
-                          >
-                            {row.url}
-                          </Link>
+                          {tracked_url_id ? (
+                            <Link href={row.url}>{row.url}</Link>
+                          ) : (
+                            <RouterLink
+                              to={"/tracked-url/" + row.url_id}
+                              style={{
+                                color: theme.palette.text.primary,
+                              }}
+                            >
+                              {row.url}
+                            </RouterLink>
+                          )}
                         </div>
                       </TableCell>
 
+                      <TableCell align="right">{row.scraped_links}</TableCell>
+                      <TableCell align="right">
+                        {row.scraped_links_duplicates_cnt}
+                        {() => {
+                          if (row.row.scraped_links_duplicates_cnt === 0) {
+                            // return <Alert
+                            return "";
+                          }
+                        }}
+                      </TableCell>
                       <TableCell align="right">
                         {row.total_scraped_jobs}
                       </TableCell>
-                      <TableCell align="right">
-                        {row.crawler_threads_cnt}
-                      </TableCell>
+                      {!tracked_url_id ? (
+                        <TableCell align="right">
+                          <RouterLink
+                            to={`/tracked-url/${row.url_id}`}
+                            style={{
+                              color: theme.palette.text.primary,
+                              padding: theme.spacing(1),
+                            }}
+                          >
+                            {row.total_threads}
+                          </RouterLink>
+                        </TableCell>
+                      ) : null}
 
-                      <TableCell align="right">{"10"}</TableCell>
+                      {/* <TableCell component="th" scope="row">
+                      <Box display="inline-flex" alignItems="center">
+                        <Box display="flex" flexDirection="column">
+                          <code style={{ fontWeight: "400" }}>
+                            {row.link_parsing_regex
+                              ? row.link_parsing_regex
+                              : DEFAULT_PARSING_REGEX}
+                          </code>
+                        </Box>
+                        <IconButton
+                          name="editRegexIcon"
+                          className={classes.editRegexIcon}
+                          size="small"
+                          style={{ marginLeft: theme.spacing(1) }}
+                          onClick={(event) => {
+                            setRowActionObject(row);
 
+                            setTimeout(() => {
+                              toggleHostParsingRegexDialog();
+                            });
+                          }}
+                        >
+                          <Edit style={{ height: 16, width: 16 }} />
+                        </IconButton>
+                      </Box>
+                    </TableCell> */}
                       <TableCell component="th" align="right">
                         {_createRowActionsButton(row)}
                       </TableCell>
                     </React.Fragment>
                   );
                   const wrapComponent = (
-                    <TableRow className={classes.tableRow} key={row.uuid}>
+                    <TableRow
+                      className={[classes.tableRow, classes.rowHover]}
+                      key={row.uuid}
+                    >
                       {innerRow}
                     </TableRow>
                   );
@@ -594,7 +704,6 @@ const ManageUrlsTable = ({ filter }) => {
           </TableBody>
         </Table>
       </div>
-
       {rowsLength > 0 && (
         <div>
           <TablePagination
@@ -617,4 +726,4 @@ const ManageUrlsTable = ({ filter }) => {
   );
 };
 
-export default ManageUrlsTable;
+export default CrawlerThreadsTable;

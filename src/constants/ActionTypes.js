@@ -8,6 +8,7 @@ import StatisticsActionTypes from "./ActionTypes/Statistics";
 import UserFilterActionTypes from "./ActionTypes/UserFilter";
 import CountryFilterActionTypes from "./ActionTypes/CountryFilter";
 import HostActionTypes from "./ActionTypes/Hosts";
+import BlacklistActionTypes from "./ActionTypes/Blacklist";
 
 export default {
   Session: SessionActionTypes,
@@ -19,4 +20,5 @@ export default {
   UserFilter: UserFilterActionTypes,
   CountryFilter: CountryFilterActionTypes,
   Hosts: HostActionTypes,
+  Blacklist: BlacklistActionTypes,
 };

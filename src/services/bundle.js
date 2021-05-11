@@ -1,7 +1,9 @@
 import UserFilterService from "./UserFilter";
-import CountryFilterService from "./CountryFilter";
+
+import BlacklistService from "./Blacklist";
+
 const ServicesBundle = () => {
-  [UserFilterService, CountryFilterService].map((func) => func());
+  [UserFilterService, BlacklistService].map((func) => func());
 };
 
 export default ServicesBundle;

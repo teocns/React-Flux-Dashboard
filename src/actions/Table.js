@@ -8,27 +8,23 @@ import tableStore from "../store/Tables";
  * @returns {TableData}
  * @param {TableData} param0
  */
-const createTableData = ({
-  tableName,
-  filter,
-  page,
-  rowsPerPage,
-  sort,
-  previousRowCount,
-  countryFilter,
-  dateRange,
-}) => {
+const createTableData = (data) => {
+  // const {
+  //   tableName,
+  //   filter,
+  //   page,
+  //   rowsPerPage,
+  //   sort,
+  //   previousRowCount,
+  //   countryFilter,
+  //   dateRange,
+  // } = data;
   const createdTableData = new TableData({
-    tableName,
-    filter,
-    rowsPerPage,
-    page,
-    sort,
+    ...data,
     isLoading: true,
-    totalRowsCount: previousRowCount !== undefined ? previousRowCount : -1,
     rows: [],
-    dateRange,
-    countryFilter,
+    totalRowsCount:
+      data.previousRowCount !== undefined ? data.previousRowCount : -1,
   });
 
   console.log("createdTableData", createdTableData);

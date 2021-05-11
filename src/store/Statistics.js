@@ -3,7 +3,8 @@ import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 import User from "../models/User";
 import TableData from "../models/TableData";
-import Statistics from "../models/Statistics";
+import Statistics from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/index";
+import StatisticsSyncRequest from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 import DateRanges from "../constants/DateRanges";
 
 const Errors = require("../constants/Errors");
@@ -22,7 +23,7 @@ class StatisticsStore extends EventEmitter {
 
   constructor(params) {
     super(params);
-    this.#statistics = undefined;
+    this.#statistics = {};
     this.#availableUsers = undefined;
     this.#availableCountries = undefined;
     this.#lastSync = undefined;
@@ -95,16 +96,18 @@ class StatisticsStore extends EventEmitter {
    * @param {Statistics} statistics
    */
   storeStats(statistics) {
-    const { availableUsers } = statistics;
-    this.#statistics = statistics;
-    this.#availableUsers = availableUsers;
+    const { syncRequest } = statistics;
+
+    const index = JSON.stringify(syncRequest);
+    this.#statistics[index] = statistics;
   }
 
   /**
    * @returns {Statistics}
    */
-  getStatistics() {
-    return this.#statistics;
+  getStatistics(syncRequest) {
+    const index = JSON.stringify(syncRequest);
+    return this.#statistics[index];
   }
 
   getAvailableUsers() {
@@ -125,7 +128,6 @@ statisticsStore.dispatchToken = dispatcher.register((event) => {
       statisticsStore.onSyncRequested(event.data);
       break;
     case ActionTypes.Statistics.STATISTICS_RECEIVED:
-      console.log("Statistics received ", event.data.statistics);
       statisticsStore.storeStats(event.data.statistics);
       break;
     default:

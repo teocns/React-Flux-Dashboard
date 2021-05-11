@@ -30,6 +30,8 @@ import tableStore from "../../store/Tables";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
 
+import { Link as RouterLink } from "react-router-dom";
+import { number_format } from "../../helpers/numbers";
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
@@ -67,7 +69,7 @@ const THIS_TABLE_NAME = TableNames.DOMAINS_MANAGEMENT;
 const COLUMNS = [
   {
     name: "host",
-    label: "Host",
+    label: "Domain",
   },
   {
     name: "totalLinks",
@@ -186,20 +188,21 @@ const DomainsManagementTable = ({ filter }) => {
     newSort,
     newRowsPerPage,
     newDateRange,
-    newCountryFilter,
   }) => {
     tableActions.createTableData({
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: filter || "",
+      filter: {
+        domain: filter || "",
+      },
       tableName: THIS_TABLE_NAME,
       sort: newSort,
       previousRowCount:
         tableData && tableData.totalRowsCount
           ? tableData.totalRowsCount
           : undefined,
-      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
+      // dateRange: newDateRange !== undefined ? newDateRange : dateRange,
     });
   };
   const handleChangePage = (event, newPage) => {
@@ -494,7 +497,12 @@ const DomainsManagementTable = ({ filter }) => {
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          stickyHeader
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
             <col style={{ width: 64 }} />
             <col style={{ width: "40%" }} />
@@ -557,16 +565,34 @@ const DomainsManagementTable = ({ filter }) => {
                       </TableCell>
                       <TableCell scope="row">
                         <Box display="inline-flex" alignItems="center">
-                          <Link href={"https://" + row.domain} target="_blank">
+                          <RouterLink
+                            to={"/domain/" + row.domain}
+                            style={{
+                              color: theme.palette.text.primary,
+                              textDecoration: "none",
+                            }}
+                          >
                             {row.domain}
-                          </Link>
+                          </RouterLink>
                         </Box>
                       </TableCell>
 
-                      <TableCell align="right">{row.totalLinks}</TableCell>
-                      <TableCell align="right">{row.scrapedJobs}</TableCell>
                       <TableCell align="right">
-                        {row.crawlerThreadsCount}
+                        {number_format(row.totalLinks, ".", ",")}
+                      </TableCell>
+                      <TableCell align="right">
+                        {number_format(row.scrapedJobs, ".", ",")}
+                      </TableCell>
+                      <TableCell align="right">
+                        <RouterLink
+                          to={`/domain/${row.domain}`}
+                          style={{
+                            color: theme.palette.text.primary,
+                            textDecoration: "none",
+                          }}
+                        >
+                          {number_format(row.crawlerThreadsCount, ".", ",")}
+                        </RouterLink>
                       </TableCell>
 
                       {/* <TableCell component="th" scope="row">

@@ -35,7 +35,7 @@ import { timeSince } from "../../helpers/time";
 import TableData from "../../models/TableData";
 import scrapingThreadsStore from "../../store/ScrapingThreads";
 import tableStore from "../../store/Tables";
-import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
+import ScrapingThreadStatus from "../Table/CrawlerThreadStatus";
 import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({

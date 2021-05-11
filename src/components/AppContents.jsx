@@ -1,59 +1,46 @@
-import React, { useEffect, useState } from "react";
-import clsx from "clsx";
-import LanguageIcon from "@material-ui/icons/Language";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import faviconIconPng from "../assets/favicon128.png";
-import ExtensionIcon from "@material-ui/icons/Extension";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import UserAvatar from "../components/User/Avatar/ShortLettersAvatar";
 import {
-  Drawer,
-  Avatar,
-  ListItemText,
-  ListItemIcon,
-  ListItem,
   AppBar,
-  Typography,
-  Toolbar,
-  Divider,
+  Badge,
   Button,
+  Collapse,
+  Divider,
+  Drawer,
   IconButton,
   List,
-  Box,
-  Badge,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
 } from "@material-ui/core";
-
-import { Link, useHistory } from "react-router-dom";
-
-import AppSnackbar from "./AppSnackbar";
-
-import sessionActions from "../actions/Session";
-
-import InboxIcon from "@material-ui/icons/MoveToInbox";
-import MailIcon from "@material-ui/icons/Mail";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import MenuIcon from "@material-ui/icons/Menu";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import EditIcon from "@material-ui/icons/Edit";
 import { deepOrange, deepPurple } from "@material-ui/core/colors";
-import { useLocation } from "react-router-dom";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
 import {
-  Link as LinkIcon,
-  Code as CodeIcon,
   AccountCircle as AccountIcon,
-  Help as HelpIcon,
-  Timeline as TimelineIcon,
-  SupervisedUserCircle as SupervisedUserCircleIcon,
-  PowerSettingsNew as PowerSettingsNewIcon,
   AddCircleOutline as AddCircleOutlineIcon,
-  Public as GlobeIcon,
-  Domain,
   Block,
+  ExpandLess,
+  ExpandMore,
+  Link as LinkIcon,
+  PowerSettingsNew as PowerSettingsNewIcon,
+  Timeline as TimelineIcon,
 } from "@material-ui/icons";
-import AppView from "./AppView";
-import sessionStore from "../store/session";
+import LanguageIcon from "@material-ui/icons/Language";
+import MenuIcon from "@material-ui/icons/Menu";
+import clsx from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import sessionActions from "../actions/Session";
+import faviconIconPng from "../assets/favicon128.png";
+import UserAvatar from "../components/User/Avatar/ShortLettersAvatar";
 import ActionTypes from "../constants/ActionTypes";
-import logoIconSvg from "../assets/l4c.svg";
+import StatisticsTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/ChartTypes";
+import sessionStore from "../store/session";
+import AppSnackbar from "./AppSnackbar";
+import AppView from "./AppView";
+
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -61,6 +48,9 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     height: "100vh",
     overflow: "hidden",
+  },
+  nested: {
+    paddingLeft: theme.spacing(4),
   },
   avatar: {
     height: 32,
@@ -140,13 +130,16 @@ const useStyles = makeStyles((theme) => ({
   },
 
   drawerPaper: {
-    backgroundColor: theme.palette.primary.dark,
-    color: "#ffffff",
-    "& .MuiListItemIcon-root": {
-      color: "#ffffff",
+    backgroundColor: "white",
+    color: theme.palette.text.primary,
+    // "& .MuiListItem-root": {
+    //   color: "#3e3d3d",
+    // },
+    "& .MuiListItem-root ": {
+      fontWeight: 500,
     },
     "& .MuiDivider-root": {
-      backgroundColor: "#ffffff2e",
+      backgroundColor: "#13131314",
     },
   },
 }));
@@ -158,6 +151,10 @@ function AppContents() {
 
   const [User, setUser] = useState(sessionStore.getUser());
   const IsAdmin = (User && User.isAdmin) || false;
+
+  const [ListItemStatisticsExpanded, setListItemStatisticsExpanded] =
+    useState(false);
+
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStore.isAuthenticated()
   );
@@ -208,14 +205,16 @@ function AppContents() {
         <React.Fragment>
           <AppBar
             position="fixed"
+            elevation={1}
             className={clsx(classes.appBar, {
               [classes.appBarShift]: isAuthenticated && drawerOpen,
             })}
           >
-            <Toolbar>
+            <Toolbar style={{ paddingLeft: 18 }}>
               <IconButton
                 color="inherit"
                 aria-label="open drawer"
+                size="small"
                 onClick={handleDrawerOpen}
                 edge="start"
                 className={classes.menuButton}
@@ -243,7 +242,7 @@ function AppContents() {
               >
                 Crawl URLs
               </Button>
-              <Button
+              {/* <Button
                 variant="text"
                 style={{ marginLeft: theme.spacing(1) }}
                 component={Link}
@@ -263,8 +262,8 @@ function AppContents() {
                     : theme.palette.text.hint
                 }
               >
-                Manage URLs
-              </Button>
+                Manage Your URLs
+              </Button> */}
             </Toolbar>
           </AppBar>
 
@@ -292,35 +291,62 @@ function AppContents() {
               }}
             >
               <div>
-                <div className={classes.drawerHeader}>
-                  <List>
-                    <ListItem button>
-                      <img
-                        style={{ width: 64 }}
-                        src={faviconIconPng}
-                        alt="yes"
-                      />
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <Typography
-                          variant="h6"
-                          style={{ marginLeft: theme.spacing(3) }}
-                        >
-                          BeBee
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          style={{
-                            marginLeft: theme.spacing(3),
-                            marginTop: -4,
-                          }}
-                        >
-                          Crawling
-                        </Typography>
+                <AnimatePresence>
+                  {drawerOpen && (
+                    <motion.div
+                      exit={{
+                        scale: 0,
+                      }}
+                      animate={{
+                        scale: 1,
+                      }}
+                    >
+                      <div className={classes.drawerHeader}>
+                        <List>
+                          <ListItem button style={{ display: "block" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                paddingLeft: theme.spacing(4),
+                              }}
+                            >
+                              <img
+                                style={{ width: 54 }}
+                                src={faviconIconPng}
+                                alt="yes"
+                              />
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                }}
+                              >
+                                <Typography
+                                  variant="h6"
+                                  style={{ marginLeft: theme.spacing(1) }}
+                                >
+                                  BeBee
+                                </Typography>
+                                <Typography
+                                  variant="body1"
+                                  style={{
+                                    marginLeft: theme.spacing(1),
+                                    marginTop: -4,
+                                  }}
+                                >
+                                  Crawling
+                                </Typography>
+                              </div>
+                            </div>
+                          </ListItem>
+                        </List>
                       </div>
-                    </ListItem>
-                  </List>
-                </div>
-                <Divider />
+                      <Divider />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <List>
                   {false && IsAdmin && (
                     <ListItem style={{ padding: 0 }}>
@@ -352,46 +378,98 @@ function AppContents() {
                     <ListItemIcon>
                       <UserAvatar username={User.name} fullname={User.name} />
                     </ListItemIcon>
-                    <ListItemText primary={User.name || User.username} />
+                    <ListItemText
+                      disableTypography={true}
+                      primary={User.name || User.username}
+                    />
                   </ListItem>
                 </List>
                 <Divider />
                 <List>
+                  <ListItem button key={"stats"} component={Link} to="/">
+                    <ListItemIcon>
+                      <AddCircleOutlineIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Crawl URLs"}
+                    />
+                  </ListItem>
+
                   <ListItem
                     button
                     key={"stats"}
                     component={Link}
+                    to="/tracked-urls"
+                  >
+                    <ListItemIcon>
+                      <LinkIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Your Crawled URLs"}
+                    />
+                  </ListItem>
+
+                  <ListItem
+                    button
+                    key={"domains"}
+                    component={Link}
+                    to="/portals"
+                  >
+                    <ListItemIcon>
+                      <LanguageIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Targeted websites"}
+                    />
+                  </ListItem>
+                  <ListItem
+                    button
+                    key={"stats"}
+                    //component={Link}
                     to="/statistics"
+                    onClick={() =>
+                      setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
+                    }
                   >
                     <ListItemIcon>
                       <TimelineIcon />
                     </ListItemIcon>
-                    <ListItemText primary={"Statistics"} />
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Performance insights"}
+                    />
+                    {ListItemStatisticsExpanded ? (
+                      <ExpandLess />
+                    ) : (
+                      <ExpandMore />
+                    )}
                   </ListItem>
-                  {/* <ListItem
-                    button
-                    key={"FAQ"}
-                    component={Link}
-                    to="/faq"
-                    selected={location.pathname === "/faq"}
+                  <Collapse
+                    in={ListItemStatisticsExpanded}
+                    timeout="auto"
+                    unmountOnExit
                   >
-                    <ListItemIcon>
-                      <HelpIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={"FAQ"} />
-                  </ListItem> */}
-                  {/* <ListItem
-                    button
-                    key={"Extension"}
-                    component={Link}
-                    to="/extension"
-                    selected={location.pathname === "/extension"}
-                  >
-                    <ListItemIcon>
-                      <ExtensionIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={"Crawling Extension"} />
-                  </ListItem> */}
+                    <List component="div" disablePadding>
+                      <ListItem
+                        button
+                        key={"/statistics/" + StatisticsTypes.USER_TRACKED_URLS}
+                        component={Link}
+                        to={"/statistics/" + StatisticsTypes.USER_TRACKED_URLS}
+                        className={classes.nested}
+                      >
+                        <ListItemIcon>
+                          <LanguageIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Tracked URLs"}
+                        />
+                      </ListItem>
+                    </List>
+                  </Collapse>
                 </List>
                 <Divider />
                 {IsAdmin && (
@@ -406,19 +484,12 @@ function AppContents() {
                         <ListItemIcon>
                           <LinkIcon />
                         </ListItemIcon>
-                        <ListItemText primary={"Tracked URLs"} />
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"What's being crawled"}
+                        />
                       </ListItem>
-                      <ListItem
-                        button
-                        key={"domains"}
-                        component={Link}
-                        to="/domains"
-                      >
-                        <ListItemIcon>
-                          <LanguageIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={"Target websites"} />
-                      </ListItem>
+
                       <ListItem
                         button
                         key={"blacklist"}
@@ -428,7 +499,10 @@ function AppContents() {
                         <ListItemIcon>
                           <Block />
                         </ListItemIcon>
-                        <ListItemText primary={"Blacklist"} />
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Blacklist"}
+                        />
                       </ListItem>
                       <ListItem
                         button
@@ -440,7 +514,10 @@ function AppContents() {
                         <ListItemIcon>
                           <AccountIcon />
                         </ListItemIcon>
-                        <ListItemText primary={"Users"} />
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Users"}
+                        />
                       </ListItem>
                     </List>
                     <Divider />
@@ -452,7 +529,10 @@ function AppContents() {
                   <ListItemIcon>
                     <PowerSettingsNewIcon />
                   </ListItemIcon>
-                  <ListItemText primary={"Disconnect"} />
+                  <ListItemText
+                    disableTypography={true}
+                    primary={"Disconnect"}
+                  />
                 </ListItem>
               </List>
             </div>

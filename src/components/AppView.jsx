@@ -9,7 +9,7 @@ import AddTrackUrlsView from "../views/AddTrackUrls";
 import LoginView from "../views/Login";
 import ManageUsersView from "../views/ManageUsers";
 import AddUsersView from "../views/AddUser";
-import ManageUrlsView from "../views/ManageUrls";
+import TrackedUrlsView from "../views/TrackedUrls";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
 import FAQView from "../views/FAQ";
@@ -22,6 +22,10 @@ import ScrapingThreadDetailsView from "../views/ScrapingThreadDetails";
 import DomainsManagementView from "../views/DomainsManagement";
 import CrawlingExtensionView from "../views/CrawlingExtension";
 import BlacklistView from "../views/BlacklistView";
+import WebsiteInsights from "../views/PortalInsights";
+import CrawlerThreadsView from "../views/CrawlerThreads";
+import TrackedUrlInsights from "../views/TrackedUrlInsights";
+import BlacklistImpactView from "../views/BlacklistImpactView";
 const useStyles = makeStyles((theme) => ({
   appView: {
     display: "flex",
@@ -50,18 +54,25 @@ const AppView = () => {
         <Route exact path="/login" component={LoginView} />
         <Route exact path="/faq" component={FAQView} />
         <Route exact path="/manage-users" component={ManageUsersView} />
-        <Route exact path="/manage-urls" component={ManageUrlsView} />
-        <Route exact path="/tracked-urls" component={ManageUrlsAdminView} />
+        <Route exact path="/manage-urls" component={TrackedUrlsView} />
+        <Route exact path="/tracked-urls" component={TrackedUrlsView} />
+        <Route
+          path="/tracked-url/:tracked_url_id"
+          component={TrackedUrlInsights}
+        />
         <Route exact path="/add-user" component={AddUsersView} />
-        <Route exact path="/statistics" component={StatisticsView} />
+        <Route path="/statistics/:type" component={StatisticsView} />
         <Route exact path="/user-statistics" component={StatisticsAdminView} />
         <Route exact path="/countries" component={CountriesManagementView} />
-        <Route exact path="/domains" component={DomainsManagementView} />
+        <Route exact path="/portals" component={DomainsManagementView} />
+        <Route exact path="/domain/:portal" component={WebsiteInsights} />
         <Route exact path="/blacklist" component={BlacklistView} />
         <Route
-          path="/url-details/:threadId"
-          render={(props) => <ScrapingThreadDetailsView {...props} />}
+          exact
+          path="/blacklist/:ruleId/impact"
+          component={BlacklistImpactView}
         />
+        <Route exact path="/crawler-threads" component={CrawlerThreadsView} />
       </Switch>
     </div>
   );

@@ -8,7 +8,7 @@ const insertIgnore = (array, item) => {
   }
 };
 
-export default function LineGraph({ chartData }) {
+export default function GenericChart({ chartData }) {
   const chartRef = useRef(null);
   const datasets = [];
   const labels = [];

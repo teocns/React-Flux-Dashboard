@@ -9,16 +9,18 @@ import KeyMirror from "keymirror";
 import React, { useEffect, useState } from "react";
 import statisticsActions from "../actions/Statistics";
 import CrawlerThreadsChart from "../components/Charts/CrawlerThreads";
-import TrackedUrlsChart from "../components/Charts/TrackedUrls";
+import TrackedUrlsChart from "../components/Charts/Generic";
 import DateFilter from "../components/Filters/DateFilter";
 import UserFilter from "../components/Filters/UserFilter";
+import Chart from "../components/Insights/Chart";
 import ActionTypes from "../constants/ActionTypes";
 import DateRanges from "../constants/DateRanges";
 import { STATISTICS_TYPES } from "../constants/Statistics";
-import { StatisticsSyncRequest } from "../models/Statistics";
+import StatisticsTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/ChartTypes";
+
 import sessionStore from "../store/session";
 import statisticsStore from "../store/Statistics";
-
+import TrackedUrlStatistic from "./Statistics/TrackedUrls";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -67,7 +69,7 @@ const CHART_VIEW_MODES = KeyMirror({
 
 var lastRequestedFilterB64 = "";
 
-export default function StatisticsView() {
+export default function StatisticsView(props) {
   const [Statistics, setStatistics] = useState(statisticsStore.getStatistics());
 
   const [ChartViewMode, setChartViewMode] = useState(CHART_VIEW_MODES.PUZZLE);
@@ -76,9 +78,7 @@ export default function StatisticsView() {
     CHART_VIEW_MODE: null,
   });
 
-  const [ActiveStatisticTypes, setActiveStatisticsTypes] = useState(
-    Object.values(STATISTICS_TYPES)
-  );
+  const StatisticType = props.match.params.type;
 
   const setAnchorElement = (key, val) => {
     AnchorElements[key] = val;
@@ -103,65 +103,20 @@ export default function StatisticsView() {
   };
   const classes = useStyles();
 
-  const getFilter = (syncRequest) => {
-    if (!syncRequest)
-      return {
-        dateRange: DateRangeFilter,
-        types: ActiveStatisticTypes,
-        userFilter: SelectedUserFilter,
-      };
-
-    return {
-      dateRange: syncRequest.dateRange,
-      types: syncRequest.types,
-      userFilter: syncRequest.userFilter,
-    };
-  };
-
-  const syncStatistics = () => {
-    isLoading = true;
-    console.log("Syncing statistics");
-
-    lastRequestedFilterB64 = btoa(JSON.stringify(getFilter()));
-
-    statisticsActions.syncStatistics(
-      new StatisticsSyncRequest(
-        DateRangeFilter,
-        SelectedUserFilter,
-        ActiveStatisticTypes
-      )
-    );
-  };
-
-  const onStatisticsSynced = () => {
-    // Verify that the received statistics match the requested ones
-    const statsb64 = btoa(
-      JSON.stringify(getFilter(statisticsStore.getStatistics().syncRequest))
-    );
-
-    if (statsb64 !== lastRequestedFilterB64) {
-      return false;
-    }
-
-    isLoading = false;
-    setStatistics(statisticsStore.getStatistics());
-  };
-
   useEffect(() => {
     // Bind listeners
-    statisticsStore.addChangeListener(
-      ActionTypes.Statistics.STATISTICS_RECEIVED,
-      onStatisticsSynced
-    );
-
-    syncStatistics();
-    return () => {
-      // Unbind listeners
-      statisticsStore.removeChangeListener(
-        ActionTypes.Statistics.STATISTICS_RECEIVED,
-        onStatisticsSynced
-      );
-    };
+    // statisticsStore.addChangeListener(
+    //   ActionTypes.Statistics.STATISTICS_RECEIVED,
+    //   onStatisticsSynced
+    // );
+    // syncStatistics();
+    // return () => {
+    //   // Unbind listeners
+    //   statisticsStore.removeChangeListener(
+    //     ActionTypes.Statistics.STATISTICS_RECEIVED,
+    //     onStatisticsSynced
+    //   );
+    // };
   });
 
   const theme = useTheme();
@@ -197,6 +152,21 @@ export default function StatisticsView() {
       acc += dataset.summary.trackedUrls;
     }
     return acc;
+  };
+
+  const renderStatisticView = () => {
+    switch (StatisticType) {
+      case StatisticsTypes.USER_TRACKED_URLS:
+        return (
+          <TrackedUrlStatistic
+            DateRangeFilter={DateRangeFilter}
+            SelectedUserFilter={SelectedUserFilter}
+          />
+        );
+
+      default:
+        return null;
+    }
   };
   return (
     <div style={{ overflow: "hidden" }}>
@@ -245,81 +215,9 @@ export default function StatisticsView() {
         style={{
           display: "flex",
         }}
-      ></div>
-      <Grid container spacing={2} style={{ overflow: "hidden" }}>
-        {Statistics &&
-          ActiveStatisticTypes.map((statistics_type) => {
-            let title;
-            let sumFunc;
-
-            let chart;
-            switch (statistics_type) {
-              case STATISTICS_TYPES.TRACKED_URLS:
-                title = "Newly added URLs";
-                sumFunc = calculateTotalTrackedUrls;
-                chart = () => {
-                  return (
-                    <TrackedUrlsChart
-                      chartData={Statistics.graphs[statistics_type]}
-                    />
-                  );
-                };
-                break;
-              case STATISTICS_TYPES.SCRAPED_JOBS:
-                title = "Jobs scraped";
-                sumFunc = calculateTotalScrapedJobs;
-                chart = () => (
-                  <CrawlerThreadsChart
-                    chartData={Statistics.graphs[statistics_type]}
-                  />
-                );
-                break;
-              default:
-                break;
-            }
-            return (
-              <Grid
-                item={true}
-                xs={6}
-                style={{
-                  minWidth: 480,
-                  minHeight: 480,
-                  position: "relative",
-                  overflow: "hidden",
-                  padding: theme.spacing(2),
-                }}
-              >
-                <Paper
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    style={{ padding: theme.spacing(2) }}
-                  >
-                    {title} {sumFunc()}
-                  </Typography>
-                  {!isLoading && !!Statistics.graphs[statistics_type] ? (
-                    chart()
-                  ) : (
-                    <CircularProgress
-                      color="secondary"
-                      style={{
-                        position: "absolute",
-                        left: "50%",
-                        top: "50%",
-                        //transform: "translate(-50%,-50%)",
-                      }}
-                    />
-                  )}
-                </Paper>
-              </Grid>
-            );
-          })}
-      </Grid>
+      >
+        {renderStatisticView()}
+      </div>
     </div>
   );
 }

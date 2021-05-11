@@ -36,6 +36,7 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   FastForward,
   Search,
+  Done,
 } from "@material-ui/icons";
 import DateRanges from "../../constants/DateRanges";
 import countryFilterStore from "../../store/CountryFilter";
@@ -99,6 +100,10 @@ function getStyles(name, personName, theme) {
 function UserFilter({ onUserFilterChanged }) {
   const [Users, setUsers] = useState(userFilterStore.get());
 
+  const [SelectedUsersUnconfirmed, setSelectedUsersUnconfirmed] = useState(
+    Users ? Object.keys(Users) : []
+  );
+
   const [SelectedUsers, setSelectedUsers] = useState(
     Users ? Object.keys(Users) : []
   );
@@ -113,10 +118,18 @@ function UserFilter({ onUserFilterChanged }) {
   const classes = useStyles();
   const theme = useTheme();
 
-  const closeUserMenu = (evt) => {
-    if (usersAnchorRef.current && usersAnchorRef.current.contains(evt.target)) {
-      return;
-    }
+  const closeUserMenu = (confirm) => {
+    // if (usersAnchorRef.current && usersAnchorRef.current.contains(evt.target)) {
+    //   return;
+    // }
+
+    setTimeout(() => {
+      if (confirm === true) {
+        confirmUserFilter();
+      } else if (confirm === false) {
+        setSelectedUsersUnconfirmed(SelectedUsers);
+      }
+    });
     return setUserMenuOpen(false);
   };
 
@@ -146,59 +159,77 @@ function UserFilter({ onUserFilterChanged }) {
     return bindListeners();
   });
 
-  const hasFilterForUser = (userId) => {
-    return SelectedUsers.includes(userId);
+  const UserIsSelected = (userId) => {
+    return SelectedUsersUnconfirmed.includes(userId);
   };
 
-  const toggleUserFilter = (name) => {
-    const userIdIndex = SelectedUsers.indexOf(name);
-    if (userIdIndex !== -1) {
-      const clone = [...SelectedUsers];
+  const selectUser = (userId) => {
+    const userIdIndex = SelectedUsersUnconfirmed.indexOf(userId);
+    const isSelected = userIdIndex !== -1;
+    if (isSelected) {
+      if (SelectedUsersUnconfirmed.length === Object.keys(Users).length) {
+        // If all the users are already selected
+        // And the user is selecting an user
+        // Then deselect all others
+        setSelectedUsersUnconfirmed([userId]);
+        return;
+      }
+      // Remove userId from selected users
+      const clone = [...SelectedUsersUnconfirmed];
       clone.splice(userIdIndex, 1);
-      handleUsersFilterChanged(clone);
+      setSelectedUsersUnconfirmed(clone);
     } else {
-      handleUsersFilterChanged([...SelectedUsers, name]);
+      setSelectedUsersUnconfirmed([...SelectedUsersUnconfirmed, userId]);
     }
   };
 
   const selectAllUsers = () => {
-    handleUsersFilterChanged(Object.keys(Users));
-    setTimeout(() => {
-      setUserMenuOpen(false);
-    });
+    setSelectedUsersUnconfirmed(Object.keys(Users));
+    // setTimeout(() => {
+    //   setUserMenuOpen(false);
+    // });
   };
 
-  const handleUsersFilterChanged = (selectedUsers) => {
-    setSelectedUsers(selectedUsers);
-    userFilterActions.userFilterChanged(selectedUsers);
+  const confirmUserFilter = () => {
+    setSelectedUsers(SelectedUsersUnconfirmed);
+    userFilterActions.userFilterChanged(SelectedUsersUnconfirmed);
+
     if (isFunction(onUserFilterChanged)) {
-      onUserFilterChanged(selectedUsers);
+      onUserFilterChanged(SelectedUsersUnconfirmed);
     }
   };
 
   return (
-    <div style={{ display: "inline-flex", alignItems: "center" }}>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1),
+      }}
+    >
       {Users && (
-        <Badge
-          badgeContent={
-            SelectedUsers && SelectedUsers.length ? SelectedUsers.length : ""
-          }
-          color="secondary"
-          variant={SelectedUsers.length ? "standard" : "dot"}
+        <IconButton
+          size="small"
+          aria-controls="users-menu"
+          aria-haspopup="true"
+          onClick={toggleUsersMenu}
+          ref={usersAnchorRef}
         >
-          <IconButton
-            size="small"
-            aria-controls="users-menu"
-            aria-haspopup="true"
-            onClick={toggleUsersMenu}
-            ref={usersAnchorRef}
+          <Badge
+            badgeContent={
+              SelectedUsers && SelectedUsers.length ? SelectedUsers.length : ""
+            }
+            color="secondary"
+            invisible={!SelectedUsers.length}
+            variant={SelectedUsers.length && "dot"}
           >
             <PersonIcon
               style={{ color: theme.palette.text.disabled }}
               size={SelectedUsers.length ? "medium" : "small"}
             />
-          </IconButton>
-        </Badge>
+          </Badge>
+        </IconButton>
       )}
 
       <Menu
@@ -206,42 +237,80 @@ function UserFilter({ onUserFilterChanged }) {
         open={UserMenuOpen}
         PaperProps={MenuProps.PaperProps}
         keepMounted
-        onClose={closeUserMenu}
+        onClose={() => closeUserMenu(false)}
         anchorEl={usersAnchorRef.current}
         style={{ paddingTop: 0 }}
+        MenuListProps={{ style: { maxHeight: 300, overflow: "hidden" } }}
       >
-        <MenuItem button onClick={selectAllUsers}>
-          <Button
-            disableRipple={true}
-            disableFocusRipple={true}
-            disableTouchRipple={true}
-            variant="small"
-            startIcon={<ClearAllIcon />}
-          >
-            Select all
-          </Button>
-        </MenuItem>
-        <Divider />
+        <div
+          style={{
+            maxHeight: 300,
+            height: 300,
+            overflowY: "hidden",
+            marginTop: -8,
+          }}
+        >
+          <div>
+            <ButtonGroup variant="text" style={{ width: "100%" }}>
+              <Button
+                disableRipple={true}
+                disableFocusRipple={true}
+                disableTouchRipple={true}
+                onClick={() => closeUserMenu(false)}
+              >
+                <Close />
+              </Button>
+              <Button
+                style={{ width: "100%" }}
+                disableRipple={true}
+                onClick={selectAllUsers}
+                disableFocusRipple={true}
+                disableTouchRipple={true}
+                startIcon={<ClearAllIcon />}
+              >
+                {"Select all"}
+              </Button>
+              <Button
+                disableRipple={true}
+                disableFocusRipple={true}
+                disableTouchRipple={true}
+                onClick={() => closeUserMenu(true)}
+              >
+                <Done />
+              </Button>
+            </ButtonGroup>
+          </div>
+          <Divider />
 
-        {Users &&
-          Object.keys(Users).map((userId) => (
-            <MenuItem
-              alignItems="center"
-              key={userId}
-              onClick={() => {
-                toggleUserFilter(userId);
+          <div style={{ overflowY: "auto", height: 300 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
               }}
-              value={userId}
             >
-              <Checkbox
-                color="secondary"
-                checked={hasFilterForUser(userId)}
-                size="small"
-                disableRipple
-              />
-              {Users[userId]}
-            </MenuItem>
-          ))}
+              {Users &&
+                Object.keys(Users).map((userId) => (
+                  <MenuItem
+                    alignItems="center"
+                    key={userId}
+                    onClick={() => {
+                      selectUser(userId);
+                    }}
+                    value={userId}
+                  >
+                    <Checkbox
+                      color="secondary"
+                      checked={UserIsSelected(userId)}
+                      size="small"
+                      disableRipple
+                    />
+                    {Users[userId]}
+                  </MenuItem>
+                ))}
+            </div>
+          </div>
+        </div>
       </Menu>
     </div>
   );

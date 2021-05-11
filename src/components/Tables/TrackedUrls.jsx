@@ -1,54 +1,41 @@
-import React, { useState, useEffect } from "react";
-import clsx from "clsx";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { Link as RouterLink } from "react-router-dom";
-import { useConfirm } from "material-ui-confirm";
-import MultifunctionalHeading from "../Table/MultifunctionalHeading";
-import countriesActions from "../../actions/Countries";
-import hostsActions from "../../actions/Hosts";
-import DEFAULT_PARSING_REGEX from "../../constants/Scraper";
 import {
-  Badge,
   Box,
   Checkbox,
+  CircularProgress,
   IconButton,
+  Link,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
-  TableFooter,
-  TableHead,
   TablePagination,
   TableRow,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Link,
   Typography,
 } from "@material-ui/core";
-
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { MoreVert, Search } from "@material-ui/icons";
+import AccessTimeIcon from "@material-ui/icons/AccessTime";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import { useConfirm } from "material-ui-confirm";
+import React, { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import TablePaginationActions from "./Pagination";
-
-import { Skeleton } from "@material-ui/lab";
 import ActionTypes from "../../constants/ActionTypes";
-import EditHostParsingRegexDialog from "../Dialogs/EditHostParsingRegex";
-import {
-  Delete,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Search,
-  MoreVert,
-  Edit,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
 import TableNames from "../../constants/Tables";
+import { number_format } from "../../helpers/numbers";
+import {
+  getTimeRemaining,
+  prettyPrintDate,
+  timeSince,
+} from "../../helpers/time";
 import TableData from "../../models/TableData";
-import MultiFilter from "../Filters/MultiFilter";
-import Country from "../../models/Country";
-import { timeSince } from "../../helpers/time";
+import tableStore from "../../store/Tables";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
+import TablePaginationActions from "./Pagination";
 
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
@@ -88,7 +75,7 @@ const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 const COLUMNS = [
   {
     name: "age",
-    label: "Age",
+    label: "Tracked at",
     align: "right",
   },
   {
@@ -99,7 +86,7 @@ const COLUMNS = [
 
   {
     name: "total_scraped_jobs",
-    label: "Jobs scraped",
+    label: "Total jobs",
     align: "right",
   },
   {
@@ -108,8 +95,15 @@ const COLUMNS = [
     align: "right",
   },
   {
+    name: "crawler_threads_cnt",
+    label: "Latest crawl",
+    hint: "X jobs scraped / out of X crawled links",
+    align: "right",
+    colspan: 2,
+  },
+  {
     name: "Score",
-    label: "URL Score",
+    label: "Next crawl",
     align: "right",
   },
   {
@@ -118,7 +112,7 @@ const COLUMNS = [
     sortable: false,
   },
 ];
-const ManageUrlsTable = ({ filter }) => {
+const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -202,7 +196,7 @@ const ManageUrlsTable = ({ filter }) => {
       setSelectedRows([]);
     } else if (checked) {
       if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
+        setSelectedRows(rows.map((row) => row.url_id));
       }
     }
   };
@@ -223,7 +217,7 @@ const ManageUrlsTable = ({ filter }) => {
             ? newPage
             : _tableData.page
           : 0,
-      filter: filter || "",
+      filter: filter || {},
       tableName: THIS_TABLE_NAME,
       previousRowCount:
         _tableData && _tableData.totalRowsCount
@@ -251,10 +245,10 @@ const ManageUrlsTable = ({ filter }) => {
     if (tableData.tableName === THIS_TABLE_NAME) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
       console.log("foundTable", foundTable);
+      onLoaded && onLoaded();
       setTableData(foundTable);
     }
   };
-  console.log("rendering", tableData);
 
   // const onScrapingThreadCreated = () => {
   //   setTimeout(() => {
@@ -317,14 +311,14 @@ const ManageUrlsTable = ({ filter }) => {
     });
 
     return bindListeners();
-  }, []);
+  }, [filter]);
 
-  const handleCountryFilterChanged = (_countryFilter) => {
-    syncTableData({ newCountryFilter: _countryFilter });
-  };
-  const handleDateFilterChanged = (_dateRange) => {
-    syncTableData({ newDateRange: _dateRange });
-  };
+  // const handleCountryFilterChanged = (_countryFilter) => {
+  //   syncTableData({ newCountryFilter: _countryFilter });
+  // };
+  // const handleDateFilterChanged = (_dateRange) => {
+  //   syncTableData({ newDateRange: _dateRange });
+  // };
 
   const theme = useTheme();
 
@@ -354,7 +348,7 @@ const ManageUrlsTable = ({ filter }) => {
         );
     };
     const _emptyRowContent = () => (
-      <TableCell colspan="6">
+      <TableCell colspan="9">
         <Box
           display="flex"
           justifyContent="center"
@@ -401,6 +395,50 @@ const ManageUrlsTable = ({ filter }) => {
     );
 
     return _createRow();
+  };
+
+  const makeStatus = (row) => {
+    if (row.crawler_threads_last_completed_age === null) {
+      if (!row.crawler_threads_cnt) {
+        return "Not yet processed";
+      } else {
+        return (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            Crawling now{" "}
+            <CircularProgress
+              style={{
+                width: 14,
+                height: 14,
+                color: theme.palette.text.disabled,
+                marginLeft: theme.spacing(1),
+              }}
+            />
+          </div>
+        );
+      }
+    } else {
+      const targetDate =
+        row.crawler_threads_last_completed_age + row.recrawling_delay;
+
+      return (
+        <div
+          style={{
+            color: theme.palette.text.hint,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Typography variant="overline" style={{ textTransform: "lowercase" }}>
+            {`${getTimeRemaining(targetDate, true)} `}
+          </Typography>
+          <AccessTimeIcon
+            fontSize="small"
+            style={{ marginLeft: theme.spacing(1) }}
+          />
+        </div>
+      );
+    }
   };
 
   const viewJobYieldingLinksExample = () => {
@@ -463,7 +501,7 @@ const ManageUrlsTable = ({ filter }) => {
           //   //toggleCountryRenameDialog();
           // }}
           component={RouterLink}
-          to={`/url-details/`}
+          to={`/tracked-url/${RowActionObject && RowActionObject.url_id}`}
         >
           View details
         </MenuItem>
@@ -471,6 +509,54 @@ const ManageUrlsTable = ({ filter }) => {
     );
   };
 
+  const makeLatestCrawl = (row, colNum) => {
+    if (!row.crawler_threads_cnt) {
+      if (colNum === 2) {
+        return "Never";
+      }
+    } else {
+      if (colNum === 1) {
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              transform: "translateY(-8px)",
+            }}
+          >
+            <Typography
+              variant="caption"
+              style={{ color: theme.palette.text.hint }}
+            >
+              Links found:
+            </Typography>
+            {row.crawler_threads_last_links_cnt}
+          </div>
+        );
+      } else {
+        return (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography
+                variant="caption"
+                style={{ color: theme.palette.text.hint }}
+              >
+                Jobs scraped:
+              </Typography>
+              {row.crawler_threads_last_jobs_cnt}
+            </div>
+
+            <Typography
+              variant="caption"
+              style={{ color: theme.palette.text.disabled }}
+            >
+              {timeSince(row.crawler_threads_last_completed_age)}
+            </Typography>
+          </div>
+        );
+      }
+    }
+  };
   const onSortChanged = ({ name, sort }) => {
     syncTableData({ newSort: { name, sort } });
   };
@@ -478,12 +564,22 @@ const ManageUrlsTable = ({ filter }) => {
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          stickyHeader
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
             <col style={{ width: 54 }} />
-            <col style={{ width: 100 }} />
-            <col style={{ width: "50%" }} />
-            <col style={{ width: "15%" }} />
+            <col style={{ width: 128 }} />
+            <col style={{ width: "100%" }} />
+            <col style={{ width: 96 }} />
+            <col style={{ width: 128 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 170 }} />
+            <col style={{ width: 54 }} />
           </colgroup>
           <MultifunctionalHeading
             columns={COLUMNS}
@@ -531,25 +627,34 @@ const ManageUrlsTable = ({ filter }) => {
                       <TableCell width="64px">
                         <Checkbox
                           size="small"
-                          checked={SelectedRows.includes(row.threadId)}
+                          checked={SelectedRows.includes(row.url_id)}
                           onChange={(evt) => {
-                            onRowSelectionChanged(row.threadId);
+                            onRowSelectionChanged(row.url_id);
                           }}
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <Typography
-                          variant="caption"
-                          style={{ color: theme.palette.text.disabled }}
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
                         >
-                          {timeSince(row.age)}
-                        </Typography>
+                          <Typography
+                            variant="caption"
+                            style={{ color: theme.palette.text.hint }}
+                          >
+                            {prettyPrintDate(row.age)}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            style={{ color: "rgb(132 132 132)" }}
+                          >
+                            {timeSince(row.age)}
+                          </Typography>
+                        </div>
                       </TableCell>
 
                       <TableCell scope="row">
                         <div
                           style={{
-                            display: "inline-flex",
                             alignItems: "center",
                             overflow: "hidden",
                             display: "block",
@@ -567,15 +672,22 @@ const ManageUrlsTable = ({ filter }) => {
                       </TableCell>
 
                       <TableCell align="right">
-                        {row.total_scraped_jobs}
+                        {number_format(row.total_scraped_jobs, 0, ".", ",")}
                       </TableCell>
                       <TableCell align="right">
                         {row.crawler_threads_cnt}
                       </TableCell>
 
-                      <TableCell align="right">{"TBD"}</TableCell>
+                      <TableCell align="right">
+                        {makeLatestCrawl(row, 1)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {makeLatestCrawl(row, 2)}
+                      </TableCell>
 
-                      <TableCell component="th" align="right">
+                      <TableCell align="right">{makeStatus(row)}</TableCell>
+
+                      <TableCell align="right">
                         {_createRowActionsButton(row)}
                       </TableCell>
                     </React.Fragment>
@@ -599,7 +711,7 @@ const ManageUrlsTable = ({ filter }) => {
         <div>
           <TablePagination
             rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-            colSpan={3}
+            colSpan={9}
             count={tableData.totalRowsCount}
             rowsPerPage={rowsPerPage}
             page={page}

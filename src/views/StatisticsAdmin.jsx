@@ -37,7 +37,7 @@ import Typography from "@material-ui/core/Typography";
 import { Skeleton } from "@material-ui/lab";
 import MultiFilter from "../components/Filters/MultiFilter";
 
-import Statistics from "../models/Statistics";
+import Statistics from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics";
 import statisticsActions from "../actions/Statistics";
 import statisticsStore from "../store/Statistics";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";

@@ -1,57 +1,29 @@
-import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { prettyTimelapse, timeSince } from "../../helpers/time";
-import { Statuses } from "../../constants/CrawlerThreadsStatuses";
-import clsx from "clsx";
 import {
   Box,
-  CircularProgress,
-  LinearProgress,
   Link,
   Table,
   TableBody,
-  Tooltip,
   TableCell,
-  TableContainer,
-  TableFooter,
   TablePagination,
   TableRow,
   Typography,
 } from "@material-ui/core";
-
-import { motion } from "framer-motion";
-
-import sessionStore from "../../store/session";
-import tableStore from "../../store/Tables";
-import scrapingThreadsStore from "../../store/ScrapingThreads";
-import TablePaginationActions from "./Pagination";
-import EmptyTablePlaceholder from "./EmptyPlaceholder";
-import ScrapingThreadStatus from "../Table/ScrapingThreadStatus";
-import { Skeleton } from "@material-ui/lab";
-import ActionTypes from "../../constants/ActionTypes";
-import scrapingThreadsActions from "../../actions/ScrapingThread";
-import {
-  BrandingWatermark,
-  Cancel,
-  HourglassFull,
-  Today,
-  HourglassEmpty,
-  DoneAll,
-  BrandingWatermarkOutlined,
-  Check,
-  ErrorOutline,
-  BugReport,
-} from "@material-ui/icons";
-
-import tableActions from "../../actions/Table";
-import TableNames from "../../constants/Tables";
-import TableData from "../../models/TableData";
-import ImportExportIcon from "@material-ui/icons/ImportExport";
-import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
-import FindInPageIcon from "@material-ui/icons/FindInPage";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { Today } from "@material-ui/icons";
 import Search from "@material-ui/icons/Search";
-import ScrapingThread from "../../models/ScrapingThread";
+import { Skeleton } from "@material-ui/lab";
+import clsx from "clsx";
+import React, { useEffect, useState } from "react";
+import tableActions from "../../actions/Table";
+import ActionTypes from "../../constants/ActionTypes";
+import TableNames from "../../constants/Tables";
+import { timeSince } from "../../helpers/time";
+import TableData from "../../models/TableData";
+import scrapingThreadsStore from "../../store/ScrapingThreads";
+import tableStore from "../../store/Tables";
+import ScrapingThreadStatus from "../Table/CrawlerThreadStatus";
+import TablePaginationActions from "./Pagination";
+
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
@@ -241,7 +213,7 @@ const AddTrackUrlTable = () => {
         );
     };
     const _emptyRowContent = () => (
-      <TableCell colspan="6">
+      <TableCell colspan="2">
         <Box
           display="flex"
           justifyContent="center"
@@ -321,10 +293,13 @@ const AddTrackUrlTable = () => {
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="custom pagination table">
+        <Table
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
           <colgroup>
             <col style={{ width: "70%" }} />
-            <col style={{ width: "15%" }} />
             <col style={{ width: "15%" }} />
           </colgroup>
           <TableBody className={classes.tableBody}>
@@ -341,13 +316,6 @@ const AddTrackUrlTable = () => {
                       <Skeleton style={{ width: "100%" }} />
                     </TableCell>
                     <TableCell>
-                      <Skeleton style={{ width: "100%" }} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton style={{ width: "100%" }} />
-                    </TableCell>
-
-                    <TableCell style={{ opacity: "0" }}>
                       <Skeleton style={{ width: "100%" }} />
                     </TableCell>
                   </TableRow>
@@ -389,9 +357,6 @@ const AddTrackUrlTable = () => {
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell width="20%" align="right">
-                        <ScrapingThreadStatus row={row} />
-                      </TableCell>
                     </React.Fragment>
                   );
                   const wrapComponent = (
@@ -418,7 +383,7 @@ const AddTrackUrlTable = () => {
               100,
               // { label: "All", value: -1 },
             ]}
-            colSpan={3}
+            colSpan={2}
             count={tableData.totalRowsCount}
             rowsPerPage={rowsPerPage}
             page={page}

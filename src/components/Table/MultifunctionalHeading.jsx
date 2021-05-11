@@ -73,12 +73,14 @@ const MultifunctionalTableHeading = ({
             width = "auto",
             sortable = true,
             align = "left",
+            colspan = 1,
           }) => {
             const thisColumnSort =
               sort && sort.name === name ? sort.sort : "asc";
             const isActive = sort && sort.name === name;
+
             return (
-              <TableCell width={width} align={align}>
+              <TableCell width={width} align={align} colSpan={colspan}>
                 <TableSortLabel
                   active={isActive}
                   direction={thisColumnSort}
