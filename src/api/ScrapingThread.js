@@ -11,4 +11,11 @@ const GetDetails = async (threadId) => {
   return await MakeRequest.get(`/scraping-thread/${threadId}/details`);
 };
 
-export default { Delete, GetDetails };
+const GetScrapedJobsCount = async ({ dateRange, userFilter }) => {
+  return await MakeRequest.post(`/statistics/crawler-urls/scraped-jobs`, {
+    dateRange,
+    userFilter,
+  });
+};
+
+export default { Delete, GetDetails, GetScrapedJobsCount };

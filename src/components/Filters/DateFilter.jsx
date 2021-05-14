@@ -1,5 +1,5 @@
 //@ts-check
-import { Badge, IconButton } from "@material-ui/core";
+import { Badge, IconButton, Tooltip } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { FastForward } from "@material-ui/icons";
 import DateRangeIcon from "@material-ui/icons/DateRange";
@@ -42,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function DateFilter({ onDateRangeChanged }) {
+function DateFilter({ onDateRangeChanged, tooltip }) {
   const [DateFilterOpen, setDateFilterOpen] = useState(false);
 
   const [DateRange, setDateRange] = useState(null);
@@ -114,23 +114,28 @@ function DateFilter({ onDateRangeChanged }) {
       style={{ paddingLeft: theme.spacing(1), paddingRight: theme.spacing(1) }}
     >
       <IconButton size="small" onClick={toggleDateRangeFilter}>
-        <Badge color="secondary" variant={DateRange && "dot"}>
-          <DateRangeIcon
-            size="small"
-            style={{ color: theme.palette.text.disabled }}
-          />
-          <div style={{ postiion: "relative" }}>
-            <div style={{ position: "fixed", zIndex: 129831298319 }}>
-              <DateRangePicker
-                closeOnClickOutside
-                open={DateFilterOpen}
-                definedRanges={DateRanges}
-                toggle={toggleDateRangeFilter}
-                onChange={handleChangeDateRange}
-              />
+        <Tooltip
+          title={tooltip ? tooltip : "Filter by date range"}
+          aria-label={tooltip ? tooltip : "Filter by date range"}
+        >
+          <Badge color="secondary" variant={DateRange && "dot"}>
+            <DateRangeIcon
+              size="small"
+              style={{ color: theme.palette.text.disabled }}
+            />
+            <div style={{ postiion: "relative" }}>
+              <div style={{ position: "fixed", zIndex: 129831298319 }}>
+                <DateRangePicker
+                  closeOnClickOutside
+                  open={DateFilterOpen}
+                  definedRanges={DateRanges}
+                  toggle={toggleDateRangeFilter}
+                  onChange={handleChangeDateRange}
+                />
+              </div>
             </div>
-          </div>
-        </Badge>
+          </Badge>
+        </Tooltip>
       </IconButton>
     </div>
   );

@@ -47,12 +47,30 @@ export default function DomainsManagementView() {
     }, 500);
   };
 
+  const onSearchFilterChanged = (f) => {
+    setFilter(f);
+  };
+
+  const onUserFilterChanged = (f) => {
+    debugger;
+    setUserFilter(f);
+  };
   return (
     <TableContainer component={Paper} className={classes.tableContainer}>
-      <MultiFilter mini />
+      <MultiFilter
+        mini
+        dateRangeTooltip={"Filter websites by datetime of crawl"}
+        onSearchFilterChanged={onSearchFilterChanged}
+        onUserFilterChanged={onUserFilterChanged}
+      />
 
       <Divider />
-      <DomainsManagementTable filter={Filter} />
+      <DomainsManagementTable
+        filter={{
+          domain: Filter,
+          users: UserFilter,
+        }}
+      />
     </TableContainer>
   );
 }

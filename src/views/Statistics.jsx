@@ -16,11 +16,13 @@ import Chart from "../components/Insights/Chart";
 import ActionTypes from "../constants/ActionTypes";
 import DateRanges from "../constants/DateRanges";
 import { STATISTICS_TYPES } from "../constants/Statistics";
-import StatisticsTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/ChartTypes";
+import StatisticsDataTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/DataTypes";
+import StatisticsTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Types";
 
 import sessionStore from "../store/session";
 import statisticsStore from "../store/Statistics";
-import TrackedUrlStatistic from "./Statistics/TrackedUrls";
+import TrackedUrlStatisticsView from "./Statistics/TrackedUrls";
+import ScrapedJobsStatisticsView from "./Statistics/ScrapedJobs";
 const useStyles = makeStyles((theme) => ({
   card: {
     minWidth: 275,
@@ -104,6 +106,7 @@ export default function StatisticsView(props) {
   const classes = useStyles();
 
   useEffect(() => {
+    console.log("Rendering");
     // Bind listeners
     // statisticsStore.addChangeListener(
     //   ActionTypes.Statistics.STATISTICS_RECEIVED,
@@ -133,32 +136,19 @@ export default function StatisticsView(props) {
     });
   };
 
-  const calculateTotalScrapedJobs = () => {
-    if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS]) {
-      return 0;
-    }
-    let acc = 0;
-    for (let dataset of Statistics.graphs[STATISTICS_TYPES.SCRAPED_JOBS]) {
-      acc += dataset.summary.scrapedJobs;
-    }
-    return acc;
-  };
-  const calculateTotalTrackedUrls = () => {
-    if (!Statistics || !Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS]) {
-      return 0;
-    }
-    let acc = 0;
-    for (let dataset of Statistics.graphs[STATISTICS_TYPES.TRACKED_URLS]) {
-      acc += dataset.summary.trackedUrls;
-    }
-    return acc;
-  };
-
   const renderStatisticView = () => {
     switch (StatisticType) {
-      case StatisticsTypes.USER_TRACKED_URLS:
+      case StatisticsDataTypes.USER_TRACKED_URLS:
         return (
-          <TrackedUrlStatistic
+          <TrackedUrlStatisticsView
+            DateRangeFilter={DateRangeFilter}
+            SelectedUserFilter={SelectedUserFilter}
+          />
+        );
+
+      case StatisticsDataTypes.USER_SCRAPED_JOBS:
+        return (
+          <ScrapedJobsStatisticsView
             DateRangeFilter={DateRangeFilter}
             SelectedUserFilter={SelectedUserFilter}
           />

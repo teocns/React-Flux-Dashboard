@@ -84,6 +84,7 @@ const MenuProps = {
     style: {
       maxHeight: ITEM_HEIGHT * 7 + ITEM_PADDING_TOP,
       width: 250,
+      overflow: "hidden",
     },
   },
 };
@@ -240,12 +241,12 @@ function UserFilter({ onUserFilterChanged }) {
         onClose={() => closeUserMenu(false)}
         anchorEl={usersAnchorRef.current}
         style={{ paddingTop: 0 }}
-        MenuListProps={{ style: { maxHeight: 300, overflow: "hidden" } }}
+        MenuListProps={{ style: { maxHeight: 500, overflow: "hidden" } }}
       >
         <div
           style={{
-            maxHeight: 300,
-            height: 300,
+            maxHeight: 500,
+            height: 500,
             overflowY: "hidden",
             marginTop: -8,
           }}
@@ -282,7 +283,7 @@ function UserFilter({ onUserFilterChanged }) {
           </div>
           <Divider />
 
-          <div style={{ overflowY: "auto", height: 300 }}>
+          <div style={{ overflowY: "auto", height: 310 }}>
             <div
               style={{
                 display: "flex",

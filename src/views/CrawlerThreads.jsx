@@ -21,7 +21,7 @@ function transformToAssocArray(prmstr) {
 const CrawlerThreadsView = (props) => {
   const loc = useLocation();
   const params = getSearchParameters(loc);
-  console.log(params);
+
   return (
     <div>
       <TableContainer>

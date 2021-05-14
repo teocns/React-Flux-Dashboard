@@ -126,7 +126,7 @@ export default function TrackedUrlsView(props) {
   const onTableDataLoaded = () => {};
   return (
     <div className={classes.root}>
-      <div>
+      {/* <div>
         <Paper>
           <div style={{ padding: theme.spacing(2) }}>
             <Typography
@@ -143,7 +143,7 @@ export default function TrackedUrlsView(props) {
           <Button>SHOW</Button>
         </Paper>
       </div>
-      <TitledDivider />
+      <TitledDivider /> */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <div
           style={{

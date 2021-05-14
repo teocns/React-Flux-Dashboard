@@ -93,6 +93,17 @@ const COLUMNS = [
     sortable: false,
   },
 ];
+
+/**
+ * @typedef {Object} DomainsManagementTableFilter
+ * @property {string} domain
+ * @property {string} users
+ */
+
+/**
+ * @param {Object} param0
+ * @param {DomainsManagementTableFilter} param0.filter
+ */
 const DomainsManagementTable = ({ filter }) => {
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
@@ -100,9 +111,8 @@ const DomainsManagementTable = ({ filter }) => {
   /**
    * @type {Array.<Country,CallableFunction>}
    */
-  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] = useState(
-    false
-  );
+  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] =
+    useState(false);
 
   const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
@@ -138,12 +148,12 @@ const DomainsManagementTable = ({ filter }) => {
   const dateRange = tableData.dateRange;
   let rows = tableData.rows;
 
-  const IsLoadingResults = tableData.isLoading;
+  const IsLoadingResults = tableData.isLoading || !tableData || !tableData.rows;
   let hasInheritedRows = false;
-  if (IsLoadingResults && tableData.previousTableData) {
-    rows = tableData.previousTableData.rows;
-    hasInheritedRows = true;
-  }
+  // if (IsLoadingResults && tableData.previousTableData) {
+  //   rows = tableData.previousTableData.rows;
+  //   hasInheritedRows = true;
+  // }
 
   const isLoadingResults = tableData ? tableData.isLoading : true;
   const rowsLength = Array.isArray(rows) ? rows.length : 0;
@@ -153,36 +163,6 @@ const DomainsManagementTable = ({ filter }) => {
     Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
     (rowsLength > 1 ? 0 : 1);
 
-  const deleteSelectedRows = () => {
-    if (SelectedRows.length) {
-      confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} links?`,
-        title: `Delete ${SelectedRows.length} links`,
-      })
-        .then(async () => {
-          const res = await ScrapingThreadApi.Delete(SelectedRows);
-          if (res && res.success) {
-            uiActions.showSnackbar(`Links deleted successfully`, "success");
-            setSelectedRows([]);
-            setTimeout(() => {
-              syncTableData({});
-            });
-          }
-        })
-        .catch();
-    }
-  };
-
-  const selectAllRows = (evt) => {
-    const checked = evt.target.checked;
-    if (!checked) {
-      setSelectedRows([]);
-    } else if (checked) {
-      if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
-      }
-    }
-  };
   const syncTableData = ({
     newPage,
     newSort,
@@ -193,9 +173,7 @@ const DomainsManagementTable = ({ filter }) => {
       rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
       page:
         newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: {
-        domain: filter || "",
-      },
+      filter,
       tableName: THIS_TABLE_NAME,
       sort: newSort,
       previousRowCount:
@@ -530,6 +508,15 @@ const DomainsManagementTable = ({ filter }) => {
                     </TableCell>
                     <TableCell width="15%">
                       <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
                     </TableCell>
                     <TableCell width="15%" align="right">
                       <Skeleton

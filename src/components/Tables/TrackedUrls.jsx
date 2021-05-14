@@ -18,6 +18,7 @@ import { MoreVert, Search } from "@material-ui/icons";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
+import KeyMirror from "keymirror";
 import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
@@ -397,11 +398,30 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
     return _createRow();
   };
 
-  const makeStatus = (row) => {
+  const CrawlingStatuses = KeyMirror({
+    IS_CRAWLING: null,
+    HAS_BEEN_CRAWLED: null,
+    NOT_PROCESSED: null,
+  });
+
+  const calculateCrawlingStatus = (row) => {
     if (row.crawler_threads_last_completed_age === null) {
       if (!row.crawler_threads_cnt) {
-        return "Not yet processed";
+        return CrawlingStatuses.NOT_PROCESSED;
       } else {
+        return CrawlingStatuses.IS_CRAWLING;
+      }
+    } else {
+      return CrawlingStatuses.HAS_BEEN_CRAWLED;
+    }
+  };
+
+  const makeNextCrawl = (row) => {
+    const crawlingStatus = calculateCrawlingStatus(row);
+    switch (crawlingStatus) {
+      case CrawlingStatuses.NOT_PROCESSED:
+        return "Not yet processed";
+      case CrawlingStatuses.IS_CRAWLING:
         return (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             Crawling now{" "}
@@ -415,29 +435,32 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
             />
           </div>
         );
-      }
-    } else {
-      const targetDate =
-        row.crawler_threads_last_completed_age + row.recrawling_delay;
+      case CrawlingStatuses.HAS_BEEN_CRAWLED:
+        const targetDate =
+          row.crawler_threads_last_completed_age + row.recrawling_delay;
 
-      return (
-        <div
-          style={{
-            color: theme.palette.text.hint,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Typography variant="overline" style={{ textTransform: "lowercase" }}>
-            {`${getTimeRemaining(targetDate, true)} `}
-          </Typography>
-          <AccessTimeIcon
-            fontSize="small"
-            style={{ marginLeft: theme.spacing(1) }}
-          />
-        </div>
-      );
+        return (
+          <div
+            style={{
+              color: theme.palette.text.hint,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Typography
+              variant="overline"
+              style={{ textTransform: "lowercase" }}
+            >
+              {`${getTimeRemaining(targetDate, true)} `}
+            </Typography>
+            <AccessTimeIcon
+              fontSize="small"
+              style={{ marginLeft: theme.spacing(1) }}
+            />
+          </div>
+        );
+        break;
     }
   };
 
@@ -510,7 +533,10 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   };
 
   const makeLatestCrawl = (row, colNum) => {
-    if (!row.crawler_threads_cnt) {
+    if (
+      !row.crawler_threads_cnt ||
+      (row.crawler_threads_cnt === 1 && !row.crawler_threads_last_completed_age)
+    ) {
       if (colNum === 2) {
         return "Never";
       }
@@ -685,7 +711,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
                         {makeLatestCrawl(row, 2)}
                       </TableCell>
 
-                      <TableCell align="right">{makeStatus(row)}</TableCell>
+                      <TableCell align="right">{makeNextCrawl(row)}</TableCell>
 
                       <TableCell align="right">
                         {_createRowActionsButton(row)}

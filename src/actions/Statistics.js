@@ -1,13 +1,14 @@
 import ActionTypes from "../constants/ActionTypes";
 import SocketEvents from "../constants/SocketEvents";
 import dispatcher from "../dispatcher";
+import SyncRequest from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 
 import { sendMessage } from "../socket";
 import statisticsStore from "../store/Statistics";
 
 /**
  *
- * @param {StatisticsSyncRequest} request
+ * @param {SyncRequest} request
  */
 const syncStatistics = (request) => {
   if (!statisticsStore.canSync(request)) {

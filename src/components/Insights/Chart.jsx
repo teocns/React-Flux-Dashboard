@@ -1,12 +1,9 @@
-import React, { useEffect, useState } from "react";
-import Minichart from "../Charts/Simple";
-
-import statisticsActions from "../../actions/Statistics";
-import StatisticsSyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
-import ChartTypes from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/ChartTypes";
-import statisticsStore from "../../store/Statistics";
-import ActionTypes from "../../constants/ActionTypes";
+//@ts-check
 import { CircularProgress, Paper } from "@material-ui/core";
+import React from "react";
+
+import SimpleChart from "../Charts/Simple";
+
 var lastRequestedFilterB64 = undefined;
 
 /**
@@ -26,70 +23,22 @@ var lastRequestedFilterB64 = undefined;
 /**
  *
  * @param {Object} param0
- * @param {InsightsChartConstructorFilter} param0.filter
+ * @param {import("../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/ChartData").ChartDataObject} param0.chartData
  * @returns
  */
-
-const InsightsChart = ({ name, type, filter }) => {
-  const [ChartData, setChartData] = useState();
-
-  let currentSyncRequest = undefined;
-  const syncStatistics = () => {
-    lastRequestedFilterB64 = btoa(JSON.stringify(filter));
-
-    currentSyncRequest = {
-      type: ChartTypes.DOMAIN_TRACKED_URLS,
-      filter,
-    };
-    statisticsActions.syncStatistics(currentSyncRequest);
-  };
-  const getFilter = (syncRequest) => {
-    if (!syncRequest) return filter;
-
-    return {
-      dateRange: syncRequest.dateRange,
-      types: syncRequest.types,
-      userFilter: syncRequest.userFilter,
-    };
-  };
-  const onStatisticsSynced = (stats) => {
-    const { syncRequest } = stats.statistics;
-    // Verify that the received statistics match the requested ones
-    // const statsb64 = btoa(
-    //   JSON.stringify(getFilter(statisticsStore.getStatistics().filter))
-    // );
-
-    // if (statsb64 !== lastRequestedFilterB64) {
-    //   return false;
-    // }
-
-    //isLoading = false;
-
-    if (JSON.stringify(syncRequest) === JSON.stringify(currentSyncRequest)) {
-      setChartData(statisticsStore.getStatistics(currentSyncRequest).chartData);
-    }
-  };
-
-  useEffect(() => {
-    // Bind listeners
-    statisticsStore.addChangeListener(
-      ActionTypes.Statistics.STATISTICS_RECEIVED,
-      onStatisticsSynced
-    );
-
-    syncStatistics();
-    return () => {
-      // Unbind listeners
-      statisticsStore.removeChangeListener(
-        ActionTypes.Statistics.STATISTICS_RECEIVED,
-        onStatisticsSynced
-      );
-    };
-  }, [filter]);
+const InsightsChart = ({ chartData, tooltipCallbacks }) => {
+  /**
+   *
+   * @param {import("../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/ChartData").ChartDataRecord} graphRecord
+   */
+  const makeDataset = (graphRecord) => {};
   return (
-    <Paper>
-      {ChartData ? (
-        <Minichart chartData={ChartData} />
+    <Paper style={{ width: "100%", height: "100%" }}>
+      {chartData ? (
+        <SimpleChart
+          chartData={chartData}
+          tooltipCallbacks={tooltipCallbacks}
+        />
       ) : (
         <CircularProgress color="secondary" />
       )}

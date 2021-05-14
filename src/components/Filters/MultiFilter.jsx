@@ -6,6 +6,7 @@ import { FastForward, Search } from "@material-ui/icons";
 import React, { useEffect, useState } from "react";
 import ActionTypes from "../../constants/ActionTypes";
 import { isFunction } from "../../helpers/utils";
+import sessionStore from "../../store/session";
 import userFilterStore from "../../store/UserFilter";
 import DateFilter from "./DateFilter";
 import UserFilter from "./UserFilter";
@@ -75,14 +76,16 @@ function getStyles(name, personName, theme) {
   };
 }
 
+var filterTimeout = undefined;
+
 function MultiFilter({
   disableUsers = false,
   disableDateRange,
-
   onDateRangeChanged,
   onUserFilterChanged,
   onSearchFilterChanged,
   searchPlaceholder = "Search...",
+  dateRangeTooltip,
   mini,
 }) {
   const [DateFilterOpen, setDateFilterOpen] = useState(false);
@@ -95,82 +98,37 @@ function MultiFilter({
   const anchorRef = React.useRef(null);
   const usersAnchorRef = React.useRef(null);
 
-  const [UserMenuOpen, setUserMenuOpen] = React.useState(false);
-
   const classes = useStyles();
   const theme = useTheme();
-  const [personName, setPersonName] = React.useState([]);
 
-  const closeUserMenu = (evt) => {
-    if (usersAnchorRef.current && usersAnchorRef.current.contains(evt.target)) {
-      return;
-    }
-    return setUserMenuOpen(false);
-  };
+  const user = sessionStore.getUser();
 
-  const toggleUsersMenu = (evt) => {
-    setUserMenuOpen(true);
-  };
-  const toggleDateRangeFilter = () => {
-    setDateFilterOpen(!DateFilterOpen);
-  };
-
-  const onUserFilterSync = () => {
-    setUsers(userFilterStore.get());
-  };
-
-  const bindListeners = () => {
-    userFilterStore.addChangeListener(
-      ActionTypes.UserFilter.USER_FILTER_SYNC,
-      onUserFilterSync
-    );
-
-    return () => {
-      userFilterStore.removeChangeListener(
-        ActionTypes.UserFilter.USER_FILTER_SYNC,
-        onUserFilterSync
-      );
-    };
-  };
+  const bindListeners = () => {};
 
   useEffect(() => {
     return bindListeners();
   });
 
-  const hasFilterForUser = (userId) => {
-    return SelectedUsers.includes(userId);
-  };
-
-  const toggleUserFilter = (userId) => {
-    const userIdIndex = SelectedUsers.indexOf(userId);
-    const isSelected = userIdIndex !== -1;
-    if (isSelected) {
-      if (SelectedUsers.length === Object.keys(Users).length) {
-        // If all the users are already selected
-        // And the user is selecting an user
-        // Then deselect all others
-        handleUsersFilterChanged([userId]);
-        return;
-      }
-      // Remove userId from selected users
-      const clone = [...SelectedUsers];
-      clone.splice(userIdIndex, 1);
-      handleUsersFilterChanged(clone);
-    } else {
-      handleUsersFilterChanged([...SelectedUsers, userId]);
-    }
-  };
-
   const handleUsersFilterChanged = (selectedUsers) => {
     setSelectedUsers(selectedUsers);
-    if (isFunction(onUserFilterChanged)) {
-      onUserFilterChanged(selectedUsers);
-    }
+    setTimeout(() => {
+      if (isFunction(onUserFilterChanged)) {
+        onUserFilterChanged(selectedUsers);
+      }
+    });
   };
 
   const onSearchChanged = (evt) => {
-    isFunction(onSearchFilterChanged) && onSearchFilterChanged(evt);
+    isFunction(onSearchFilterChanged) &&
+      (() => {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(() => {
+          console.log("Setting filter");
+          onSearchFilterChanged(evt);
+        }, 500);
+      })();
   };
+
   return (
     <div>
       <div
@@ -181,17 +139,22 @@ function MultiFilter({
         }}
       >
         <Grid container alignItems="center" className={classes.grid}>
-          <DateFilter />
+          <DateFilter tooltip={dateRangeTooltip} />
           <Divider orientation={"vertical"} flexItem />
-          <UserFilter onUserFilterChanged={handleUsersFilterChanged} />
+          {user && user.isAdmin ? (
+            <React.Fragment>
+              <UserFilter onUserFilterChanged={handleUsersFilterChanged} />
 
-          <Divider orientation={"vertical"} flexItem />
+              <Divider orientation={"vertical"} flexItem />
+            </React.Fragment>
+          ) : null}
+
           <FormControl fullWidth size="small">
             <Input
               id="standard-adornment-amount"
               size="small"
               disableUnderline
-              placeholder="Search portals"
+              placeholder={searchPlaceholder}
               onChange={(evt) => {
                 onSearchChanged(evt.target.value);
               }}
@@ -200,7 +163,7 @@ function MultiFilter({
               }}
               startAdornment={
                 <InputAdornment position="start">
-                  <Search />
+                  <Search style={{ color: theme.palette.text.disabled }} />
                 </InputAdornment>
               }
             />

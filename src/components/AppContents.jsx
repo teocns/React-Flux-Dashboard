@@ -1,3 +1,4 @@
+//@ts-check
 import {
   AppBar,
   Badge,
@@ -20,6 +21,7 @@ import {
   AccountCircle as AccountIcon,
   AddCircleOutline as AddCircleOutlineIcon,
   Block,
+  BugReport,
   ExpandLess,
   ExpandMore,
   Link as LinkIcon,
@@ -36,7 +38,8 @@ import sessionActions from "../actions/Session";
 import faviconIconPng from "../assets/favicon128.png";
 import UserAvatar from "../components/User/Avatar/ShortLettersAvatar";
 import ActionTypes from "../constants/ActionTypes";
-import StatisticsTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/ChartTypes";
+
+import StatisticsDataTypes from "../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/DataTypes";
 import sessionStore from "../store/session";
 import AppSnackbar from "./AppSnackbar";
 import AppView from "./AppView";
@@ -422,7 +425,7 @@ function AppContents() {
                     </ListItemIcon>
                     <ListItemText
                       disableTypography={true}
-                      primary={"Targeted websites"}
+                      primary={"Crawled websites"}
                     />
                   </ListItem>
                   <ListItem
@@ -455,17 +458,41 @@ function AppContents() {
                     <List component="div" disablePadding>
                       <ListItem
                         button
-                        key={"/statistics/" + StatisticsTypes.USER_TRACKED_URLS}
+                        key={
+                          "/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS
+                        }
                         component={Link}
-                        to={"/statistics/" + StatisticsTypes.USER_TRACKED_URLS}
+                        to={
+                          "/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS
+                        }
                         className={classes.nested}
                       >
                         <ListItemIcon>
-                          <LanguageIcon />
+                          <LinkIcon />
                         </ListItemIcon>
                         <ListItemText
                           disableTypography={true}
                           primary={"Tracked URLs"}
+                        />
+                      </ListItem>
+
+                      <ListItem
+                        button
+                        key={
+                          "/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS
+                        }
+                        component={Link}
+                        to={
+                          "/statistics/" + StatisticsDataTypes.USER_SCRAPED_JOBS
+                        }
+                        className={classes.nested}
+                      >
+                        <ListItemIcon>
+                          <BugReport />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Scraped Jobs"}
                         />
                       </ListItem>
                     </List>

@@ -123,9 +123,8 @@ const CrawlerThreadsTable = ({ domain, tracked_url_id }) => {
   /**
    * @type {Array.<Country,CallableFunction>}
    */
-  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] = useState(
-    false
-  );
+  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] =
+    useState(false);
 
   const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
@@ -250,7 +249,7 @@ const CrawlerThreadsTable = ({ domain, tracked_url_id }) => {
   const onTableRowsDataUpdated = ({ tableData }) => {
     if (tableData.tableName === THIS_TABLE_NAME) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
-      console.log("foundTable", foundTable);
+
       setTableData(foundTable);
     }
   };
@@ -373,7 +372,7 @@ const CrawlerThreadsTable = ({ domain, tracked_url_id }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} portals found
+              No{rowsLength > 0 ? " more" : ""} crawling events found
             </Typography>
           </Box>
           {_renderHint()}
@@ -598,12 +597,22 @@ const CrawlerThreadsTable = ({ domain, tracked_url_id }) => {
                         />
                       </TableCell> */}
                       <TableCell align="right">
-                        <Typography
-                          variant="caption"
-                          style={{ color: theme.palette.text.disabled }}
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
                         >
-                          {prettyPrintDate(row.age)}
-                        </Typography>
+                          <Typography
+                            variant="caption"
+                            style={{ color: theme.palette.text.hint }}
+                          >
+                            {prettyPrintDate(row.age)}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            style={{ color: "rgb(132 132 132)" }}
+                          >
+                            {timeSince(row.age)}
+                          </Typography>
+                        </div>
                       </TableCell>
                       <TableCell scope="row">
                         <div

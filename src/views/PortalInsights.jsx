@@ -13,11 +13,12 @@ import {
 import { number_format } from "../helpers/numbers";
 import { useHistory, useLocation } from "react-router-dom";
 import TouchRipple from "@material-ui/core/ButtonBase/TouchRipple";
-import Minichart from "../components/Charts/Simple";
+import SimpleChart from "../components/Charts/Simple";
 import CrawlerThreadsTable from "../components/Tables/CrawlerThreads";
 import TitledDivider from "../components/Dashboard/TitledDivider";
 import { BugReport } from "@material-ui/icons";
 import InsightsChart from "../components/Insights/Chart";
+import ViewHeader from "../components/ViewHeader";
 const useStyles = makeStyles((theme) => ({
   cardPaper: {
     //maxWidth: 240,
@@ -61,10 +62,7 @@ const PortalInsights = (props) => {
           dateRange: DateRange,
         }}
       /> */}
-      <TitledDivider
-        title={"Recent crawling events"}
-        icon={<BugReport color="primary" />}
-      />
+      <ViewHeader title="Recent crawling events" subtitle={requestedDomain} />
       <TableContainer component={Paper} className={classes.tableContainer}>
         <CrawlerThreadsTable domain={requestedDomain} />
       </TableContainer>

@@ -1,3 +1,5 @@
+import ColorHash from "color-hash";
+
 import {
   amber,
   blueGrey,
@@ -74,3 +76,17 @@ export const getRandomColor = (letter) => {
   }
   return colorPairs[letter];
 };
+
+export function colorHash(str) {
+  return new ColorHash().hex(str);
+}
+
+export function stringToHslColor(str, s = 80, l = 50) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  var h = hash % 360;
+  return "hsl(" + h + ", " + s + "%, " + l + "%)";
+}
