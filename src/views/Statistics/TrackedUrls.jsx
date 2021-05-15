@@ -6,7 +6,12 @@ import statisticsStore from "../../store/Statistics";
 import statisticsActions from "../../actions/Statistics";
 import StatisticsSyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 import { syncRequestToB64 } from "../../helpers/statistics";
-import { Paper, Typography, useTheme } from "@material-ui/core";
+import {
+  CircularProgress,
+  Paper,
+  Typography,
+  useTheme,
+} from "@material-ui/core";
 import SyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 import ChartSyncResponse from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/SyncRequest";
 import ChartSyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/SyncRequest";
@@ -20,6 +25,7 @@ const NICE_NAME = "Tracked URLs";
 var lastRequestedFilter;
 var isLoading = false;
 var chartSyncRequest = undefined;
+var lastCountSYncRequest = undefined;
 
 const TrackedUrlsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
   const [Statistics, setStatistics] = useState();
@@ -36,6 +42,16 @@ const TrackedUrlsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
   };
 
   const theme = useTheme();
+
+  const loadCounts = () => {
+    setTrackedUrlsCount(undefined);
+    setTimeout(() => {
+      TrackedUrlsApi.GetTrackedUrlsCount({
+        dateRange: DateRangeFilter,
+        userFilter: SelectedUserFilter,
+      }).then((c) => setTrackedUrlsCount(c.trackedUrls));
+    });
+  };
 
   const syncStatistics = () => {
     chartSyncRequest = ChartSyncRequest.create({
@@ -55,12 +71,7 @@ const TrackedUrlsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
       onStatisticsSynced
     );
     syncStatistics();
-
-    TrackedUrlsApi.GetTrackedUrlsCount({
-      dateRange: DateRangeFilter,
-      userFilter: SelectedUserFilter,
-    }).then((c) => setTrackedUrlsCount(c.trackedUrls));
-
+    loadCounts();
     return () => {
       // Unbind listeners
       statisticsStore.removeChangeListener(
@@ -70,6 +81,21 @@ const TrackedUrlsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
     };
   }, [DateRangeFilter, SelectedUserFilter]);
 
+  const renderIfNotLoading = () => {
+    if (TrackedUrlsCount === undefined) {
+      return (
+        <CircularProgress
+          style={{
+            width: 14,
+            height: 14,
+            color: theme.palette.text.disabled,
+            marginLeft: theme.spacing(1),
+          }}
+        />
+      );
+    }
+    return number_format(TrackedUrlsCount, 0, ".", ",");
+  };
   return (
     <div style={{ width: "100%", height: "100%", paddingBottom: 256 }}>
       <Paper
@@ -79,9 +105,7 @@ const TrackedUrlsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
           marginBottom: theme.spacing(2),
         }}
       >
-        <Typography>
-          Tracked urls: {number_format(TrackedUrlsCount, 0, ".", ",")}
-        </Typography>
+        <Typography>Tracked urls: {renderIfNotLoading()}</Typography>
       </Paper>
       <InsightsChart
         chartData={Statistics && Statistics.chartData}

@@ -8,7 +8,12 @@ import statisticsStore from "../../store/Statistics";
 import statisticsActions from "../../actions/Statistics";
 import StatisticsSyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 import { syncRequestToB64 } from "../../helpers/statistics";
-import { Paper, Typography, useTheme } from "@material-ui/core";
+import {
+  CircularProgress,
+  Paper,
+  Typography,
+  useTheme,
+} from "@material-ui/core";
 import SyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/SyncRequest";
 import ChartSyncResponse from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/SyncRequest";
 import ChartSyncRequest from "../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/SyncRequest";
@@ -42,17 +47,38 @@ const ScrapedJobsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
     chartSyncRequest = ChartSyncRequest.create({
       filter: {
         dateRange: DateRangeFilter,
-        users: UserFilter,
+        users: SelectedUserFilter,
       },
       dataType: StatisticsDataTypes.USER_SCRAPED_JOBS,
     });
     statisticsActions.syncStatistics(chartSyncRequest);
   };
 
-  ScrapedJobsApi.GetScrapedJobsCount({
-    dateRange: DateRangeFilter,
-    userFilter: SelectedUserFilter,
-  }).then((c) => setScrapedJobsCount(c.scrapedJobs));
+  const renderIfNotLoading = () => {
+    if (ScrapedJobsCount === undefined) {
+      return (
+        <CircularProgress
+          style={{
+            width: 14,
+            height: 14,
+            color: theme.palette.text.disabled,
+            marginLeft: theme.spacing(1),
+          }}
+        />
+      );
+    }
+    return number_format(ScrapedJobsCount, 0, ".", ",");
+  };
+
+  const loadCounts = () => {
+    setScrapedJobsCount(undefined);
+    setTimeout(() => {
+      ScrapedJobsApi.GetScrapedJobsCount({
+        dateRange: DateRangeFilter,
+        userFilter: SelectedUserFilter,
+      }).then((c) => setScrapedJobsCount(c.scrapedJobs));
+    });
+  };
 
   useEffect(() => {
     //Bind listeners1
@@ -61,6 +87,7 @@ const ScrapedJobsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
       onStatisticsSynced
     );
     syncStatistics();
+    loadCounts();
     return () => {
       // Unbind listeners
       statisticsStore.removeChangeListener(
@@ -79,9 +106,7 @@ const ScrapedJobsStatisticsView = ({ DateRangeFilter, SelectedUserFilter }) => {
           marginBottom: theme.spacing(2),
         }}
       >
-        <Typography>
-          Scraped jobs: {number_format(ScrapedJobsCount, 0, ".", ",")}
-        </Typography>
+        <Typography>Scraped jobs: {renderIfNotLoading()}</Typography>
       </Paper>
       <InsightsChart
         chartData={Statistics && Statistics.chartData}
