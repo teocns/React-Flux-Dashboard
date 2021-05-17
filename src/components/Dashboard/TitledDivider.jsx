@@ -15,7 +15,10 @@ const TitledDivider = ({ title, subtitle, icon }) => {
           marginLeft: theme.spacing(1),
         }}
       >
-        {icon}
+        {React.cloneElement(icon, {
+          style: { color: theme.palette.secondary.main },
+        })}
+
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Typography variant="h6" style={{ padding: theme.spacing(2) }}>
             {title}

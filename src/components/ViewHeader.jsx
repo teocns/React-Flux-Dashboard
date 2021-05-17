@@ -25,6 +25,8 @@ const ViewHeader = ({ title, subtitle, history, subtitleLoading }) => {
       }}
     >
       <IconButton
+        size="small"
+        style={{ color: theme.palette.secondary.main }}
         onClick={() => {
           history.goBack();
         }}

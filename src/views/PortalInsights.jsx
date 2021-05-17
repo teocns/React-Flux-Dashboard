@@ -1,4 +1,7 @@
+//@ts-check
 import React, { useState } from "react";
+import HistoryIcon from "@material-ui/icons/History";
+import StatisticsCard from "../components/Statistics/Card";
 import {
   Grid,
   Typography,
@@ -62,7 +65,12 @@ const PortalInsights = (props) => {
           dateRange: DateRange,
         }}
       /> */}
-      <ViewHeader title="Recent crawling events" subtitle={requestedDomain} />
+      <ViewHeader title="Domain insights" subtitle={requestedDomain} />
+      <StatisticsCard
+        title="Average scraped jobs"
+        value={number_format(12.5)}
+      />
+      <TitledDivider title="Recent crawling events" icon={<HistoryIcon />} />
       <TableContainer component={Paper} className={classes.tableContainer}>
         <CrawlerThreadsTable domain={requestedDomain} />
       </TableContainer>

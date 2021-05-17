@@ -475,7 +475,7 @@ function AppContents() {
                           primary={"Tracked URLs"}
                         />
                       </ListItem>
-
+                      {/* 
                       <ListItem
                         button
                         key={
@@ -494,7 +494,7 @@ function AppContents() {
                           disableTypography={true}
                           primary={"Scraped Jobs"}
                         />
-                      </ListItem>
+                      </ListItem> */}
                     </List>
                   </Collapse>
                 </List>
