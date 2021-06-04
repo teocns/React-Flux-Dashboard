@@ -17,6 +17,13 @@ const theme = createMuiTheme({
       contrastText: "#ffffff",
     },
   },
+  overrides: {
+    MuiTooltip: {
+      tooltip: {
+        fontSize: 13,
+      },
+    },
+  },
 });
 
 export default theme;

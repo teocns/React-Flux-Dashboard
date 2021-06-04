@@ -179,7 +179,7 @@ export default function StatisticsView(props) {
         ) : (
           ""
         )}
-        <DateFilter onDateRangeChanged={handleDateFilterChanged} />
+        {/* <DateFilter onDateRangeChanged={handleDateFilterChanged} /> */}
         <ButtonGroup
           disableElevation
           style={{ marginLeft: theme.spacing(1) }}

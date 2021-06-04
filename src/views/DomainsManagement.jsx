@@ -52,7 +52,7 @@ export default function DomainsManagementView() {
   };
 
   const onUserFilterChanged = (f) => {
-    debugger;
+    
     setUserFilter(f);
   };
   return (

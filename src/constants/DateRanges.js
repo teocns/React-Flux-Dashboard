@@ -9,64 +9,72 @@ function getMonday() {
 export default [
   {
     label: "Today",
-    startDate: (() => {
+    startDate: (function () {
       const d = new Date();
       d.setHours(0, 0, 0, 0);
-      return d;
+      return d.getTime();
     })(),
-    endDate: (() => {
+    endDate: (function () {
       const d = new Date();
       d.setDate(new Date().getDate() + 1);
       d.setHours(0, 0, 0, 0);
-      return d;
+      return d.getTime();
     })(),
-    dateFormat: "%Y-%m-%d %H",
+    dateFormat: "%h %p",
     timeFrame: "HOUR",
   },
   {
     label: "Yesterday",
-    startDate: (() => {
+    startDate: (function () {
       const d = new Date();
       d.setDate(d.getDate() - 1);
       d.setHours(0, 0, 0, 0);
-      return d;
+      return d.getTime() / 1000;
     })(),
-    endDate: (() => {
+    endDate: (function () {
       const d = new Date();
-
       d.setHours(0, 0, 0, 0);
-      return d;
+      return d.getTime() / 1000;
     })(),
-    dateFormat: "%Y-%m-%d %H",
+    dateFormat: "%h %p",
     timeFrame: "HOUR",
   },
-  {
-    label: "This week",
-    startDate: getMonday(),
-    endDate: new Date().setDate(new Date().getDate() + 1),
-    timeFrame: "DAY",
-    dateFormat: "%Y-%m-%d",
-  },
+
   {
     label: "Last 7 days",
-    startDate: new Date().setDate(new Date().getDate() - 7),
-    endDate: new Date().setDate(new Date().getDate() + 1),
+    startDate: (function () {
+      let date = new Date();
+      date.setDate(new Date().getDate() - 7);
+      return date.getTime();
+    })(),
+    endDate: (function () {
+      let date = new Date();
+      date.setDate(new Date().getDate() + 1);
+      return date.getTime();
+    })(),
     timeFrame: "DAY",
-    dateFormat: "%Y-%m-%d",
+    dateFormat: "%W %D",
   },
   {
-    label: "This month",
-    startDate: (() => {
-      const date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      return date;
+    label: "Last 30 days",
+    startDate: (function () {
+      let date = new Date();
+      date.setDate(new Date().getDate() - 30);
+      return date.getTime();
     })(),
-    endDate: null,
+    endDate: (function () {
+      let date = new Date();
+      date.setDate(new Date().getDate() + 1);
+      return date.getTime();
+    })(),
+    timeFrame: "DAY",
+    dateFormat: "%W %D",
   },
   {
     label: "MAX",
     timeFrame: "MONTH",
     startDate: null,
     endDate: null,
-    dateFormat: "%Y-%m",
+    dateFormat: "%b %Y",
   },
 ];

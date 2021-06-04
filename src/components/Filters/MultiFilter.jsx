@@ -139,8 +139,8 @@ function MultiFilter({
         }}
       >
         <Grid container alignItems="center" className={classes.grid}>
-          <DateFilter tooltip={dateRangeTooltip} />
-          <Divider orientation={"vertical"} flexItem />
+          {/* <DateFilter tooltip={dateRangeTooltip} /> */}
+          {/* <Divider orientation={"vertical"} flexItem /> */}
           {user && user.isAdmin ? (
             <React.Fragment>
               <UserFilter onUserFilterChanged={handleUsersFilterChanged} />

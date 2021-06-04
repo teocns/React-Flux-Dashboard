@@ -399,7 +399,7 @@ function AppContents() {
                     />
                   </ListItem>
 
-                  <ListItem
+                  {/* <ListItem
                     button
                     key={"stats"}
                     component={Link}
@@ -412,30 +412,19 @@ function AppContents() {
                       disableTypography={true}
                       primary={"Your Crawled URLs"}
                     />
-                  </ListItem>
+                  </ListItem> */}
 
-                  <ListItem
-                    button
-                    key={"domains"}
-                    component={Link}
-                    to="/portals"
-                  >
-                    <ListItemIcon>
-                      <LanguageIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      disableTypography={true}
-                      primary={"Crawled websites"}
-                    />
-                  </ListItem>
                   <ListItem
                     button
                     key={"stats"}
                     //component={Link}
-                    to="/statistics"
-                    onClick={() =>
-                      setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
-                    }
+                    //to="/statistics"
+                    key={"/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS}
+                    component={Link}
+                    to={"/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS}
+                    // onClick={() =>
+                    //   setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
+                    // }
                   >
                     <ListItemIcon>
                       <TimelineIcon />
@@ -444,13 +433,13 @@ function AppContents() {
                       disableTypography={true}
                       primary={"Performance insights"}
                     />
-                    {ListItemStatisticsExpanded ? (
+                    {/* {ListItemStatisticsExpanded ? (
                       <ExpandLess />
                     ) : (
                       <ExpandMore />
-                    )}
+                    )} */}
                   </ListItem>
-                  <Collapse
+                  {/* <Collapse
                     in={ListItemStatisticsExpanded}
                     timeout="auto"
                     unmountOnExit
@@ -475,7 +464,7 @@ function AppContents() {
                           primary={"Tracked URLs"}
                         />
                       </ListItem>
-                      {/* 
+                      
                       <ListItem
                         button
                         key={
@@ -494,9 +483,9 @@ function AppContents() {
                           disableTypography={true}
                           primary={"Scraped Jobs"}
                         />
-                      </ListItem> */}
+                      </ListItem>
                     </List>
-                  </Collapse>
+                  </Collapse> */}
                 </List>
                 <Divider />
                 {IsAdmin && (
@@ -514,6 +503,20 @@ function AppContents() {
                         <ListItemText
                           disableTypography={true}
                           primary={"What's being crawled"}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button
+                        key={"domains"}
+                        component={Link}
+                        to="/portals"
+                      >
+                        <ListItemIcon>
+                          <LanguageIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Crawled websites"}
                         />
                       </ListItem>
 

@@ -211,7 +211,6 @@ function UserFilter({ onUserFilterChanged }) {
     >
       {Users && (
         <IconButton
-          size="small"
           aria-controls="users-menu"
           aria-haspopup="true"
           onClick={toggleUsersMenu}
@@ -225,10 +224,7 @@ function UserFilter({ onUserFilterChanged }) {
             invisible={!SelectedUsers.length}
             variant={SelectedUsers.length && "dot"}
           >
-            <PersonIcon
-              style={{ color: theme.palette.text.disabled }}
-              size={SelectedUsers.length ? "medium" : "small"}
-            />
+            <PersonIcon style={{ color: theme.palette.text.disabled }} />
           </Badge>
         </IconButton>
       )}

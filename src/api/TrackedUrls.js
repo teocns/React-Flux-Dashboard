@@ -12,4 +12,10 @@ export default class TrackedUrlsApi {
       userFilter,
     });
   }
+  static async GetSummaries({ dateRange, userFilter }) {
+    return await MakeRequest.post(`/statistics/tracked-urls/summary`, {
+      dateRange,
+      userFilter,
+    });
+  }
 }
