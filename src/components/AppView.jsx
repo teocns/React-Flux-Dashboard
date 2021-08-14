@@ -13,8 +13,9 @@ import TrackedUrlsView from "../views/TrackedUrls";
 import sessionStore from "../store/session";
 import ActionTypes from "../constants/ActionTypes";
 import FAQView from "../views/FAQ";
-import StatisticsView from "../views/Statistics";
-import StatisticsAdminView from "../views/StatisticsAdmin";
+import UserStatisticsView from "../views/UserStatistics";
+import CrawlerStatisticsView from "../views/CrawlerStatistics";
+import StatisticsAdminView from "../views/CrawlerStatistics";
 import ManageUrlsAdminView from "../views/ManageUrlsAdmin";
 import XmlManagementView from "../views/XmlManagement";
 import CountriesManagementView from "../views/CountriesManagement";
@@ -26,6 +27,8 @@ import WebsiteInsights from "../views/PortalInsights";
 import CrawlerThreadsView from "../views/CrawlerThreads";
 import TrackedUrlInsights from "../views/TrackedUrlInsights";
 import BlacklistImpactView from "../views/BlacklistImpactView";
+import AutoscalingConfig from "../views/AutoscalingConfig";
+import CrawlerControlCenter from "../views/CrawlerControlCenter";
 const useStyles = makeStyles((theme) => ({
   appView: {
     display: "flex",
@@ -50,23 +53,23 @@ const AppView = () => {
   return (
     <div className={classes.appView}>
       <Switch>
-        <Route exact path="/" component={AddTrackUrlsView} />
+        <Route exact path="/" component={TrackedUrlsView} />
         <Route exact path="/login" component={LoginView} />
         <Route exact path="/faq" component={FAQView} />
         <Route exact path="/manage-users" component={ManageUsersView} />
         <Route exact path="/manage-urls" component={TrackedUrlsView} />
         <Route exact path="/tracked-urls" component={TrackedUrlsView} />
-        <Route
-          path="/tracked-url/:tracked_url_id"
-          component={TrackedUrlInsights}
-        />
-        <Route exact path="/add-user" component={AddUsersView} />
-        <Route path="/statistics/:type" component={StatisticsView} />
-        <Route exact path="/user-statistics" component={StatisticsAdminView} />
         <Route exact path="/countries" component={CountriesManagementView} />
+        <Route path="/tracked-url/:url" component={TrackedUrlInsights} />
+        <Route exact path="/add-user" component={AddUsersView} />
+        <Route path="/statistics/user" component={UserStatisticsView} />
+        <Route path="/statistics/crawlers" component={CrawlerStatisticsView} />
+        <Route exact path="/user-statistics" component={StatisticsAdminView} />
         <Route exact path="/portals" component={DomainsManagementView} />
         <Route exact path="/domain/:portal" component={WebsiteInsights} />
-        <Route exact path="/blacklist" component={BlacklistView} />
+        {/* <Route exact path="/blacklist" component={BlacklistView} /> */}
+        <Route exact path="/crawlers" component={CrawlerControlCenter} />
+        <Route exact path="/autoscaling-config" component={AutoscalingConfig} />
         <Route
           exact
           path="/blacklist/:ruleId/impact"

@@ -1,6 +1,7 @@
 import {
   Button,
   Divider,
+  InputBase,
   FormControl,
   InputAdornment,
   OutlinedInput,
@@ -47,30 +48,44 @@ export default function DomainsManagementView() {
     }, 500);
   };
 
-  const onSearchFilterChanged = (f) => {
-    setFilter(f);
-  };
-
-  const onUserFilterChanged = (f) => {
-    
-    setUserFilter(f);
-  };
   return (
     <TableContainer component={Paper} className={classes.tableContainer}>
-      <MultiFilter
-        mini
-        dateRangeTooltip={"Filter websites by datetime of crawl"}
-        onSearchFilterChanged={onSearchFilterChanged}
-        onUserFilterChanged={onUserFilterChanged}
-      />
-
-      <Divider />
-      <DomainsManagementTable
-        filter={{
-          domain: Filter,
-          users: UserFilter,
+      <div
+        style={{
+          padding: theme.spacing(2),
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "nowrap",
+          background: "rgb(250, 250, 250)",
         }}
-      />
+      >
+        <FormControl fullWidth size="small" className={classes.margin}>
+          <InputBase
+            defaultValue={Filter}
+            variant="standard"
+            style={{ outline: "none" }}
+            id="standard-adornment-amount"
+            size="small"
+            aria-describedby="search-error"
+            placeholder="Search Domains"
+            onChange={(evt) => {
+              onFilterChanged(evt.target.value);
+            }}
+            onKeyPress={(evt) => {
+              onFilterChanged(evt.target.value);
+            }}
+            startAdornment={
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            }
+          />
+        </FormControl>
+      </div>
+      <Divider />
+
+      <DomainsManagementTable filter={Filter} />
     </TableContainer>
   );
 }

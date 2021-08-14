@@ -36,3 +36,6 @@
     transform: rotate(360deg);
   }
 }
+.MuiInputBase-root .MuiTablePagination-input .MuiTablePagination-selectRoot {
+  margin-right: 8px !important;
+}

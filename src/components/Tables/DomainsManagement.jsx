@@ -1,8 +1,8 @@
+import DomainsApi from "../../api/Domains";
 import {
   Box,
   Checkbox,
   IconButton,
-  Link,
   Menu,
   MenuItem,
   Table,
@@ -10,6 +10,7 @@ import {
   TableCell,
   TablePagination,
   TableRow,
+  Switch,
   Typography,
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -32,6 +33,7 @@ import TablePaginationActions from "./Pagination";
 
 import { Link as RouterLink } from "react-router-dom";
 import { number_format } from "../../helpers/numbers";
+import uiStore from "../../store/UI";
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
@@ -88,8 +90,8 @@ const COLUMNS = [
   },
 
   {
-    name: "actions",
-    label: "",
+    name: "is_enabled",
+    label: "Enable crawling",
     sortable: false,
   },
 ];
@@ -105,6 +107,14 @@ const COLUMNS = [
  * @param {DomainsManagementTableFilter} param0.filter
  */
 const DomainsManagementTable = ({ filter }) => {
+  const [Table_Page, setTable_Page] = useState(0);
+  const [Table_LastStep, setTable_LastStep] = useState(1);
+  const [Table_LastEvaluatedKey_History, setTable_LastEvaluatedKey_History] =
+    useState([]);
+  const [IsLoading, setIsLoading] = useState(true);
+  const [RowsPerPage, setRowsPerPage] = useState(
+    uiStore.getDefaultTableRowsPerPage()
+  );
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -115,6 +125,8 @@ const DomainsManagementTable = ({ filter }) => {
     useState(false);
 
   const [RowActionObject, setRowActionObject] = useState(null);
+
+  const [Rows, setRows] = useState([]);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
 
   const [SelectedRows, setSelectedRows] = useState([]);
@@ -123,6 +135,12 @@ const DomainsManagementTable = ({ filter }) => {
   const toggleRowMenuOpen = (event, country) => {
     setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
+  };
+
+  const onRowsPerPageChanged = (data) => {
+    setTable_LastEvaluatedKey_History([]);
+    setTable_Page(0);
+    setRowsPerPage(data);
   };
 
   const handleRowMenuClose = (event) => {
@@ -136,17 +154,12 @@ const DomainsManagementTable = ({ filter }) => {
     setRowMenuAnchorRef(null);
   };
 
-  const HasTableData = tableData !== undefined;
-
-  if (!HasTableData) {
-    tableData = TableData.defaults(THIS_TABLE_NAME);
-  }
   const confirm = useConfirm();
-  const rowsPerPage = tableData.rowsPerPage;
+  const rowsPerPage = RowsPerPage;
   const page = tableData.page;
 
   const dateRange = tableData.dateRange;
-  let rows = tableData.rows;
+  let rows = tableData.Items;
 
   const IsLoadingResults = tableData.isLoading || !tableData || !tableData.rows;
   let hasInheritedRows = false;
@@ -163,34 +176,55 @@ const DomainsManagementTable = ({ filter }) => {
     Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
     (rowsLength > 1 ? 0 : 1);
 
-  const syncTableData = ({
-    newPage,
-    newSort,
-    newRowsPerPage,
-    newDateRange,
-  }) => {
-    tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
-      page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter,
-      tableName: THIS_TABLE_NAME,
-      sort: newSort,
-      previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
-          : undefined,
-      // dateRange: newDateRange !== undefined ? newDateRange : dateRange,
-    });
+  const onTableDataReceived = (td) => {
+    setIsLoading(false);
+    const { LastEvaluatedKey, step, ScanIndexForward, Items } = td;
+    setTable_Page(Table_Page + step);
+    console.log("TablePage", Table_Page);
+    setTable_LastStep(step);
+    if (step === 1) {
+      if (LastEvaluatedKey && !(Table_Page === 1)) {
+        setTable_LastEvaluatedKey_History([
+          ...Table_LastEvaluatedKey_History,
+          LastEvaluatedKey,
+        ]);
+      }
+    }
+    setTableData(td);
   };
-  const handleChangePage = (event, newPage) => {
-    console.log("handleChangePage.newPage", newPage);
-    syncTableData({ newPage });
+
+  const syncTableData = ({ step }) => {
+    setIsLoading(true);
+    if (step === 1) {
+      DomainsApi.GetTable({
+        step,
+        filter,
+        LastEvaluatedKey: tableData.LastEvaluatedKey,
+      }).then(onTableDataReceived);
+    } else if (step === -1) {
+      if (Table_LastStep === 1) {
+        Table_LastEvaluatedKey_History.pop();
+        setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      }
+      const lastEvalKey = Table_LastEvaluatedKey_History.pop();
+      setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      DomainsApi.GetTable({
+        step,
+        filter,
+        LastEvaluatedKey: lastEvalKey,
+      }).then(onTableDataReceived);
+    } else {
+      DomainsApi.GetTable({ filter, step: 1 }).then(onTableDataReceived);
+    }
+  };
+
+  const handleChangePage = (step) => {
+    syncTableData({ step });
   };
 
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
-    syncTableData({ newRowsPerPage, newPage: 0 });
+    uiActions.changeTableRowsPerPage(newRowsPerPage);
   };
 
   /**
@@ -219,28 +253,36 @@ const DomainsManagementTable = ({ filter }) => {
   };
 
   const bindListeners = () => {
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_CREATED,
-      onTableRowsDataUpdated
+    uiStore.addChangeListener(
+      ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+      onRowsPerPageChanged
     );
-
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_UPDATED,
-      onTableRowsDataUpdated
-    );
-
+    // tableStore.addChangeListener(
+    //   ActionTypes.Table.DATA_CREATED,
+    //   onTableRowsDataUpdated
+    // );
+    // tableStore.addChangeListener(
+    //   ActionTypes.Table.DATA_UPDATED,
+    //   onTableRowsDataUpdated
+    // );
+    // return () => {
+    //   tableStore.removeChangeListener(
+    //     ActionTypes.Table.DATA_CREATED,
+    //     onTableRowsDataUpdated
+    //   );
+    //   tableStore.removeChangeListener(
+    //     ActionTypes.Table.DATA_UPDATED,
+    //     onTableRowsDataUpdated
+    //   );
+    // };
     return () => {
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_CREATED,
-        onTableRowsDataUpdated
-      );
-
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_UPDATED,
-        onTableRowsDataUpdated
+      uiStore.removeChangeListener(
+        ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+        onRowsPerPageChanged
       );
     };
   };
+
   const onRowSelectionChanged = (id) => {
     console.log(SelectedRows);
     const alreadySelectedIndex = SelectedRows.findIndex((c) => c === id);
@@ -261,7 +303,7 @@ const DomainsManagementTable = ({ filter }) => {
     });
 
     return bindListeners();
-  }, [filter]);
+  }, [filter, RowsPerPage]);
 
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
@@ -377,31 +419,27 @@ const DomainsManagementTable = ({ filter }) => {
   //   // Handle chosenCountry
   // };
 
-  const viewJobYieldingLinksExample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/job-yielding-sample`,
-      "_blank"
+  const toggleDomainCrawlingEnabled = ({ domain, previous_is_enabled }) => {
+    DomainsApi.ToggleCrawlingEnabled({ domain, previous_is_enabled }).then(
+      (data) => {
+        const newTable = { ...tableData };
+        let updateIndex = undefined;
+
+        for (let i = 0; i < newTable.Items.length; i++) {
+          if (newTable["Items"][i].domain === domain) {
+            updateIndex = i;
+            break;
+          }
+        }
+        if (updateIndex !== undefined) {
+          newTable["Items"][updateIndex]["is_enabled"] =
+            data.Attributes.is_enabled;
+        }
+        setTableData(newTable);
+      }
     );
-    handle.focus();
   };
 
-  const viewHtmlSample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/view-html-sample`,
-      "_blank"
-    );
-    handle.focus();
-  };
-  const testRegex = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
-      "_blank"
-    );
-    handle.focus();
-  };
   const _createRowActionsButton = (country) => {
     const key = country.countryId;
     return (
@@ -449,7 +487,7 @@ const DomainsManagementTable = ({ filter }) => {
         <MenuItem onClick={handleRowMenuClose}>Generate XML</MenuItem>
         <MenuItem
           onClick={() => {
-            viewJobYieldingLinksExample();
+            //viewJobYieldingLinksExample();
             handleRowMenuClose();
           }}
         >
@@ -458,7 +496,7 @@ const DomainsManagementTable = ({ filter }) => {
 
         <MenuItem
           onClick={() => {
-            viewHtmlSample();
+            // viewHtmlSample();
             handleRowMenuClose();
           }}
         >
@@ -565,10 +603,10 @@ const DomainsManagementTable = ({ filter }) => {
                       </TableCell>
 
                       <TableCell align="right">
-                        {number_format(row.totalLinks, ".", ",")}
+                        {number_format(row.cnt_tracked_urls, ".", ",")}
                       </TableCell>
                       <TableCell align="right">
-                        {number_format(row.scrapedJobs, ".", ",")}
+                        {number_format(row.cnt_scraped_jobs, ".", ",")}
                       </TableCell>
                       <TableCell align="right">
                         <RouterLink
@@ -608,9 +646,27 @@ const DomainsManagementTable = ({ filter }) => {
                         </IconButton>
                       </Box>
                     </TableCell> */}
-                      <TableCell component="th" align="right">
-                        {_createRowActionsButton(row)}
+                      <TableCell align="right">
+                        <div>
+                          <Switch
+                            checked={row.is_enabled}
+                            onChange={() => {
+                              toggleDomainCrawlingEnabled({
+                                domain: row.domain,
+                                previous_is_enabled: row.is_enabled,
+                              });
+                            }}
+                            size="small"
+                            color="secondary"
+                            inputProps={{
+                              "aria-label": "checkbox with default color",
+                            }}
+                          />
+                        </div>
                       </TableCell>
+                      {/* <TableCell component="th" align="right">
+                        {_createRowActionsButton(row)}
+                      </TableCell> */}
                     </React.Fragment>
                   );
                   const wrapComponent = (
@@ -628,20 +684,36 @@ const DomainsManagementTable = ({ filter }) => {
         </Table>
       </div>
       {rowsLength > 0 && (
-        <div>
+        <div
+          style={{
+            pointerEvents: IsLoading ? "none" : "auto",
+            //backgroundColor: IsLoading ? "black" : "white",
+          }}
+        >
           <TablePagination
-            rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
+            rowsPerPageOptions={[10, 25, 50, 100]}
             colSpan={3}
-            count={tableData.totalRowsCount}
-            rowsPerPage={rowsPerPage}
-            page={page}
+            count={-1}
+            rowsPerPage={RowsPerPage}
+            //page={page}
+            labelDisplayedRows={() => {
+              return "";
+            }}
             SelectProps={{
               inputProps: { "aria-label": "rows per page" },
               native: true,
             }}
             onChangePage={handleChangePage}
             onChangeRowsPerPage={handleChangeRowsPerPage}
-            ActionsComponent={TablePaginationActions}
+            ActionsComponent={(props) => {
+              return (
+                <TablePaginationActions
+                  backwardDisabled={Table_Page < 2}
+                  forwardDisabled={!tableData.LastEvaluatedKey}
+                  {...props}
+                />
+              );
+            }}
           />
         </div>
       )}

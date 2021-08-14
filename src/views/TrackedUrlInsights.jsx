@@ -15,7 +15,7 @@ import { number_format } from "../helpers/numbers";
 import { useHistory, useLocation } from "react-router-dom";
 import TouchRipple from "@material-ui/core/ButtonBase/TouchRipple";
 import SimpleChart from "../components/Charts/Simple";
-import CrawlerThreadsTable from "../components/Tables/CrawlerThreads";
+import CrawlerProcessesTable from "../components/Tables/CrawlerProcesses";
 import BugReportIcon from "@material-ui/icons/BugReport";
 import TitledDivider from "../components/Dashboard/TitledDivider";
 import ViewHeader from "../components/ViewHeader";
@@ -36,9 +36,7 @@ const useStyles = makeStyles((theme) => ({
 const TrackedUrlInsights = (props) => {
   let location = useLocation();
   const theme = useTheme();
-  const requestedUrl = props.match.params.tracked_url_id;
-
-  const [FullUrl, setFullUrl] = useState(undefined);
+  const requestedUrl = decodeURIComponent(props.match.params.url);
 
   const classes = useStyles();
 
@@ -56,23 +54,18 @@ const TrackedUrlInsights = (props) => {
     );
   };
 
-  useEffect(() => {
-    if (!FullUrl) {
-      TrackedUrlsApi.GetFullUrlById(requestedUrl).then(({ url }) => {
-        setFullUrl(url);
-      });
-    }
-  });
+  useEffect(() => {}, [requestedUrl]);
   return (
     <React.Fragment>
       <ViewHeader
+        // @ts-ignore
         title="Recent crawling events"
-        subtitle={FullUrl}
-        subtitleLoading={!FullUrl}
+        subtitle={requestedUrl}
+        subtitleLoading={false}
       />
 
       <TableContainer component={Paper} className={classes.tableContainer}>
-        <CrawlerThreadsTable tracked_url_id={requestedUrl} />
+        <CrawlerProcessesTable url={requestedUrl} />
       </TableContainer>
     </React.Fragment>
   );

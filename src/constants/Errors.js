@@ -1,5 +1,5 @@
 const Errors = {
-  ERR_UNKNOWN: "Uknown",
+  ERR_UNKNOWN: "Uknown error occured",
   ERR_INSUFFICIENT_BALANCE: "Insufficient balance",
   ERR_BETS_CLOSED: "Bets already closed",
   ERR_INVALID_CURRENCY: "Choose a currency to bet with.",
@@ -32,6 +32,10 @@ const Errors = {
   ERR_MAX_URLS_PER_DOMAIN_HIT: "No more URLs can be added for this website",
   ERR_NO_JOBS_PER_DOMAIN_THROTTLE:
     "Please wait for the previous URLs of this website to be crawled before adding more",
+  ERR_CRAWLER_ACTION_COOLDOWN_START_STOP:
+    "Please wait for internal pending tasks to complete. Could take several minutes",
+  ERR_URL_INVALID: "URL Invalid",
+  ERR_CRAWLERS_MUST_BE_STOPPED: "Crawlers must be stopped",
 };
 
 export default Errors;

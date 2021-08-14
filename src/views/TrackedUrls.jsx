@@ -1,11 +1,14 @@
+//@ts-check
+import uiActions from "../actions/UI";
+import SpinnerGrow from "../components/SpinnerGrow";
 import {
   Button,
   Divider,
   FormControl,
   FormHelperText,
   InputAdornment,
+  InputBase,
   OutlinedInput,
-  Typography,
 } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -17,9 +20,12 @@ import TitledDivider from "../components/Dashboard/TitledDivider";
 import TrackedUrlsTable from "../components/Tables/TrackedUrls";
 import { number_format } from "../helpers/numbers";
 import { parseDomain } from "../helpers/url";
-function createData(name, calories, fat) {
-  return { name, calories, fat };
-}
+
+import {
+  Link as LinkIcon,
+  AddCircle as AddCircleIcon,
+} from "@material-ui/icons";
+import TrackedUrlsApi from "../api/TrackedUrls";
 
 const useStyles = makeStyles({
   root: {
@@ -47,6 +53,7 @@ var previousFilter = null;
 
 export default function TrackedUrlsView(props) {
   const [Filter, setFilter] = useState(getSearchParam(props));
+  const [TrackedUrlsIndex, setTrackedUrlsIndex] = useState(1);
   const classes = useStyles();
 
   const history = useHistory();
@@ -57,52 +64,9 @@ export default function TrackedUrlsView(props) {
    * Destructures the search values
    * Interprets the domain (if present) to boost indexing
    */
-  const buildFilter = (value) => {
-    // Validate
-
-    if (typeof value !== "string" || !(value.length > 5)) {
-      return setFilter(undefined);
-    }
-
-    const httpInjectedValue =
-      !value.startsWith("http://") && !value.startsWith("https://")
-        ? `https://${value}`
-        : value;
-
-    // Attempt parsing the domain
-    const filter = {
-      domain: undefined,
-      url: undefined,
-    };
-
-    console.log(httpInjectedValue);
-    try {
-      filter.domain = parseDomain(httpInjectedValue);
-    } catch (e) {
-      //pass
-    }
-
-    // Attempt constructing URL
-    try {
-      const url = new URL(httpInjectedValue);
-      if (url !== filter.domain) {
-        filter.url = httpInjectedValue;
-      }
-    } catch (e) {
-      //pass
-    }
-
-    // Make sure we are not re-rendering for nothing
-    if (
-      Filter &&
-      (filter.domain !== Filter.domain || filter.url !== Filter.url)
-    ) {
-      setFilter(filter);
-    }
-    console.log("Made filter ", filter);
-  };
 
   const onFilterChanged = (f) => {
+    return;
     HasEverSearched = true;
     setTimeout(() => {
       history.push({
@@ -111,7 +75,7 @@ export default function TrackedUrlsView(props) {
     });
     clearTimeout(filterTimeout);
     filterTimeout = setTimeout(() => {
-      buildFilter(f);
+      setFilter(f);
     }, 500);
   };
 
@@ -123,9 +87,60 @@ export default function TrackedUrlsView(props) {
     }
   };
 
+  const trackUrl = () => {
+    TrackedUrlsApi.TrackUrl({
+      url: document.getElementById("track-url-input").value,
+    }).then((result) => {
+      if (result.success) {
+        setTrackedUrlsIndex(TrackedUrlsIndex + 1);
+        uiActions.showSnackbar(`URL tracked successfully`, "success");
+      }
+    });
+  };
   const onTableDataLoaded = () => {};
   return (
     <div className={classes.root}>
+      <Paper style={{ marginBottom: theme.spacing(3) }}>
+        <div
+          style={{
+            padding: theme.spacing(2),
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+          }}
+        >
+          <FormControl fullWidth size="small">
+            <OutlinedInput
+              id="track-url-input"
+              placeholder="URL to track"
+              //value={UrlInputValue.inputValue}
+
+              onKeyPress={(evt) => {
+                if (evt.key === "Enter") {
+                  trackUrl();
+                }
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <LinkIcon />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+          <Button
+            variant="contained"
+            color="secondary"
+            disableElevation
+            startIcon={<AddCircleIcon />}
+            endIcon={<SpinnerGrow />}
+            onClick={trackUrl}
+            style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+          >
+            Add URL
+          </Button>
+        </div>
+      </Paper>
       {/* <div>
         <Paper>
           <div style={{ padding: theme.spacing(2) }}>
@@ -155,8 +170,10 @@ export default function TrackedUrlsView(props) {
           }}
         >
           <FormControl fullWidth size="small" className={classes.margin}>
-            <OutlinedInput
+            <InputBase
               defaultValue={Filter}
+              variant="standard"
+              style={{ outline: "none" }}
               id="standard-adornment-amount"
               size="small"
               aria-describedby="search-error"
@@ -174,20 +191,13 @@ export default function TrackedUrlsView(props) {
                 </InputAdornment>
               }
             />
-
-            {HasEverSearched && !isValidRuleType() ? (
-              <FormHelperText id="search-error">
-                Input a domain or a valid URL
-              </FormHelperText>
-            ) : (
-              ""
-            )}
           </FormControl>
         </div>
         <Divider />
         <TrackedUrlsTable
+          TrackedUrlsIndex={TrackedUrlsIndex}
           filter={isValidRuleType() ? Filter : undefined}
-          onLoaded={onTableDataLoaded}
+          //onLoaded={onTableDataLoaded}
         />
       </TableContainer>
     </div>

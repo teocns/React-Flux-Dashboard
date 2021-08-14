@@ -26,7 +26,6 @@ import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import tableActions from "../../actions/Table";
 
-import ScrapingThreadApi from "../../api/ScrapingThread";
 import TrackedUrlsApi from "../../api/TrackedUrls";
 import ActionTypes from "../../constants/ActionTypes";
 import TableNames from "../../constants/Tables";
@@ -80,49 +79,42 @@ const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 const COLUMNS = [
   {
     name: "age",
-    label: "Tracked at",
-    align: "right",
-  },
-  {
-    name: "url",
-    label: "URL",
-    sortable: false,
+    label: "Initiated at",
+    align: "left",
   },
 
   {
     name: "total_scraped_jobs",
-    label: "Total jobs",
+    label: "Jobs Extracted",
     align: "right",
   },
   {
     name: "crawler_threads_cnt",
-    label: "Times crawled",
+    label: "Sub-Links Crawled",
     align: "right",
   },
   {
     name: "crawler_threads_cnt",
-    label: "Latest crawl",
-    hint: "X jobs scraped / out of X crawled links",
+    label: "Duplicates skipped",
+    align: "right",
+  },
+  {
+    name: "crawler_threads_cnt",
+    label: "Consumed bandwith",
+    align: "right",
+  },
+  {
+    name: "crawler_threads_cnt",
+    label: "Finished at",
     align: "right",
     colspan: 2,
   },
-  {
-    name: "Score",
-    label: "Next crawl",
-    align: "right",
-  },
-  {
-    name: "actions",
-    label: "",
-    sortable: false,
-  },
 ];
 
-const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
-  const [Table_Page, setTable_Page] = useState(0);
-  const [Table_LastStep, setTable_LastStep] = useState(1);
-  const [Table_LastEvaluatedKey_History, setTable_LastEvaluatedKey_History] =
-    useState([]);
+var Table_LastEvaluatedKey_History = [];
+var Table_LastStep = 1;
+var Table_Page = 0;
+const CrawlerProcessesTable = ({ url }) => {
   const [IsLoading, setIsLoading] = useState(true);
   const [RowsPerPage, setRowsPerPage] = useState(
     uiStore.getDefaultTableRowsPerPage()
@@ -170,60 +162,39 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   const onTableDataReceived = (td) => {
     setIsLoading(false);
     const { LastEvaluatedKey, step, ScanIndexForward, Items } = td;
-    setTable_Page(Table_Page + step);
+    Table_Page += step;
     console.log("TablePage", Table_Page);
-    setTable_LastStep(step);
+    Table_LastStep = step;
     if (step === 1) {
       if (LastEvaluatedKey && !(Table_Page === 1)) {
-        setTable_LastEvaluatedKey_History([
-          ...Table_LastEvaluatedKey_History,
-          LastEvaluatedKey,
-        ]);
+        Table_LastEvaluatedKey_History.push(LastEvaluatedKey);
       }
     }
     setTableData(td);
-  };
-
-  const selectAllRows = (evt) => {
-    const checked = evt.target.checked;
-    if (!checked) {
-      setSelectedRows([]);
-    } else if (checked) {
-      if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.url_id));
-      }
-    }
-  };
-
-  const getTableData = () => {
-    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
   };
 
   const syncTableData = ({ step }) => {
     setIsLoading(true);
     const limit = RowsPerPage;
     if (step === 1) {
-      TrackedUrlsApi.GetTable({
+      TrackedUrlsApi.GetCrawlingEvents({
         step,
-        filter,
+        url,
         limit,
         LastEvaluatedKey: tableData.LastEvaluatedKey,
       }).then(onTableDataReceived);
     } else if (step === -1) {
       if (Table_LastStep === 1) {
         Table_LastEvaluatedKey_History.pop();
-        setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
       }
-      const lastEvalKey = Table_LastEvaluatedKey_History.pop();
-      setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
-      TrackedUrlsApi.GetTable({
+      TrackedUrlsApi.GetCrawlingEvents({
         step,
-        filter,
+        url,
         limit,
-        LastEvaluatedKey: lastEvalKey,
+        LastEvaluatedKey: Table_LastEvaluatedKey_History.pop(),
       }).then(onTableDataReceived);
     } else {
-      TrackedUrlsApi.GetTable({ filter, step: 1, limit }).then(
+      TrackedUrlsApi.GetCrawlingEvents({ step: 1, limit, url }).then(
         onTableDataReceived
       );
     }
@@ -265,8 +236,6 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   };
 
   const onRowsPerPageChanged = (data) => {
-    setTable_LastEvaluatedKey_History([]);
-    setTable_Page(0);
     setRowsPerPage(data);
   };
 
@@ -322,9 +291,8 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
       syncTableData({});
     });
 
-    console.log(TrackedUrlsIndex, filter);
     return bindListeners();
-  }, [TrackedUrlsIndex, filter, RowsPerPage]);
+  }, [RowsPerPage]);
 
   // const handleCountryFilterChanged = (_countryFilter) => {
   //   syncTableData({ newCountryFilter: _countryFilter });
@@ -343,20 +311,10 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
     const hasFilterApplied =
       tableData.totalRowsCount < tableData.unfilteredRowsCount;
     const _renderHint = () => {
-      if (hasFilterApplied) {
-        return (
-          <Typography
-            variant={isJustFilling ? "body2" : "h6"}
-            style={{ color: theme.palette.text.hint }}
-          >
-            Try changing filter options
-          </Typography>
-        );
-      }
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Start adding some now!
+            Please be patient
           </Typography>
         );
     };
@@ -387,7 +345,7 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} URLs tracked
+              No{rowsLength > 0 ? " more" : ""} crawling events
             </Typography>
           </Box>
           {_renderHint()}
@@ -408,121 +366,6 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
     );
 
     return _createRow();
-  };
-
-  const CrawlingStatuses = KeyMirror({
-    IS_CRAWLING: null,
-    HAS_BEEN_CRAWLED: null,
-    NOT_PROCESSED: null,
-  });
-
-  const calculateCrawlingStatus = (row) => {
-    if (!row.cp_last_done_age) {
-      if (!row.cp_cnt) {
-        return CrawlingStatuses.NOT_PROCESSED;
-      } else {
-        return CrawlingStatuses.IS_CRAWLING;
-      }
-    } else {
-      return CrawlingStatuses.HAS_BEEN_CRAWLED;
-    }
-  };
-
-  const makeNextCrawl = (row) => {
-    const crawlingStatus = calculateCrawlingStatus(row);
-
-    switch (crawlingStatus) {
-      case CrawlingStatuses.NOT_PROCESSED:
-        return (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-            }}
-          >
-            Scheduled
-            <AccessTimeIcon
-              fontSize="small"
-              style={{
-                marginLeft: theme.spacing(1),
-                color: theme.palette.text.disabled,
-              }}
-            />
-          </div>
-        );
-      case CrawlingStatuses.IS_CRAWLING:
-        return (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            Crawling now{" "}
-            <CircularProgress
-              style={{
-                width: 14,
-                height: 14,
-                color: theme.palette.text.disabled,
-                marginLeft: theme.spacing(1),
-              }}
-            />
-          </div>
-        );
-      case CrawlingStatuses.HAS_BEEN_CRAWLED:
-        const targetDate =
-          row.cp_last_done_age +
-          (row.recrawling_delay ||
-            configStore.getConfig("RECRAWLING_DELAY_DEFAULT"));
-
-        return (
-          <div
-            style={{
-              color: theme.palette.text.hint,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-            }}
-          >
-            <Typography
-              variant="overline"
-              style={{ textTransform: "lowercase" }}
-            >
-              {`${getTimeRemaining(targetDate, true)} `}
-            </Typography>
-            <AccessTimeIcon
-              fontSize="small"
-              style={{ marginLeft: theme.spacing(1) }}
-            />
-          </div>
-        );
-
-      default:
-        break;
-    }
-  };
-
-  const viewJobYieldingLinksExample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/job-yielding-sample`,
-      "_blank"
-    );
-    handle.focus();
-  };
-
-  const viewHtmlSample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/view-html-sample`,
-      "_blank"
-    );
-    handle.focus();
-  };
-
-  const testRegex = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
-      "_blank"
-    );
-    handle.focus();
   };
 
   const _createRowActionsButton = (country) => {
@@ -553,10 +396,6 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
         onClose={handleRowMenuClose}
       >
         <MenuItem
-          // onClick={() => {
-          //   handleRowMenuClose();
-          //   //toggleCountryRenameDialog();
-          // }}
           component={RouterLink}
           to={`/tracked-url/${RowActionObject && RowActionObject.url_id}`}
         >
@@ -564,6 +403,15 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
         </MenuItem>
       </Menu>
     );
+  };
+
+  const isCompleted = (cp) => {
+    let links = cp["links"];
+    let duplicates = cp["duplicates"];
+    let done_threads = cp["threads_done_cnt"];
+    let real_threads_count = links - duplicates + 1;
+
+    return done_threads >= real_threads_count;
   };
 
   const makeLatestCrawl = (row, colNum) => {
@@ -614,9 +462,6 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
       }
     }
   };
-  const onSortChanged = ({ name, sort }) => {
-    syncTableData({ newSort: { name, sort } });
-  };
 
   return (
     <React.Fragment>
@@ -629,19 +474,18 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
         >
           <colgroup>
             <col style={{ width: 54 }} />
-            <col style={{ width: 128 }} />
             <col style={{ width: "100%" }} />
-            <col style={{ width: 96 }} />
             <col style={{ width: 128 }} />
             <col style={{ width: 132 }} />
             <col style={{ width: 132 }} />
-            <col style={{ width: 170 }} />
-            <col style={{ width: 54 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 132 }} />
           </colgroup>
           <MultifunctionalHeading
             columns={COLUMNS}
             sort={tableData && tableData.sort}
-            onSortChanged={onSortChanged}
+            onCheckedChanged={() => {}}
+            onSortChanged={() => {}}
           />
           <TableBody>
             {IsLoadingResults
@@ -690,59 +534,63 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
                       </TableCell>
                       <TableCell align="right">
                         <div
-                          style={{ display: "flex", flexDirection: "column" }}
-                        >
-                          <Typography
-                            variant="caption"
-                            style={{ color: theme.palette.text.hint }}
-                          >
-                            {prettyPrintDate(row.age)}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            style={{ color: "rgb(132 132 132)" }}
-                          >
-                            {timeSince(row.age)}
-                          </Typography>
-                        </div>
-                      </TableCell>
-
-                      <TableCell scope="row">
-                        <div
                           style={{
+                            display: "flex",
+                            whiteSpace: "nowrap",
                             alignItems: "center",
-                            overflow: "hidden",
-                            display: "block",
-                            textOverflow: "ellipsis",
                           }}
                         >
-                          <Link
-                            href={"https://" + row.url}
-                            target="_blank"
-                            style={{ textOverflow: "ellipsis" }}
+                          <Typography
+                            variant="overline"
+                            style={{ fontSize: 13, whiteSpace: "no-wrap" }}
                           >
-                            {row.url}
-                          </Link>
+                            {prettyPrintDate(row.age)}{" "}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            style={{ color: "rgb(132 132 132)", marginLeft: 6 }}
+                          >
+                            ({timeSince(row.age)})
+                          </Typography>
                         </div>
                       </TableCell>
 
                       <TableCell align="right">
-                        {number_format(row.total_scraped_jobs, 0, ".", ",")}
-                      </TableCell>
-                      <TableCell align="right">{row.cp_done_cnt}</TableCell>
-
-                      <TableCell align="right">
-                        {makeLatestCrawl(row, 1)}
+                        {number_format(row.jobs || 0, 0, ".", ",")}
                       </TableCell>
                       <TableCell align="right">
-                        {makeLatestCrawl(row, 2)}
+                        {number_format(
+                          (row.threads_done_cnt || 0) - 1,
+                          0,
+                          ".",
+                          ","
+                        )}{" "}
+                        / {number_format(row.links || 0, 0, ".", ",")}
                       </TableCell>
 
-                      <TableCell align="right">{makeNextCrawl(row)}</TableCell>
+                      <TableCell align="right">
+                        {number_format(row.duplicates || 0, 0, ".", ",")}
+                      </TableCell>
+                      <TableCell align="right">
+                        {number_format(
+                          (row.bytes || 0) / 1048576 || 0,
+                          1,
+                          ".",
+                          ","
+                        )}{" "}
+                        MB
+                      </TableCell>
+                      <TableCell align="right">
+                        {isCompleted(row)
+                          ? prettyPrintDate(row.age_completed)
+                          : "Not yet"}
+                      </TableCell>
 
+                      {/* <TableCell align="right">{makeNextCrawl(row)}</TableCell> */}
+                      {/* 
                       <TableCell align="right">
                         {_createRowActionsButton(row)}
-                      </TableCell>
+                      </TableCell> */}
                     </React.Fragment>
                   );
                   const wrapComponent = (
@@ -793,4 +641,4 @@ const ManageUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   );
 };
 
-export default ManageUrlsTable;
+export default CrawlerProcessesTable;

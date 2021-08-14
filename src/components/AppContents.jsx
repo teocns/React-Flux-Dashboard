@@ -1,4 +1,5 @@
-//@ts-check
+// @ts-nocheck
+import PublicIcon from "@material-ui/icons/Public";
 import {
   AppBar,
   Badge,
@@ -12,6 +13,7 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@material-ui/core";
 import { deepOrange, deepPurple } from "@material-ui/core/colors";
@@ -26,13 +28,15 @@ import {
   ExpandMore,
   Link as LinkIcon,
   PowerSettingsNew as PowerSettingsNewIcon,
+  Refresh,
+  SettingsApplications,
   Timeline as TimelineIcon,
 } from "@material-ui/icons";
 import LanguageIcon from "@material-ui/icons/Language";
 import MenuIcon from "@material-ui/icons/Menu";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import sessionActions from "../actions/Session";
 import faviconIconPng from "../assets/favicon128.png";
@@ -155,8 +159,7 @@ function AppContents() {
   const [User, setUser] = useState(sessionStore.getUser());
   const IsAdmin = (User && User.isAdmin) || false;
 
-  const [ListItemStatisticsExpanded, setListItemStatisticsExpanded] =
-    useState(false);
+  const [RefreshTrigger, setRefreshTrigger] = useState(0);
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStore.isAuthenticated()
@@ -184,22 +187,24 @@ function AppContents() {
 
   const location = useLocation();
 
-  const renderShortLetters = () => {
-    if (!User || !User.name) {
-      return "";
-    }
-    const fullName = User.name;
-    let shortLetters = "";
-    const nameParts = fullName.split(" ");
-    if (nameParts.length >= 2) {
-      shortLetters =
-        nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
-    } else {
-      shortLetters = nameParts[0].substring(0, 2);
-    }
-    // alert(fullName);
-    return shortLetters;
-  };
+  const appViewRef = useRef(null);
+
+  // const renderShortLetters = () => {
+  //   if (!User || !User.name) {
+  //     return "";
+  //   }
+  //   const fullName = User.name;
+  //   let shortLetters = "";
+  //   const nameParts = fullName.split(" ");
+  //   if (nameParts.length >= 2) {
+  //     shortLetters =
+  //       nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1);
+  //   } else {
+  //     shortLetters = nameParts[0].substring(0, 2);
+  //   }
+  //   // alert(fullName);
+  //   return shortLetters;
+  // };
   console.log("isAuthenticated", isAuthenticated);
   return (
     <div className={classes.root}>
@@ -213,38 +218,47 @@ function AppContents() {
               [classes.appBarShift]: isAuthenticated && drawerOpen,
             })}
           >
-            <Toolbar style={{ paddingLeft: 18 }}>
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                size="small"
-                onClick={handleDrawerOpen}
-                edge="start"
-                className={classes.menuButton}
-              >
-                <MenuIcon />
-              </IconButton>
-              <Button
-                variant="text"
-                color={
-                  location.pathname === "/" || location.pathname === ""
-                    ? "secondary"
-                    : "rgb(127, 127, 127)"
-                }
-                startIcon={
-                  <AddCircleOutlineIcon
-                    color={
-                      location.pathname === "/" || location.pathname === ""
-                        ? "secondary"
-                        : "rgb(127, 127, 127)"
-                    }
-                  />
-                }
-                component={Link}
-                to="/"
-              >
-                Crawl URLs
-              </Button>
+            <Toolbar
+              style={{
+                paddingLeft: 18,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  size="small"
+                  onClick={handleDrawerOpen}
+                  edge="start"
+                  className={classes.menuButton}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Button
+                  variant="text"
+                  color={
+                    location.pathname === "/" || location.pathname === ""
+                      ? "secondary"
+                      : "rgb(127, 127, 127)"
+                  }
+                  startIcon={
+                    <AddCircleOutlineIcon
+                      color={
+                        location.pathname === "/" || location.pathname === ""
+                          ? "secondary"
+                          : "rgb(127, 127, 127)"
+                      }
+                    />
+                  }
+                  component={Link}
+                  to="/"
+                >
+                  Crawl URLs
+                </Button>
+              </div>
               {/* <Button
                 variant="text"
                 style={{ marginLeft: theme.spacing(1) }}
@@ -267,6 +281,18 @@ function AppContents() {
               >
                 Manage Your URLs
               </Button> */}
+              <Tooltip title="Refresh Now">
+                <IconButton
+                  onClick={() => {
+                    setRefreshTrigger(true);
+                    setTimeout(() => {
+                      setRefreshTrigger(false);
+                    }, 150);
+                  }}
+                >
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
             </Toolbar>
           </AppBar>
 
@@ -395,7 +421,7 @@ function AppContents() {
                     </ListItemIcon>
                     <ListItemText
                       disableTypography={true}
-                      primary={"Crawl URLs"}
+                      primary={"URLs Tracking"}
                     />
                   </ListItem>
 
@@ -416,12 +442,11 @@ function AppContents() {
 
                   <ListItem
                     button
-                    key={"stats"}
                     //component={Link}
                     //to="/statistics"
-                    key={"/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS}
+                    key={"/statistics/user"}
                     component={Link}
-                    to={"/statistics/" + StatisticsDataTypes.USER_TRACKED_URLS}
+                    to={"/statistics/user"}
                     // onClick={() =>
                     //   setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
                     // }
@@ -433,11 +458,25 @@ function AppContents() {
                       disableTypography={true}
                       primary={"Performance insights"}
                     />
-                    {/* {ListItemStatisticsExpanded ? (
-                      <ExpandLess />
-                    ) : (
-                      <ExpandMore />
-                    )} */}
+                  </ListItem>
+                  <ListItem
+                    button
+                    //component={Link}
+                    //to="/statistics"
+                    key={"countries-management"}
+                    component={Link}
+                    to={"/countries/"}
+                    // onClick={() =>
+                    //   setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
+                    // }
+                  >
+                    <ListItemIcon>
+                      <PublicIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Countries"}
+                    />
                   </ListItem>
                   {/* <Collapse
                     in={ListItemStatisticsExpanded}
@@ -516,11 +555,11 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText
                           disableTypography={true}
-                          primary={"Crawled websites"}
+                          primary={"Tracked Domains"}
                         />
                       </ListItem>
 
-                      <ListItem
+                      {/* <ListItem
                         button
                         key={"blacklist"}
                         component={Link}
@@ -533,7 +572,7 @@ function AppContents() {
                           disableTypography={true}
                           primary={"Blacklist"}
                         />
-                      </ListItem>
+                      </ListItem> */}
                       <ListItem
                         button
                         key={"users"}
@@ -551,6 +590,39 @@ function AppContents() {
                       </ListItem>
                     </List>
                     <Divider />
+                    <List>
+                      <ListItem
+                        button
+                        key={"Crawler Control Center"}
+                        selected={location.pathname === "/crawlers"}
+                        component={Link}
+                        to="/crawlers"
+                      >
+                        <ListItemIcon>
+                          <SettingsApplications />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Crawler Control Center"}
+                        />
+                      </ListItem>
+
+                      <ListItem
+                        button
+                        key={"Crawler Performance"}
+                        selected={location.pathname === "/statistics/crawlers"}
+                        component={Link}
+                        to="/statistics/crawlers"
+                      >
+                        <ListItemIcon>
+                          <TimelineIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"Robot Performance"}
+                        />
+                      </ListItem>
+                    </List>
                   </React.Fragment>
                 )}
               </div>
@@ -575,7 +647,7 @@ function AppContents() {
           [classes.appContent]: true,
         })}
       >
-        <AppView />
+        {!RefreshTrigger && <AppView ref={appViewRef} />}
         <AppSnackbar />
       </main>
     </div>

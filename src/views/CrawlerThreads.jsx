@@ -1,7 +1,7 @@
 import { TableContainer, Paper, Typography } from "@material-ui/core";
 import React from "react";
 import { useLocation } from "react-router";
-import CrawlerThreadsTable from "../components/Tables/CrawlerThreads";
+import CrawlerThreadsTable from "../components/Tables/CrawlerProcesses";
 
 function getSearchParameters(loc) {
   var prmstr = loc.search.substr(1);

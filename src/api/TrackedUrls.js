@@ -18,4 +18,18 @@ export default class TrackedUrlsApi {
       userFilter,
     });
   }
+
+  static async GetTable(DATA) {
+    return await MakeRequest.post(`/tracked-urls/table`, DATA);
+  }
+
+  static async GetCrawlingEvents(DATA) {
+    return await MakeRequest.post(`/url/crawler-processes`, DATA);
+  }
+
+  static async TrackUrl({ url }) {
+    return await MakeRequest.post(`/tracked-urls/track`, {
+      url,
+    });
+  }
 }

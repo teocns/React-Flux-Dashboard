@@ -3,8 +3,11 @@ import dispatcher from "../dispatcher";
 import ActionTypes from "../constants/ActionTypes";
 
 class UIStore extends EventEmitter {
+  #default_rows_per_page;
+
   constructor(params) {
     super(params);
+    this.#default_rows_per_page = 25;
     this.messages = [];
     this.sidebar = {
       isOpen: true,
@@ -61,6 +64,25 @@ class UIStore extends EventEmitter {
   loginModalIsOpen() {
     return this.modals.login.isOpen;
   }
+
+  getDefaultTableRowsPerPage() {
+    if (
+      !this.#default_rows_per_page ||
+      ![10, 25, 50, 100].includes(this.#default_rows_per_page)
+    ) {
+      this.#default_rows_per_page =
+        parseInt(window.localStorage.getItem("default_rows_per_page")) || 25;
+    }
+    return this.#default_rows_per_page;
+  }
+  setDefaultTableRowsPerPage(rows_per_page) {
+    if (![10, 25, 50, 100].includes(rows_per_page)) {
+      return;
+    }
+
+    window.localStorage.setItem("default_rows_per_page", rows_per_page);
+    this.#default_rows_per_page = rows_per_page;
+  }
 }
 
 const uiStore = new UIStore();
@@ -69,6 +91,9 @@ dispatcher.register((action) => {
   let willEmitOwnChange = true;
   switch (action.actionType) {
     case ActionTypes.UI.SHOW_SNACKBAR:
+      break;
+    case ActionTypes.Table.ROWS_PER_PAGE_CHANGED:
+      uiStore.setDefaultTableRowsPerPage(action.data);
       break;
     default:
       willEmitOwnChange = false;

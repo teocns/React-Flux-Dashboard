@@ -3,6 +3,7 @@ import sessionStore from "../store/session";
 import sessionActions from "../actions/Session";
 import Errors from "../constants/Errors";
 import ApiError from "../models/ApiError";
+
 String.prototype.trimChar = function (charToRemove) {
   let string = this;
   while (string.charAt(0) == charToRemove) {

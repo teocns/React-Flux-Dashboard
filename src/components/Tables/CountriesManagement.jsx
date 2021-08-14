@@ -1,30 +1,26 @@
+import CountriesApi from "../../api/Countries";
 import {
-  Badge,
   Box,
   Checkbox,
   IconButton,
+  Button,
   Menu,
   MenuItem,
   Table,
   TableBody,
   TableCell,
-  TableFooter,
-  TableHead,
   TablePagination,
   TableRow,
-  Tooltip,
+  Switch,
   Typography,
 } from "@material-ui/core";
-import Chip from "@material-ui/core/Chip";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { Delete, MoreVert, Search } from "@material-ui/icons";
-import AssignmentTurnedIn from "@material-ui/icons/AssignmentTurnedIn";
-import WarningIcon from "@material-ui/icons/Warning";
+import { Edit, MoreVert, Search } from "@material-ui/icons";
 import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
 import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
-import countriesActions from "../../actions/Countries";
+import hostsActions from "../../actions/Hosts";
 import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
 import ScrapingThreadApi from "../../api/ScrapingThread";
@@ -33,19 +29,33 @@ import TableNames from "../../constants/Tables";
 import Country from "../../models/Country";
 import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
-import CountryPickerDialog from "../Dialogs/CountryPicker";
-import RenameDialog from "../Dialogs/Rename";
-import MultiFilter from "../Filters/MultiFilter";
+import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
 
+import { Link as RouterLink } from "react-router-dom";
+import { number_format } from "../../helpers/numbers";
+import uiStore from "../../store/UI";
 const useStyles = makeStyles((theme) => ({
+  tableContainer: {
+    overflowY: "scroll",
+    overflowX: "hidden",
+  },
   table: {
     minWidth: 500,
+    tableLayout: "fixed",
+    overflowY: "auto",
+    overflowX: "hidden",
+  },
+  editRegexIcon: {
+    opacity: 0,
   },
   tableRow: {
     height: 70,
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.action.hover,
+    },
+    '&:hover [name="editRegexIcon"]': {
+      opacity: 1,
     },
   },
   emptyRow: {
@@ -56,42 +66,71 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "8rem",
     },
   },
-
-  countryChipContainer: {
-    display: "flex",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    listStyle: "none",
-    padding: theme.spacing(0.5),
-    margin: 0,
-  },
-  countryChip: {
-    margin: 0,
-    marginRight: theme.spacing(0.5),
-  },
 }));
 
-const THIS_TABLE_NAME = TableNames.COUNTRIES_MANAGEMENT;
+const THIS_TABLE_NAME = TableNames.DOMAINS_MANAGEMENT;
+const COLUMNS = [
+  {
+    name: "country_code",
+    label: "Country name",
+  },
+  {
+    name: "price",
+    label: "Pay per job",
+    align: "right",
+  },
+  // {
+  //   name: "crawlerThreadsCount",
+  //   label: "Times crawled",
+  //   align: "right",
+  // },
+
+  // {
+  //   name: "is_enabled",
+  //   label: "Enable crawling",
+  //   sortable: false,
+  // },
+];
 
 const CountriesManagementTable = ({ filter }) => {
+  const [Table_Page, setTable_Page] = useState(0);
+  const [Table_LastStep, setTable_LastStep] = useState(1);
+  const [Table_LastEvaluatedKey_History, setTable_LastEvaluatedKey_History] =
+    useState([]);
+  const [TableSort, setTableSort] = useState({
+    name: "country_code",
+    sort: "desc",
+  });
+  const [IsLoading, setIsLoading] = useState(true);
+  const [RowsPerPage, setRowsPerPage] = useState(
+    uiStore.getDefaultTableRowsPerPage()
+  );
   let [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
   /**
    * @type {Array.<Country,CallableFunction>}
    */
-  const [CountryPickerDialogOpen, setCountryPickerDialogOpen] = useState(false);
-  const [CountryRenameDialogOpen, setCountryRenameDialogOpen] = useState(false);
+  const [HostParsingRegexDialogOpen, setHostParsingRegexDialogOpen] =
+    useState(false);
 
-  const [RowActionCountryObject, setRowActionCountryObject] = useState(null);
+  const [RowActionObject, setRowActionObject] = useState(null);
+
+  const [Rows, setRows] = useState([]);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
 
   const [SelectedRows, setSelectedRows] = useState([]);
   const [DateRange, setDateRange] = useState(null);
 
   const toggleRowMenuOpen = (event, country) => {
-    setRowActionCountryObject(country);
+    setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
+  };
+
+  const onRowsPerPageChanged = (data) => {
+    setTable_LastEvaluatedKey_History([]);
+    setTable_Page(0);
+    setRowsPerPage(data);
   };
 
   const handleRowMenuClose = (event) => {
@@ -105,24 +144,20 @@ const CountriesManagementTable = ({ filter }) => {
     setRowMenuAnchorRef(null);
   };
 
-  const HasTableData = tableData !== undefined;
-
-  if (!HasTableData) {
-    tableData = TableData.defaults(THIS_TABLE_NAME);
-  }
   const confirm = useConfirm();
-  const rowsPerPage = tableData.rowsPerPage;
+  const rowsPerPage = RowsPerPage;
   const page = tableData.page;
-  const countryFilter = tableData.countryFilter;
-  const dateRange = tableData.dateRange;
-  let rows = tableData.rows;
 
-  const IsLoadingResults = tableData.isLoading;
+  const dateRange = tableData.dateRange;
+  let rows = tableData.Items;
+
+  const IsLoadingResults =
+    tableData.isLoading || !tableData || !tableData.Items;
   let hasInheritedRows = false;
-  if (IsLoadingResults && tableData.previousTableData) {
-    rows = tableData.previousTableData.rows;
-    hasInheritedRows = true;
-  }
+  // if (IsLoadingResults && tableData.previousTableData) {
+  //   rows = tableData.previousTableData.rows;
+  //   hasInheritedRows = true;
+  // }
 
   const isLoadingResults = tableData ? tableData.isLoading : true;
   const rowsLength = Array.isArray(rows) ? rows.length : 0;
@@ -132,69 +167,71 @@ const CountriesManagementTable = ({ filter }) => {
     Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
     (rowsLength > 1 ? 0 : 1);
 
-  const deleteSelectedRows = () => {
-    if (SelectedRows.length) {
-      confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} links?`,
-        title: `Delete ${SelectedRows.length} links`,
-      })
-        .then(async () => {
-          const res = await ScrapingThreadApi.Delete(SelectedRows);
-          if (res && res.success) {
-            uiActions.showSnackbar(`Links deleted successfully`, "success");
-            setSelectedRows([]);
-            setTimeout(() => {
-              syncTableData({});
-            });
-          }
-        })
-        .catch();
-    }
-  };
-  const handleUserFilterChanged = (userFilter) => {
-    return;
-    //setUserFilter(userFilter);
-  };
-
-  const selectAllRows = (evt) => {
-    const checked = evt.target.checked;
-    if (!checked) {
-      setSelectedRows([]);
-    } else if (checked) {
-      if (Array.isArray(rows)) {
-        setSelectedRows(rows.map((row) => row.threadId));
+  const onTableDataReceived = (td) => {
+    setIsLoading(false);
+    const { LastEvaluatedKey, step, ScanIndexForward, Items } = td;
+    setTable_Page(Table_Page + step);
+    console.log("TablePage", Table_Page);
+    setTable_LastStep(step);
+    if (step === 1) {
+      if (LastEvaluatedKey && !(Table_Page === 1)) {
+        setTable_LastEvaluatedKey_History([
+          ...Table_LastEvaluatedKey_History,
+          LastEvaluatedKey,
+        ]);
       }
     }
+    setTableData(td);
   };
-  const syncTableData = ({
-    newPage,
-    newRowsPerPage,
-    newDateRange,
-    newCountryFilter,
-  }) => {
-    tableActions.createTableData({
-      rowsPerPage: newRowsPerPage !== undefined ? newRowsPerPage : rowsPerPage,
-      page:
-        newRowsPerPage !== -1 ? (newPage !== undefined ? newPage : page) : 0,
-      filter: filter || "",
-      tableName: THIS_TABLE_NAME,
-      previousRowCount:
-        tableData && tableData.totalRowsCount
-          ? tableData.totalRowsCount
-          : undefined,
-      dateRange: newDateRange !== undefined ? newDateRange : dateRange,
-      countryFilter:
-        newCountryFilter !== undefined ? newCountryFilter : countryFilter,
-    });
+
+  const syncTableData = ({ step }) => {
+    setSelectedRows([]);
+    setIsLoading(true);
+    window.lastEvalKey = undefined;
+    if (step === 1) {
+      window.lastEvalKey = tableData.LastEvaluatedKey;
+      CountriesApi.GetTable({
+        step,
+        filter,
+        sort: TableSort,
+        LastEvaluatedKey: tableData.LastEvaluatedKey,
+      }).then(onTableDataReceived);
+    } else if (step === -1) {
+      if (Table_LastStep === 1) {
+        Table_LastEvaluatedKey_History.pop();
+        setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      }
+      const lastEvalKey = (window.lastEvalKey =
+        Table_LastEvaluatedKey_History.pop());
+
+      setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      CountriesApi.GetTable({
+        step,
+        filter,
+        LastEvaluatedKey: lastEvalKey,
+        sort: TableSort,
+      }).then(onTableDataReceived);
+    } else if (step === 0) {
+      CountriesApi.GetTable({
+        step: 1,
+        filter,
+        LastEvaluatedKey: window.lastEvalKey,
+        sort: TableSort,
+      }).then(onTableDataReceived);
+    } else {
+      CountriesApi.GetTable({ sort: TableSort, filter, step: 1 }).then(
+        onTableDataReceived
+      );
+    }
   };
-  const handleChangePage = (event, newPage) => {
-    console.log("handleChangePage.newPage", newPage);
-    syncTableData({ newPage });
+
+  const handleChangePage = (step) => {
+    syncTableData({ step });
   };
 
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
-    syncTableData({ newRowsPerPage, newPage: 0 });
+    uiActions.changeTableRowsPerPage(newRowsPerPage);
   };
 
   /**
@@ -210,11 +247,11 @@ const CountriesManagementTable = ({ filter }) => {
   };
   console.log("rendering", tableData);
 
-  const onScrapingThreadCreated = () => {
-    setTimeout(() => {
-      syncTableData({ newPage: 0 });
-    });
-  };
+  // const onScrapingThreadCreated = () => {
+  //   setTimeout(() => {
+  //     syncTableData({ newPage: 0 });
+  //   });
+  // };
 
   const reSync = () => {
     setTimeout(() => {
@@ -223,34 +260,19 @@ const CountriesManagementTable = ({ filter }) => {
   };
 
   const bindListeners = () => {
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_CREATED,
-      onTableRowsDataUpdated
-    );
-    tableStore.addChangeListener(
-      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-      reSync
-    );
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_UPDATED,
-      onTableRowsDataUpdated
+    uiStore.addChangeListener(
+      ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+      onRowsPerPageChanged
     );
 
     return () => {
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_CREATED,
-        onTableRowsDataUpdated
-      );
-      tableStore.removeChangeListener(
-        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-        reSync
-      );
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_UPDATED,
-        onTableRowsDataUpdated
+      uiStore.removeChangeListener(
+        ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+        onRowsPerPageChanged
       );
     };
   };
+
   const onRowSelectionChanged = (id) => {
     console.log(SelectedRows);
     const alreadySelectedIndex = SelectedRows.findIndex((c) => c === id);
@@ -267,17 +289,12 @@ const CountriesManagementTable = ({ filter }) => {
   useEffect(() => {
     // Means data has not yet loaded nor requested
     setTimeout(() => {
-      if (!HasTableData || filter !== tableData.filter) {
-        syncTableData({});
-      }
+      syncTableData({});
     });
 
     return bindListeners();
-  });
+  }, [filter, RowsPerPage, TableSort]);
 
-  const handleCountryFilterChanged = (_countryFilter) => {
-    syncTableData({ newCountryFilter: _countryFilter });
-  };
   const handleDateFilterChanged = (_dateRange) => {
     syncTableData({ newDateRange: _dateRange });
   };
@@ -305,7 +322,7 @@ const CountriesManagementTable = ({ filter }) => {
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Add some links to get started
+            Try changing filter settings
           </Typography>
         );
     };
@@ -336,7 +353,7 @@ const CountriesManagementTable = ({ filter }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} links found
+              No{rowsLength > 0 ? " more" : ""} countries found
             </Typography>
           </Box>
           {_renderHint()}
@@ -358,42 +375,84 @@ const CountriesManagementTable = ({ filter }) => {
 
     return _createRow();
   };
-  const toggleCountryPickerDialog = () => {
-    setCountryPickerDialogOpen(!CountryPickerDialogOpen);
-  };
-  const toggleCountryRenameDialog = () => {
-    setCountryRenameDialogOpen(!CountryRenameDialogOpen);
+
+  const toggleHostParsingRegexDialog = () => {
+    setHostParsingRegexDialogOpen(!HostParsingRegexDialogOpen);
   };
 
-  const onCountryPickerDialogClosed = (chosenCountryId) => {
-    setCountryPickerDialogOpen(false);
-
-    if (chosenCountryId) {
-      setTimeout(() => {
-        countriesActions.setCountriesAsAlias(
-          [RowActionCountryObject.countryId],
-          chosenCountryId
-        );
-      });
+  const getTableDataItem = (country_code) => {
+    for (let item of tableData.Items) {
+      if (item.country_code === country_code) {
+        return item;
+      }
     }
-    setRowActionCountryObject(null);
-    // Handle chosenCountry
   };
-  const onCountryRenameDialogClosed = (newCountryName) => {
-    setCountryRenameDialogOpen(false);
+
+  const changePrice = async () => {
+    const defaultPrice = getTableDataItem(SelectedRows[0]).price;
+
+    const val = parseFloat(
+      window.prompt(
+        `Changing the price for ${SelectedRows.length} countries. Input the price below`,
+        defaultPrice
+      )
+    );
+
+    if (isNaN(val)) {
+      return uiActions.showSnackbar("Price change aborted", "error");
+    }
+
     if (
-      typeof newCountryName === "string" &&
-      newCountryName &&
-      newCountryName.trim().toLowerCase() !== newCountryName
+      window.confirm(
+        `Confirm to update price for ${SelectedRows.length} countries to €${val}?`
+      )
     ) {
-      countriesActions.renameCountry(
-        RowActionCountryObject.countryId,
-        newCountryName.trim()
-      );
+      const { success, errors } = await CountriesApi.SetPrice({
+        countries: SelectedRows,
+        price: val,
+      });
+
+      if (success) {
+        uiActions.showSnackbar(
+          `Prices updated successfully for ${
+            SelectedRows.length - (errors || 0)
+          } countries to €${val}`,
+          "success"
+        );
+        syncTableData({ step: 0 });
+      }
     }
-    setRowActionCountryObject(null);
+  };
+
+  const onHostParsingRegexDialogClosed = (regex) => {
+    const hostId = RowActionObject.hostId;
+    setHostParsingRegexDialogOpen(false);
+    setTimeout(() => {
+      setRowActionObject(null);
+    }, 275);
+
+    if (regex && regex !== setRowActionObject.link_parsing_regex) {
+      hostsActions.changeRegex(hostId, regex);
+    }
+
     // Handle chosenCountry
   };
+  // const onCountryRenameDialogClosed = (newCountryName) => {
+  //   setCountryRenameDialogOpen(false);
+  //   if (
+  //     typeof newCountryName === "string" &&
+  //     newCountryName &&
+  //     newCountryName.trim().toLowerCase() !== newCountryName
+  //   ) {
+  //     countriesActions.renameCountry(
+  //       RowActionCountryObject.countryId,
+  //       newCountryName.trim()
+  //     );
+  //   }
+  //   setRowActionCountryObject(null);
+  //   // Handle chosenCountry
+  // };
+
   const _createRowActionsButton = (country) => {
     const key = country.countryId;
     return (
@@ -421,10 +480,10 @@ const CountriesManagementTable = ({ filter }) => {
         open={Boolean(rowMenuAnchorRef)}
         onClose={handleRowMenuClose}
       >
-        <MenuItem
+        {/* <MenuItem
           onClick={() => {
             handleRowMenuClose();
-            toggleCountryRenameDialog();
+            HostParsingRegexDialog();
           }}
         >
           Rename
@@ -433,235 +492,248 @@ const CountriesManagementTable = ({ filter }) => {
         <MenuItem
           onClick={() => {
             handleRowMenuClose();
-            toggleCountryPickerDialog();
+            toggleHostParsingRegexDialog();
           }}
         >
           Mark as alias of..
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={handleRowMenuClose}>Generate XML</MenuItem>
+        <MenuItem
+          onClick={() => {
+            //viewJobYieldingLinksExample();
+            handleRowMenuClose();
+          }}
+        >
+          View links with job schema
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            // viewHtmlSample();
+            handleRowMenuClose();
+          }}
+        >
+          View HTML sample
+        </MenuItem>
       </Menu>
     );
   };
 
+  const onSortChanged = ({ name, sort }) => {
+    setTableSort({ name, sort });
+  };
+
+  const selectAllRows = (checked) => {
+    if (!checked) {
+      setSelectedRows([]);
+    } else if (checked) {
+      if (Array.isArray(tableData.Items)) {
+        setSelectedRows(tableData.Items.map((row) => row.country_code));
+      }
+    }
+  };
   return (
     <React.Fragment>
-      <Table className={classes.table} aria-label="custom pagination table">
-        {/* <LinearProgress
-        variant="indeterminate"
-        color="secondary"
-        style={{ height: 2, opacity: IsLoadingResults ? "0.5" : 0 }}
-      /> */}
-        <TableHead>
-          <TableRow>
-            <TableCell component="th" colspan="6">
-              <Box display="flex" width="100%" position="relative">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Checkbox
-                    size="small"
-                    disabled={rows.length < 1}
-                    checked={rows.length && SelectedRows.length === rows.length}
-                    onChange={selectAllRows}
-                  />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginLeft: theme.spacing(1),
-                  }}
-                >
-                  <Tooltip
-                    title={`Permanently delete ${SelectedRows.length} links?`}
-                  >
-                    <IconButton
-                      disabled={SelectedRows.length < 1}
-                      size="small"
-                      onClick={deleteSelectedRows}
-                    >
-                      <Badge
-                        badgeContent={SelectedRows.length}
-                        color="secondary"
-                      >
-                        <Delete />
-                      </Badge>
-                    </IconButton>
-                  </Tooltip>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginLeft: theme.spacing(1),
-                  }}
-                >
-                  <MultiFilter
-                    disableCountries={true}
-                    disableUsers={true}
-                    onUserFilterChanged={handleUserFilterChanged}
-                    onCountriesChanged={handleCountryFilterChanged}
-                    onDateRangeChanged={handleDateFilterChanged}
-                  />
-                </div>
-              </Box>
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {isLoadingResults && !hasInheritedRows
-            ? [
-                ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
-              ].map((x) => (
-                <TableRow key={x} style={{ height: 56 }}>
-                  <TableCell width="45%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
-                  </TableCell>
-                  <TableCell width="27,5%">
-                    <Skeleton animation="wave" style={{ width: "75%" }} />
-                  </TableCell>
-                  <TableCell width="27,5%" align="right">
-                    <Skeleton
-                      animation="wave"
-                      style={{
-                        width: "75%",
-                        display: "inline-block",
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            : rows.map((row, index) => {
-                const innerRow = (
-                  <React.Fragment>
-                    <TableCell width="64px">
-                      <Checkbox
-                        size="small"
-                        checked={SelectedRows.includes(row.threadId)}
-                        onChange={(evt) => {
-                          onRowSelectionChanged(row.threadId);
+      <div className={classes.tableContainer}>
+        <div
+          style={{
+            padding: theme.spacing(1),
+            marginLeft: theme.spacing(2),
+          }}
+        >
+          <Button
+            style={{ whiteSpace: "nowrap" }}
+            size="small"
+            onClick={changePrice}
+            startIcon={<Edit />}
+            disabled={SelectedRows.length === 0}
+            //variant="outlined"
+          >
+            Edit price
+          </Button>
+        </div>
+        <Table
+          stickyHeader
+          size="small"
+          className={classes.table}
+          aria-label="custom pagination table"
+        >
+          <colgroup>
+            <col style={{ width: 64 }} />
+            <col style={{ width: "100%" }} />
+            <col style={{ width: 128 }} />
+          </colgroup>
+          <MultifunctionalHeading
+            columns={COLUMNS}
+            sort={TableSort}
+            onSortChanged={onSortChanged}
+            onCheckedChanged={selectAllRows}
+            //disableChecker={!rows || rows.length}
+            allRowsChecked={
+              SelectedRows.length &&
+              SelectedRows.length === ((rows && rows.length) || 0)
+            }
+          />
+
+          <TableBody>
+            {isLoadingResults && !hasInheritedRows
+              ? [
+                  ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
+                ].map((x) => (
+                  <TableRow key={x} style={{ height: 56 }}>
+                    <TableCell width="5%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="50%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="15%">
+                      <Skeleton animation="wave" style={{ width: "75%" }} />
+                    </TableCell>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
                         }}
                       />
                     </TableCell>
-                    <TableCell component="th" scope="row">
-                      <Box display="inline-flex" alignItems="center">
-                        {row.name.length < 3 && (
-                          <Tooltip title="Possible alias identified">
-                            <WarningIcon
-                              style={{
-                                marginRight: theme.spacing(1),
-                                width: 18,
-                                height: 18,
-                                color: "red",
-                              }}
-                            />
-                          </Tooltip>
-                        )}
-                        {row.name}
-                      </Box>
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
                     </TableCell>
-
-                    <TableCell component="th" scope="row">
-                      {row.aliases && (
-                        <Box display="flex" flexDirection="column">
-                          <Typography
-                            variant="caption"
-                            style={{ color: theme.palette.text.hint }}
-                          >
-                            Aliases
-                          </Typography>
-                          <Box display="inline-flex">
-                            {row.aliases.map((alias) => {
-                              return (
-                                <div key={alias.countryId}>
-                                  <Chip
-                                    label={alias.name}
-                                    onDelete={() => {
-                                      confirm({
-                                        title: "Confirm removing alias  ",
-                                        description: `If you proceed, "${alias.name}" won't be an alias of "${row.name}" and both will be treated as separate countries.`,
-                                      }).then(() => {
-                                        countriesActions.unmarkCountryAlias(
-                                          alias.countryId
-                                        );
-                                      });
-                                    }}
-                                    className={classes.countryChip}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </Box>
-                        </Box>
-                      )}
+                    <TableCell width="15%" align="right">
+                      <Skeleton
+                        animation="wave"
+                        style={{
+                          width: "75%",
+                          display: "inline-block",
+                        }}
+                      />
                     </TableCell>
-                    <TableCell>
-                      <Box display="inline-flex" alignItems="center">
-                        <AssignmentTurnedIn
-                          style={{
-                            width: 18,
-                            height: 18,
-                            color: theme.palette.text.hint,
+                  </TableRow>
+                ))
+              : rows.map((row, index) => {
+                  const innerRow = (
+                    <React.Fragment>
+                      <TableCell width="64px">
+                        <Checkbox
+                          size="small"
+                          checked={SelectedRows.includes(row.country_code)}
+                          onChange={(evt) => {
+                            onRowSelectionChanged(row.country_code);
                           }}
                         />
-                        <Typography
-                          variant="body2"
-                          noWrap={true}
-                          style={{
-                            marginLeft: theme.spacing(1),
-                            whiteSpace: "nowrap",
+                      </TableCell>
+                      <TableCell scope="row">
+                        {row.country_name_multicase} [{row.country_code}]
+                      </TableCell>
+
+                      <TableCell align="right">€{row.price}</TableCell>
+
+                      {/* <TableCell component="th" scope="row">
+                      <Box display="inline-flex" alignItems="center">
+                        <Box display="flex" flexDirection="column">
+                          <code style={{ fontWeight: "400" }}>
+                            {row.link_parsing_regex
+                              ? row.link_parsing_regex
+                              : DEFAULT_PARSING_REGEX}
+                          </code>
+                        </Box>
+                        <IconButton
+                          name="editRegexIcon"
+                          className={classes.editRegexIcon}
+                          size="small"
+                          style={{ marginLeft: theme.spacing(1) }}
+                          onClick={(event) => {
+                            setRowActionObject(row);
+
+                            setTimeout(() => {
+                              toggleHostParsingRegexDialog();
+                            });
                           }}
                         >
-                          {row.totalJobs} jobs
-                        </Typography>
+                          <Edit style={{ height: 16, width: 16 }} />
+                        </IconButton>
                       </Box>
-                    </TableCell>
-                    <TableCell component="th" scope="row" align="right">
-                      {_createRowActionsButton(row)}
-                    </TableCell>
-                  </React.Fragment>
-                );
-                const wrapComponent = (
-                  <TableRow className={classes.tableRow} key={row.uuid}>
-                    {innerRow}
-                  </TableRow>
-                );
-                return wrapComponent;
-              })}
-          {!IsLoadingResults && renderEmptyRows()}
-          {/* Row actions menu */}
-          {_attachRowActionsMenu()}
-          {/* Row actions menu */}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            {rowsLength > 0 && (
-              <TablePagination
-                rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-                colSpan={3}
-                count={tableData.totalRowsCount}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: { "aria-label": "rows per page" },
-                  native: true,
-                }}
-                onChangePage={handleChangePage}
-                onChangeRowsPerPage={handleChangeRowsPerPage}
-                ActionsComponent={TablePaginationActions}
-              />
-            )}
-          </TableRow>
-        </TableFooter>
-      </Table>
-      <RenameDialog
-        open={CountryRenameDialogOpen}
-        country={RowActionCountryObject}
-        onClose={onCountryRenameDialogClosed}
-      />
-      <CountryPickerDialog
-        markAsAlias={RowActionCountryObject}
-        open={CountryPickerDialogOpen}
-        onClose={onCountryPickerDialogClosed}
-      />
+                    </TableCell> */}
+                      {/* <TableCell align="right">
+                        <div>
+                          <Switch
+                            checked={row.is_enabled}
+                            onChange={() => {
+                              // toggleDomainCrawlingEnabled({
+                              //   domain: row.domain,
+                              //   previous_is_enabled: row.is_enabled,
+                              // });
+                            }}
+                            size="small"
+                            color="secondary"
+                            inputProps={{
+                              "aria-label": "checkbox with default color",
+                            }}
+                          />
+                        </div>
+                      </TableCell> */}
+                      {/* <TableCell component="th" align="right">
+                        {_createRowActionsButton(row)}
+                      </TableCell> */}
+                    </React.Fragment>
+                  );
+                  const wrapComponent = (
+                    <TableRow className={classes.tableRow} key={row.uuid}>
+                      {innerRow}
+                    </TableRow>
+                  );
+                  return wrapComponent;
+                })}
+            {!IsLoadingResults && renderEmptyRows()}
+            {/* Row actions menu */}
+            {_attachRowActionsMenu()}
+            {/* Row actions menu */}
+          </TableBody>
+        </Table>
+      </div>
+      {rowsLength > 0 && (
+        <div
+          style={{
+            pointerEvents: IsLoading ? "none" : "auto",
+            //backgroundColor: IsLoading ? "black" : "white",
+          }}
+        >
+          <TablePagination
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            colSpan={3}
+            count={-1}
+            rowsPerPage={RowsPerPage}
+            //page={page}
+            labelDisplayedRows={() => {
+              return "";
+            }}
+            SelectProps={{
+              inputProps: { "aria-label": "rows per page" },
+              native: true,
+            }}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            ActionsComponent={(props) => {
+              return (
+                <TablePaginationActions
+                  backwardDisabled={Table_Page < 2}
+                  forwardDisabled={!tableData.LastEvaluatedKey}
+                  {...props}
+                />
+              );
+            }}
+          />
+        </div>
+      )}
     </React.Fragment>
   );
 };

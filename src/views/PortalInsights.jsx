@@ -17,7 +17,7 @@ import { number_format } from "../helpers/numbers";
 import { useHistory, useLocation } from "react-router-dom";
 import TouchRipple from "@material-ui/core/ButtonBase/TouchRipple";
 import SimpleChart from "../components/Charts/Simple";
-import CrawlerThreadsTable from "../components/Tables/CrawlerThreads";
+import CrawlerThreadsTable from "../components/Tables/CrawlerProcesses";
 import TitledDivider from "../components/Dashboard/TitledDivider";
 import { BugReport } from "@material-ui/icons";
 import InsightsChart from "../components/Insights/Chart";

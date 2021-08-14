@@ -1,3 +1,4 @@
+import configStore from "../../store/Config";
 import {
   Box,
   Checkbox,
@@ -13,6 +14,7 @@ import {
   TableRow,
   Typography,
 } from "@material-ui/core";
+import uiActions from "../../actions/UI";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { MoreVert, Search } from "@material-ui/icons";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
@@ -23,8 +25,9 @@ import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import tableActions from "../../actions/Table";
-import uiActions from "../../actions/UI";
+
 import ScrapingThreadApi from "../../api/ScrapingThread";
+import TrackedUrlsApi from "../../api/TrackedUrls";
 import ActionTypes from "../../constants/ActionTypes";
 import TableNames from "../../constants/Tables";
 import { number_format } from "../../helpers/numbers";
@@ -37,6 +40,7 @@ import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
+import uiStore from "../../store/UI";
 
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
@@ -95,13 +99,7 @@ const COLUMNS = [
     label: "Times crawled",
     align: "right",
   },
-  {
-    name: "crawler_threads_cnt",
-    label: "Latest crawl",
-    hint: "X jobs scraped / out of X crawled links",
-    align: "right",
-    colspan: 2,
-  },
+
   {
     name: "Score",
     label: "Next crawl",
@@ -113,17 +111,29 @@ const COLUMNS = [
     sortable: false,
   },
 ];
-const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
-  let [tableData, setTableData] = useState(
+
+//var Table_Page = 0;
+const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
+  const [IsLoading, setIsLoading] = useState(true);
+  const [Table_Page, setTable_Page] = useState(0);
+  const [Table_LastStep, setTable_LastStep] = useState(1);
+  const [Table_LastEvaluatedKey_History, setTable_LastEvaluatedKey_History] =
+    useState([]);
+  const [RowsPerPage, setRowsPerPage] = useState(
+    uiStore.getDefaultTableRowsPerPage()
+  );
+
+  const [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
+  //tableStore.getTableData(THIS_TABLE_NAME)
 
   const [RowActionObject, setRowActionObject] = useState(null);
   const [rowMenuAnchorRef, setRowMenuAnchorRef] = React.useState(null);
 
   const [SelectedRows, setSelectedRows] = useState([]);
-  const [DateRange, setDateRange] = useState(null);
 
+  const rows = (tableData && tableData.Items) || [];
   const toggleRowMenuOpen = (event, country) => {
     setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
@@ -140,55 +150,34 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
     setRowMenuAnchorRef(null);
   };
 
-  const HasTableData = tableData !== undefined;
-
-  if (!HasTableData) {
-    tableData = TableData.defaults(THIS_TABLE_NAME);
-  }
   const confirm = useConfirm();
-  const rowsPerPage = tableData.rowsPerPage;
-  const page = tableData.page;
-  const countryFilter = tableData.countryFilter;
-  const dateRange = tableData.dateRange;
-  let rows = tableData.rows;
 
-  const IsLoadingResults = tableData.isLoading;
-  let hasInheritedRows = false;
-  if (IsLoadingResults && tableData.previousTableData) {
-    rows = tableData.previousTableData.rows;
-    hasInheritedRows = true;
-  }
+  const page = 0;
 
-  const isLoadingResults = tableData ? tableData.isLoading : true;
-  const rowsLength = Array.isArray(rows) ? rows.length : 0;
+  const IsLoadingResults = IsLoading;
+
+  const rowsLength =
+    tableData && Array.isArray(tableData.Items) ? tableData.Items.length : 0;
   const classes = useStyles();
-  const emptyRows =
-    rowsPerPage -
-    Math.min(rowsPerPage, rowsLength - page * rowsPerPage) +
-    (rowsLength > 1 ? 0 : 1);
 
-  const deleteSelectedRows = () => {
-    if (SelectedRows.length) {
-      confirm({
-        description: `Are you sure you want to delete ${SelectedRows.length} links?`,
-        title: `Delete ${SelectedRows.length} links`,
-      })
-        .then(async () => {
-          const res = await ScrapingThreadApi.Delete(SelectedRows);
-          if (res && res.success) {
-            uiActions.showSnackbar(`Links deleted successfully`, "success");
-            setSelectedRows([]);
-            setTimeout(() => {
-              syncTableData({});
-            });
-          }
-        })
-        .catch();
+  const emptyRows = 0;
+
+  const onTableDataReceived = (td) => {
+    setIsLoading(false);
+    const { LastEvaluatedKey, step, ScanIndexForward, Items } = td;
+
+    setTable_Page(Table_Page + step);
+    console.log("TablePage", Table_Page);
+    setTable_LastStep(step);
+    if (step === 1) {
+      if (LastEvaluatedKey && !(Table_Page === 1)) {
+        setTable_LastEvaluatedKey_History([
+          ...Table_LastEvaluatedKey_History,
+          LastEvaluatedKey,
+        ]);
+      }
     }
-  };
-  const handleUserFilterChanged = (userFilter) => {
-    return;
-    //setUserFilter(userFilter);
+    setTableData(td);
   };
 
   const selectAllRows = (evt) => {
@@ -205,37 +194,45 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   const getTableData = () => {
     return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
   };
-  const syncTableData = ({ newPage, newRowsPerPage, newDateRange }) => {
-    const _tableData = getTableData();
 
-    tableActions.createTableData({
-      rowsPerPage:
-        newRowsPerPage !== undefined ? newRowsPerPage : _tableData.rowsPerPage,
-      totalRowsCount: _tableData.totalRowsCount,
-      page:
-        newRowsPerPage !== -1
-          ? newPage !== undefined
-            ? newPage
-            : _tableData.page
-          : 0,
-      filter: filter || {},
-      tableName: THIS_TABLE_NAME,
-      previousRowCount:
-        _tableData && _tableData.totalRowsCount
-          ? _tableData.totalRowsCount
-          : undefined,
-      dateRange:
-        newDateRange !== undefined ? newDateRange : _tableData.dateRange,
-    });
+  const syncTableData = ({ step }) => {
+    setIsLoading(true);
+    const limit = RowsPerPage;
+    if (step === 1) {
+      TrackedUrlsApi.GetTable({
+        step,
+        filter,
+        limit,
+        LastEvaluatedKey: tableData.LastEvaluatedKey,
+      }).then(onTableDataReceived);
+    } else if (step === -1) {
+      if (Table_LastStep === 1) {
+        Table_LastEvaluatedKey_History.pop();
+        setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      }
+      const lastEvalKey = Table_LastEvaluatedKey_History.pop();
+      setTable_LastEvaluatedKey_History([...Table_LastEvaluatedKey_History]);
+      TrackedUrlsApi.GetTable({
+        step,
+        filter,
+        limit,
+        LastEvaluatedKey: lastEvalKey,
+      }).then(onTableDataReceived);
+    } else {
+      TrackedUrlsApi.GetTable({ filter, step: 1, limit }).then(
+        onTableDataReceived
+      );
+    }
   };
-  const handleChangePage = (event, newPage) => {
-    console.log("handleChangePage.newPage", newPage);
-    syncTableData({ newPage });
+
+  const handleChangePage = (step) => {
+    console.log("step: ", step);
+    syncTableData({ step });
   };
 
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
-    syncTableData({ newRowsPerPage, newPage: 0 });
+    uiActions.changeTableRowsPerPage(newRowsPerPage);
   };
 
   /**
@@ -246,7 +243,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
     if (tableData.tableName === THIS_TABLE_NAME) {
       const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
       console.log("foundTable", foundTable);
-      onLoaded && onLoaded();
+      //onLoaded && onLoaded();
       setTableData(foundTable);
     }
   };
@@ -263,33 +260,43 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
     });
   };
 
+  const onRowsPerPageChanged = (data) => {
+    setTable_LastEvaluatedKey_History([]);
+    setTable_Page(0);
+    setRowsPerPage(data);
+  };
+
   const bindListeners = () => {
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_CREATED,
-      onTableRowsDataUpdated
+    uiStore.addChangeListener(
+      ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+      onRowsPerPageChanged
     );
-    tableStore.addChangeListener(
-      ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-      reSync
-    );
-    tableStore.addChangeListener(
-      ActionTypes.Table.DATA_UPDATED,
-      onTableRowsDataUpdated
-    );
+    // // tableStore.addChangeListener(
+    // //   ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+    // //   reSync
+    // // );
+    // tableStore.addChangeListener(
+    //   ActionTypes.Table.DATA_UPDATED,
+    //   onTableRowsDataUpdated
+    // );
 
     return () => {
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_CREATED,
-        onTableRowsDataUpdated
+      uiStore.removeChangeListener(
+        ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+        onRowsPerPageChanged
       );
-      tableStore.removeChangeListener(
-        ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-        reSync
-      );
-      tableStore.removeChangeListener(
-        ActionTypes.Table.DATA_UPDATED,
-        onTableRowsDataUpdated
-      );
+      //   tableStore.removeChangeListener(
+      //     ActionTypes.Table.DATA_CREATED,
+      //     onTableRowsDataUpdated
+      //   );
+      //   tableStore.removeChangeListener(
+      //     ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
+      //     reSync
+      //   );
+      //   tableStore.removeChangeListener(
+      //     ActionTypes.Table.DATA_UPDATED,
+      //     onTableRowsDataUpdated
+      //   );
     };
   };
   const onRowSelectionChanged = (id) => {
@@ -311,8 +318,9 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
       syncTableData({});
     });
 
+    console.log(TrackedUrlsIndex, filter);
     return bindListeners();
-  }, [filter]);
+  }, [TrackedUrlsIndex, filter, RowsPerPage]);
 
   // const handleCountryFilterChanged = (_countryFilter) => {
   //   syncTableData({ newCountryFilter: _countryFilter });
@@ -324,7 +332,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   const theme = useTheme();
 
   const renderEmptyRows = () => {
-    if (rowsPerPage === rowsLength) {
+    if (RowsPerPage === rowsLength) {
       return "";
     }
     const isJustFilling = rowsLength > 0;
@@ -344,7 +352,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
       if (!isJustFilling)
         return (
           <Typography variant="h6" style={{ color: theme.palette.text.hint }}>
-            Add some links to get started
+            Start adding some now!
           </Typography>
         );
     };
@@ -375,7 +383,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} links found
+              No{rowsLength > 0 ? " more" : ""} URLs tracked
             </Typography>
           </Box>
           {_renderHint()}
@@ -405,8 +413,8 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   });
 
   const calculateCrawlingStatus = (row) => {
-    if (row.crawler_threads_last_completed_age === null) {
-      if (!row.crawler_threads_cnt) {
+    if (!row.cp_last_done_age) {
+      if (!row.cp_cnt) {
         return CrawlingStatuses.NOT_PROCESSED;
       } else {
         return CrawlingStatuses.IS_CRAWLING;
@@ -418,9 +426,27 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
 
   const makeNextCrawl = (row) => {
     const crawlingStatus = calculateCrawlingStatus(row);
+
     switch (crawlingStatus) {
       case CrawlingStatuses.NOT_PROCESSED:
-        return "Not yet processed";
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
+            Scheduled
+            <AccessTimeIcon
+              fontSize="small"
+              style={{
+                marginLeft: theme.spacing(1),
+                color: theme.palette.text.disabled,
+              }}
+            />
+          </div>
+        );
       case CrawlingStatuses.IS_CRAWLING:
         return (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -437,8 +463,21 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
         );
       case CrawlingStatuses.HAS_BEEN_CRAWLED:
         const targetDate =
-          row.crawler_threads_last_completed_age + row.recrawling_delay;
+          row.cp_last_done_age +
+          (row.recrawling_delay ||
+            configStore.getConfig("RECRAWLING_DELAY_DEFAULT"));
 
+        if (parseInt(new Date().getTime() / 1000) > targetDate) {
+          return (
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              Crawling soon{" "}
+              <AccessTimeIcon
+                fontSize="small"
+                style={{ marginLeft: theme.spacing(1) }}
+              />
+            </div>
+          );
+        }
         return (
           <div
             style={{
@@ -460,35 +499,10 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
             />
           </div>
         );
+
+      default:
         break;
     }
-  };
-
-  const viewJobYieldingLinksExample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/job-yielding-sample`,
-      "_blank"
-    );
-    handle.focus();
-  };
-
-  const viewHtmlSample = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/view-html-sample`,
-      "_blank"
-    );
-    handle.focus();
-  };
-
-  const testRegex = () => {
-    let hostId = RowActionObject.hostId;
-    let handle = window.open(
-      `https://api2-scrapers.bebee.com/hosts/${hostId}/test-regex`,
-      "_blank"
-    );
-    handle.focus();
   };
 
   const _createRowActionsButton = (country) => {
@@ -524,7 +538,9 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
           //   //toggleCountryRenameDialog();
           // }}
           component={RouterLink}
-          to={`/tracked-url/${RowActionObject && RowActionObject.url_id}`}
+          to={`/tracked-url/${
+            RowActionObject && encodeURIComponent(RowActionObject.url)
+          }`}
         >
           View details
         </MenuItem>
@@ -533,10 +549,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   };
 
   const makeLatestCrawl = (row, colNum) => {
-    if (
-      !row.crawler_threads_cnt ||
-      (row.crawler_threads_cnt === 1 && !row.crawler_threads_last_completed_age)
-    ) {
+    if (!row.cp_cnt || (row.cp_cnt === 1 && !row.cp_last_done_age)) {
       if (colNum === 2) {
         return "Never";
       }
@@ -602,8 +615,7 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
             <col style={{ width: "100%" }} />
             <col style={{ width: 96 }} />
             <col style={{ width: 128 }} />
-            <col style={{ width: 132 }} />
-            <col style={{ width: 132 }} />
+
             <col style={{ width: 170 }} />
             <col style={{ width: 54 }} />
           </colgroup>
@@ -613,10 +625,8 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
             onSortChanged={onSortChanged}
           />
           <TableBody>
-            {isLoadingResults && !hasInheritedRows
-              ? [
-                  ...Array(rowsPerPage !== undefined ? rowsPerPage : 10).keys(),
-                ].map((x) => (
+            {IsLoadingResults
+              ? [...Array(RowsPerPage).keys()].map((x) => (
                   <TableRow key={x} style={{ height: 56 }}>
                     <TableCell width="5%">
                       <Skeleton animation="wave" style={{ width: "75%" }} />
@@ -700,16 +710,14 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
                       <TableCell align="right">
                         {number_format(row.total_scraped_jobs, 0, ".", ",")}
                       </TableCell>
-                      <TableCell align="right">
-                        {row.crawler_threads_cnt}
-                      </TableCell>
+                      <TableCell align="right">{row.cp_done_cnt}</TableCell>
 
-                      <TableCell align="right">
+                      {/* <TableCell align="right">
                         {makeLatestCrawl(row, 1)}
                       </TableCell>
                       <TableCell align="right">
                         {makeLatestCrawl(row, 2)}
-                      </TableCell>
+                      </TableCell> */}
 
                       <TableCell align="right">{makeNextCrawl(row)}</TableCell>
 
@@ -736,18 +744,29 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
       {rowsLength > 0 && (
         <div>
           <TablePagination
-            rowsPerPageOptions={[5, 8, 10, 25, { label: "All", value: -1 }]}
-            colSpan={9}
-            count={tableData.totalRowsCount}
-            rowsPerPage={rowsPerPage}
-            page={page}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            colSpan={3}
+            count={-1}
+            rowsPerPage={RowsPerPage}
+            //page={page}
+            labelDisplayedRows={() => {
+              return "";
+            }}
             SelectProps={{
               inputProps: { "aria-label": "rows per page" },
               native: true,
             }}
             onChangePage={handleChangePage}
             onChangeRowsPerPage={handleChangeRowsPerPage}
-            ActionsComponent={TablePaginationActions}
+            ActionsComponent={(props) => {
+              return (
+                <TablePaginationActions
+                  backwardDisabled={Table_Page < 2}
+                  forwardDisabled={!tableData.LastEvaluatedKey}
+                  {...props}
+                />
+              );
+            }}
           />
         </div>
       )}
@@ -755,4 +774,4 @@ const ManageUrlsTable = ({ filter, multiUser = false, onLoaded }) => {
   );
 };
 
-export default ManageUrlsTable;
+export default TrackedUrlsTable;

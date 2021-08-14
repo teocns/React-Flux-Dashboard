@@ -18,4 +18,11 @@ const showSnackbar = (message, severity) => {
     },
   });
 };
-export default { showSnackbar };
+
+const changeTableRowsPerPage = (rows_per_page) => {
+  dispatcher.dispatch({
+    actionType: ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
+    data: rows_per_page,
+  });
+};
+export default { showSnackbar, changeTableRowsPerPage };

@@ -1,18 +1,12 @@
-//@ts-check
 import Chart from "chart.js";
 import React, { useEffect, useRef } from "react";
-import {
-  colorHash,
-  getRandomColor,
-  stringToHslColor,
-} from "../../helpers/colors";
-import { randomNumbers } from "../../helpers/numbers";
+import { colorHash } from "../../helpers/colors";
 
-const insertIgnore = (array, item) => {
-  if (!array.includes(item)) {
-    array.push(item);
-  }
-};
+// const insertIgnore = (array, item) => {
+//   if (!array.includes(item)) {
+//     array.push(item);
+//   }
+// };
 
 const insertIgnoreIndexed = (lookupObject, item) => {
   if (!lookupObject[item]) {
@@ -20,7 +14,7 @@ const insertIgnoreIndexed = (lookupObject, item) => {
   }
 };
 
-export default function SimpleChart({ chartData, tooltipCallbacks }) {
+function SimpleChart({ chartData, tooltipCallbacks }) {
   const chartRef = useRef(null);
 
   let dataLabelsKeys = {};
@@ -31,7 +25,7 @@ export default function SimpleChart({ chartData, tooltipCallbacks }) {
 
   chartData.map((item) => {
     insertIgnoreIndexed(dataLabelsKeys, item.x);
-    labelTooltips[item.x] = item.tooltip;
+    labelTooltips[item.x] = item.tooltip || item.x;
     if (!datasetsKeys[item.dataset]) {
       datasetsKeys[item.dataset] = [item.y];
     } else {
@@ -42,7 +36,7 @@ export default function SimpleChart({ chartData, tooltipCallbacks }) {
   let data = {
     labels: Object.keys(dataLabelsKeys),
     datasets: Object.keys(datasetsKeys).map((datasetKey) => {
-      const labelName = JSON.parse(datasetKey).name;
+      const labelName = datasetKey;
       return {
         data: datasetsKeys[datasetKey],
         label: labelName,
@@ -103,13 +97,9 @@ export default function SimpleChart({ chartData, tooltipCallbacks }) {
                 display: true,
               },
               ticks: {
-                //stepSize: 1,
-                //steps: 10,
-                //callback: (value, index) => value > 0 && value,
                 beginAtZero: true,
-                // min: Math.min.apply(this, data) - 5,
-                // max: Math.max.apply(this, data) + 5,
               },
+              min: 0,
             },
           ],
           yAxes: [
@@ -118,7 +108,10 @@ export default function SimpleChart({ chartData, tooltipCallbacks }) {
               // scaleLabel: {
               //   display: false,
               // },
-              suggestedMin: 0,
+              ticks: {
+                min: 0,
+                suggestedMin: 0,
+              },
             },
           ],
         },
@@ -147,3 +140,4 @@ export default function SimpleChart({ chartData, tooltipCallbacks }) {
     </div>
   );
 }
+export default SimpleChart;

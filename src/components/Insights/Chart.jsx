@@ -31,6 +31,7 @@ const InsightsChart = ({ chartData, tooltipCallbacks }) => {
    *
    * @param {import("../../Shared/BBE-CRWL.WebApp.Shared.Models/Statistics/Charts/ChartData").ChartDataRecord} graphRecord
    */
+
   const makeDataset = (graphRecord) => {};
   return (
     <Paper style={{ width: "100%", height: "100%" }}>

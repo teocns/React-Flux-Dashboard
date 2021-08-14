@@ -1,50 +1,40 @@
-import React, { useState, useEffect } from "react";
-
-import PropTypes from "prop-types";
-
-import SearchIcon from "@material-ui/icons/Search";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableFooter from "@material-ui/core/TableFooter";
-import TablePagination from "@material-ui/core/TablePagination";
-import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
-import IconButton from "@material-ui/core/IconButton";
-import FirstPageIcon from "@material-ui/icons/FirstPage";
-import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
-import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import LastPageIcon from "@material-ui/icons/LastPage";
-import LinkIcon from "@material-ui/icons/Link";
-import { useHistory } from "react-router-dom";
-
 import {
-  Divider,
-  Input,
-  TableHead,
-  TextField,
   Button,
+  Divider,
+  InputBase,
   FormControl,
-  InputLabel,
   InputAdornment,
-  ButtonGroup,
   OutlinedInput,
 } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
+import Paper from "@material-ui/core/Paper";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import TableContainer from "@material-ui/core/TableContainer";
+import SearchIcon from "@material-ui/icons/Search";
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import DomainsManagementTable from "../components/Tables/DomainsManagement";
+import UserFilterComponent from "../components/Filters/UserFilter";
 import sessionStore from "../store/session";
+import MultiFilter from "../components/Filters/MultiFilter";
 import CountriesManagementTable from "../components/Tables/CountriesManagement";
-import dispatcher from "../dispatcher";
-
 const useStyles = makeStyles({
   table: {
     minWidth: 500,
   },
+  tableContainer: {
+    overflow: "hidden",
+    overflowY: "hidden",
+    display: "flex",
+    flexDirection: "column",
+  },
 });
 let filterTimeout = undefined;
-export default function CountriesManagementView() {
+export default function DomainsManagementView() {
   const [Filter, setFilter] = useState("");
+
+  const user = sessionStore.getUser();
+
+  const [UserFilter, setUserFilter] = useState(user.isAdmin ? [] : [user.id]);
   const classes = useStyles();
 
   const history = useHistory();
@@ -60,7 +50,7 @@ export default function CountriesManagementView() {
   };
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} className={classes.tableContainer}>
       <div
         style={{
           padding: theme.spacing(2),
@@ -68,13 +58,18 @@ export default function CountriesManagementView() {
           display: "flex",
           flexDirection: "row",
           flexWrap: "nowrap",
+          background: "white",
         }}
       >
         <FormControl fullWidth size="small" className={classes.margin}>
-          <OutlinedInput
+          <InputBase
+            defaultValue={Filter}
+            variant="standard"
+            style={{ outline: "none" }}
             id="standard-adornment-amount"
             size="small"
-            placeholder="Search URLs"
+            aria-describedby="search-error"
+            placeholder="Search Domains"
             onChange={(evt) => {
               onFilterChanged(evt.target.value);
             }}
@@ -88,17 +83,9 @@ export default function CountriesManagementView() {
             }
           />
         </FormControl>
-        <Button
-          variant="contained"
-          color="secondary"
-          disableElevation
-          startIcon={<SearchIcon />}
-          style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
-        >
-          Search
-        </Button>
       </div>
       <Divider />
+
       <CountriesManagementTable filter={Filter} />
     </TableContainer>
   );

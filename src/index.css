@@ -20,3 +20,7 @@ code {
 tr {
   height: 32px !important;
 }
+
+.MuiInputBase-root .MuiTablePagination-input .MuiTablePagination-selectRoot {
+  margin-right: 8px !important;
+}
