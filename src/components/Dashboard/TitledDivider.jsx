@@ -4,8 +4,10 @@ import React from "react";
 const TitledDivider = ({ title, subtitle, icon }) => {
   const theme = useTheme();
   return (
-    <div style={{ marginTop: theme.spacing(3) }}>
-      <Divider style={{ height: 4 }} />
+    <div
+      style={{ marginTop: theme.spacing(3), marginBottom: theme.spacing(3) }}
+    >
+      <Divider style={{ height: 3, marginBottom: theme.spacing(1) }} />
 
       <div
         style={{
@@ -15,14 +17,13 @@ const TitledDivider = ({ title, subtitle, icon }) => {
           marginLeft: theme.spacing(1),
         }}
       >
-        {React.cloneElement(icon, {
-          style: { color: theme.palette.secondary.main },
-        })}
+        {icon &&
+          React.cloneElement(icon, {
+            style: { color: theme.palette.secondary.main },
+          })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <Typography variant="h6" style={{ padding: theme.spacing(2) }}>
-            {title}
-          </Typography>
+          <Typography variant="h6">{title}</Typography>
           {subtitle && (
             <Typography
               variant="subtitle2"

@@ -10,7 +10,7 @@ export default class StatisticsApi {
   }
 
   static async GetCrawlerStatistics({ day }) {
-    return await MakeRequest.post(`/statistics/user`, {
+    return await MakeRequest.post(`/statistics/crawler`, {
       day,
     });
   }

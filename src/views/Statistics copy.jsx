@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 import statisticsActions from "../actions/Statistics";
 import CrawlerThreadsChart from "../components/Charts/CrawlerThreads";
 import TrackedUrlsChart from "../components/Charts/Generic";
-import DateFilter from "../components/Filters/DateFilter";
+import DateFilter from "../components/Filters/UserFilter";
 import UserFilter from "../components/Filters/UserFilter";
 import ActionTypes from "../constants/ActionTypes";
 import DateRanges from "../constants/DateRanges";

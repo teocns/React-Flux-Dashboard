@@ -11,7 +11,7 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import React, { useEffect, useState } from "react";
 import InsightsChart from "../components/Insights/Chart";
 import StatisticsApi from "../api/Statistics";
-import UserFilterDropdown from "../components/Filters/UserFilterDropdown";
+import UserFilterDropdown from "../components/Filters/UserFilter";
 import MonthSelectComponent from "../components/Selects/Month";
 import sessionStore from "../store/session";
 import { CircularProgress } from "@material-ui/core";
@@ -63,7 +63,7 @@ export default function StatisticsView(props) {
 
   const [AvailableProxies, setAvailableProxies] = useState();
 
-  const [Day, setDay] = useState(new Date().getDate() + 1);
+  const [Day, setDay] = useState(formatDate());
   const user = sessionStore.getUser();
   const [SelectedUserFilter, setUserFilter] = useState(user.id);
 
@@ -81,13 +81,22 @@ export default function StatisticsView(props) {
   const classes = useStyles();
 
   const syncStats = () => {
-    if (!Month && !SelectedUserFilter) {
-      return false;
-    }
     StatisticsApi.GetCrawlerStatistics({
       day: Day,
     }).then(setStatsData);
   };
+
+  function formatDate() {
+    var d = new Date(),
+      month = "" + (d.getMonth() + 1),
+      day = "" + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2) month = "0" + month;
+    if (day.length < 2) day = "0" + day;
+
+    return [year, month, day].join("-");
+  }
 
   useEffect(() => {
     syncStats();
@@ -127,7 +136,10 @@ export default function StatisticsView(props) {
             id="date"
             label="Date"
             type="date"
-            defaultValue="2017-05-24"
+            onChange={(evt) => {
+              setDay(evt.target.value);
+            }}
+            defaultValue={formatDate()}
             className={classes.textField}
             InputLabelProps={{
               shrink: true,
@@ -141,15 +153,14 @@ export default function StatisticsView(props) {
           }}
           orientation="vertical"
         />
-        {StatsData && (
-          <div>
-            <Paper>Total Requests: {StatsData.trackedUrlsTotal || 0}</Paper>
-            <Paper>Total Scraped Jobs: {StatsData.jobCntTotal || 0}</Paper>
-            <Paper>Total Errors: {StatsData.jobCntTotal || 0}</Paper>
-          </div>
-        )}
       </Paper>
-
+      {StatsData && (
+        <div>
+          <Paper>Total Requests: {StatsData.trackedUrlsTotal || 0}</Paper>
+          <Paper>Total Scraped Jobs: {StatsData.jobCntTotal || 0}</Paper>
+          <Paper>Total Errors: {StatsData.jobCntTotal || 0}</Paper>
+        </div>
+      )}
       <div
         style={{
           display: "flex",

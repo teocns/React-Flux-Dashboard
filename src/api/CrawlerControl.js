@@ -15,6 +15,8 @@ export default class CrawlerControl {
     return MakeRequest.get("/crawlers/stats");
   }
 
+  
+
   static ReloadIncompleteThreads() {
     return MakeRequest.post("/crawlers/reload-threads");
   }

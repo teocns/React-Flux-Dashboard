@@ -1,9 +1,8 @@
-import CountriesApi from "../../api/Countries";
 import {
   Box,
+  Button,
   Checkbox,
   IconButton,
-  Button,
   Menu,
   MenuItem,
   Table,
@@ -11,7 +10,6 @@ import {
   TableCell,
   TablePagination,
   TableRow,
-  Switch,
   Typography,
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
@@ -21,20 +19,19 @@ import clsx from "clsx";
 import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
 import hostsActions from "../../actions/Hosts";
-import tableActions from "../../actions/Table";
 import uiActions from "../../actions/UI";
-import ScrapingThreadApi from "../../api/ScrapingThread";
+import CountriesApi from "../../api/Countries";
 import ActionTypes from "../../constants/ActionTypes";
 import TableNames from "../../constants/Tables";
 import Country from "../../models/Country";
 import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
+import uiStore from "../../store/UI";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
 
-import { Link as RouterLink } from "react-router-dom";
-import { number_format } from "../../helpers/numbers";
-import uiStore from "../../store/UI";
+import userStore from "../../store/session";
+
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
@@ -532,26 +529,32 @@ const CountriesManagementTable = ({ filter }) => {
       }
     }
   };
+
+  const user = userStore.getUser();
+  const isAdmin = user.isAdmin;
+
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        <div
-          style={{
-            padding: theme.spacing(1),
-            marginLeft: theme.spacing(2),
-          }}
-        >
-          <Button
-            style={{ whiteSpace: "nowrap" }}
-            size="small"
-            onClick={changePrice}
-            startIcon={<Edit />}
-            disabled={SelectedRows.length === 0}
-            //variant="outlined"
+        {isAdmin && (
+          <div
+            style={{
+              padding: theme.spacing(1),
+              marginLeft: theme.spacing(2),
+            }}
           >
-            Edit price
-          </Button>
-        </div>
+            <Button
+              style={{ whiteSpace: "nowrap" }}
+              size="small"
+              onClick={changePrice}
+              startIcon={<Edit />}
+              disabled={SelectedRows.length === 0}
+              //variant="outlined"
+            >
+              Edit price
+            </Button>
+          </div>
+        )}
         <Table
           stickyHeader
           size="small"

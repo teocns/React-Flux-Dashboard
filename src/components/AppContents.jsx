@@ -1,5 +1,6 @@
 // @ts-nocheck
 import PublicIcon from "@material-ui/icons/Public";
+import DashboardIcon from "@material-ui/icons/Dashboard";
 import {
   AppBar,
   Badge,
@@ -240,21 +241,23 @@ function AppContents() {
                 <Button
                   variant="text"
                   color={
-                    location.pathname === "/" || location.pathname === ""
+                    location.pathname === "/tracking" ||
+                    location.pathname === ""
                       ? "secondary"
                       : "rgb(127, 127, 127)"
                   }
                   startIcon={
                     <AddCircleOutlineIcon
                       color={
-                        location.pathname === "/" || location.pathname === ""
+                        location.pathname === "/tracking" ||
+                        location.pathname === ""
                           ? "secondary"
                           : "rgb(127, 127, 127)"
                       }
                     />
                   }
                   component={Link}
-                  to="/"
+                  to="/tracking"
                 >
                   Crawl URLs
                 </Button>
@@ -415,7 +418,28 @@ function AppContents() {
                 </List>
                 <Divider />
                 <List>
-                  <ListItem button key={"stats"} component={Link} to="/">
+                  <ListItem
+                    button
+                    //component={Link}
+                    //to="/statistics"
+                    key={"/"}
+                    component={Link}
+                    to={"/"}
+                  >
+                    <ListItemIcon>
+                      <DashboardIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      disableTypography={true}
+                      primary={"Dashboard"}
+                    />
+                  </ListItem>
+                  <ListItem
+                    button
+                    key={"stats"}
+                    component={Link}
+                    to="/tracking"
+                  >
                     <ListItemIcon>
                       <AddCircleOutlineIcon />
                     </ListItemIcon>
@@ -425,40 +449,6 @@ function AppContents() {
                     />
                   </ListItem>
 
-                  {/* <ListItem
-                    button
-                    key={"stats"}
-                    component={Link}
-                    to="/tracked-urls"
-                  >
-                    <ListItemIcon>
-                      <LinkIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      disableTypography={true}
-                      primary={"Your Crawled URLs"}
-                    />
-                  </ListItem> */}
-
-                  <ListItem
-                    button
-                    //component={Link}
-                    //to="/statistics"
-                    key={"/statistics/user"}
-                    component={Link}
-                    to={"/statistics/user"}
-                    // onClick={() =>
-                    //   setListItemStatisticsExpanded(!ListItemStatisticsExpanded)
-                    // }
-                  >
-                    <ListItemIcon>
-                      <TimelineIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      disableTypography={true}
-                      primary={"Performance insights"}
-                    />
-                  </ListItem>
                   <ListItem
                     button
                     //component={Link}
@@ -527,9 +517,19 @@ function AppContents() {
                   </Collapse> */}
                 </List>
                 <Divider />
+
                 {IsAdmin && (
                   <React.Fragment>
-                    <List>
+                    <Typography
+                      variant="overline"
+                      style={{
+                        color: theme.palette.text.disabled,
+                        marginLeft: theme.spacing(2),
+                      }}
+                    >
+                      Admin features
+                    </Typography>
+                    <List style={{ marginTop: -8 }}>
                       <ListItem
                         button
                         key={"tracked-urls"}
@@ -541,7 +541,7 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText
                           disableTypography={true}
-                          primary={"What's being crawled"}
+                          primary={"URLs browser"}
                         />
                       </ListItem>
                       <ListItem
@@ -620,6 +620,22 @@ function AppContents() {
                         <ListItemText
                           disableTypography={true}
                           primary={"Robot Performance"}
+                        />
+                      </ListItem>
+
+                      <ListItem
+                        button
+                        key={"URL Crawling Performance"}
+                        selected={location.pathname === "/statistics/daily"}
+                        component={Link}
+                        to="/statistics/daily"
+                      >
+                        <ListItemIcon>
+                          <TimelineIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                          disableTypography={true}
+                          primary={"URL Crawling Performance"}
                         />
                       </ListItem>
                     </List>

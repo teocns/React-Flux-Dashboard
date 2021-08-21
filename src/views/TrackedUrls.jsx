@@ -195,7 +195,7 @@ export default function TrackedUrlsView(props) {
         </div>
         <Divider />
         <TrackedUrlsTable
-          TrackedUrlsIndex={TrackedUrlsIndex}
+          forceRenderControlVariable={TrackedUrlsIndex}
           filter={isValidRuleType() ? Filter : undefined}
           //onLoaded={onTableDataLoaded}
         />

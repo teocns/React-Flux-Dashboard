@@ -42,6 +42,8 @@ import DateRanges from "../../constants/DateRanges";
 import countryFilterStore from "../../store/CountryFilter";
 import ActionTypes from "../../constants/ActionTypes";
 import dispatcher from "../../dispatcher";
+import { CircularProgress } from "@material-ui/core";
+import sessionStore from "../../store/session";
 const useStyles = makeStyles((theme) => ({
   select: {
     "&:before": {
@@ -75,6 +77,10 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: "nowrap",
     overflow: "hidden",
   },
+  formControl: {
+    //margin: theme.spacing(1),
+    minWidth: 160,
+  },
 }));
 
 const ITEM_HEIGHT = 48;
@@ -98,45 +104,13 @@ function getStyles(name, personName, theme) {
   };
 }
 
-function UserFilter({ onUserFilterChanged }) {
+function UserFilterDropdown({ onUserFilterChanged, title, required }) {
   const [Users, setUsers] = useState(userFilterStore.get());
 
-  const [SelectedUsersUnconfirmed, setSelectedUsersUnconfirmed] = useState(
-    Users ? Object.keys(Users) : []
-  );
-
-  const [SelectedUsers, setSelectedUsers] = useState(
-    Users ? Object.keys(Users) : []
-  );
-
-  const [DateRange, setDateRange] = useState(null);
-
-  const anchorRef = React.useRef(null);
-  const usersAnchorRef = React.useRef(null);
-
-  const [UserMenuOpen, setUserMenuOpen] = React.useState(false);
+  const [SelectedUser, setSelectedUsers] = useState(sessionStore.getUser().id);
 
   const classes = useStyles();
   const theme = useTheme();
-
-  const closeUserMenu = (confirm) => {
-    // if (usersAnchorRef.current && usersAnchorRef.current.contains(evt.target)) {
-    //   return;
-    // }
-
-    setTimeout(() => {
-      if (confirm === true) {
-        confirmUserFilter();
-      } else if (confirm === false) {
-        setSelectedUsersUnconfirmed(SelectedUsers);
-      }
-    });
-    return setUserMenuOpen(false);
-  };
-
-  const toggleUsersMenu = (evt) => {
-    setUserMenuOpen(true);
-  };
 
   const onUserFilterSync = () => {
     setUsers(userFilterStore.get());
@@ -160,156 +134,36 @@ function UserFilter({ onUserFilterChanged }) {
     return bindListeners();
   });
 
-  const UserIsSelected = (userId) => {
-    return SelectedUsersUnconfirmed.includes(userId);
+  const handleChange = (ev) => {
+    setSelectedUsers(ev.target.value);
+    onUserFilterChanged && onUserFilterChanged(ev.target.value);
   };
 
-  const selectUser = (userId) => {
-    const userIdIndex = SelectedUsersUnconfirmed.indexOf(userId);
-    const isSelected = userIdIndex !== -1;
-    if (isSelected) {
-      if (SelectedUsersUnconfirmed.length === Object.keys(Users).length) {
-        // If all the users are already selected
-        // And the user is selecting an user
-        // Then deselect all others
-        setSelectedUsersUnconfirmed([userId]);
-        return;
-      }
-      // Remove userId from selected users
-      const clone = [...SelectedUsersUnconfirmed];
-      clone.splice(userIdIndex, 1);
-      setSelectedUsersUnconfirmed(clone);
-    } else {
-      setSelectedUsersUnconfirmed([...SelectedUsersUnconfirmed, userId]);
+  const render = () => {
+    if (!Users) {
+      return <CircularProgress />;
     }
-  };
-
-  const selectAllUsers = () => {
-    setSelectedUsersUnconfirmed(Object.keys(Users));
-    // setTimeout(() => {
-    //   setUserMenuOpen(false);
-    // });
-  };
-
-  const confirmUserFilter = () => {
-    setSelectedUsers(SelectedUsersUnconfirmed);
-    userFilterActions.userFilterChanged(SelectedUsersUnconfirmed);
-
-    if (isFunction(onUserFilterChanged)) {
-      onUserFilterChanged(SelectedUsersUnconfirmed);
-    }
-  };
-
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        paddingLeft: theme.spacing(1),
-        paddingRight: theme.spacing(1),
-      }}
-    >
-      {Users && (
-        <IconButton
-          aria-controls="users-menu"
-          aria-haspopup="true"
-          onClick={toggleUsersMenu}
-          ref={usersAnchorRef}
+    return (
+      <FormControl variant="standard" className={classes.formControl}>
+        <InputLabel id="demo-simple-select-outlined-label">
+          {title ? title : "User"}
+        </InputLabel>
+        <Select
+          labelId="demo-simple-select-outlined-label"
+          id="demo-simple-select-outlined"
+          value={SelectedUser}
+          onChange={handleChange}
+          label={title ? title : "User"}
+          required
         >
-          <Badge
-            badgeContent={
-              SelectedUsers && SelectedUsers.length ? SelectedUsers.length : ""
-            }
-            color="secondary"
-            invisible={!SelectedUsers.length}
-            variant={SelectedUsers.length && "dot"}
-          >
-            <PersonIcon style={{ color: theme.palette.text.disabled }} />
-          </Badge>
-        </IconButton>
-      )}
-
-      <Menu
-        id="users-menu"
-        open={UserMenuOpen}
-        PaperProps={MenuProps.PaperProps}
-        keepMounted
-        onClose={() => closeUserMenu(false)}
-        anchorEl={usersAnchorRef.current}
-        style={{ paddingTop: 0 }}
-        MenuListProps={{ style: { maxHeight: 500, overflow: "hidden" } }}
-      >
-        <div
-          style={{
-            maxHeight: 500,
-            height: 500,
-            overflowY: "hidden",
-            marginTop: -8,
-          }}
-        >
-          <div>
-            <ButtonGroup variant="text" style={{ width: "100%" }}>
-              <Button
-                disableRipple={true}
-                disableFocusRipple={true}
-                disableTouchRipple={true}
-                onClick={() => closeUserMenu(false)}
-              >
-                <Close />
-              </Button>
-              <Button
-                style={{ width: "100%" }}
-                disableRipple={true}
-                onClick={selectAllUsers}
-                disableFocusRipple={true}
-                disableTouchRipple={true}
-                startIcon={<ClearAllIcon />}
-              >
-                {"Select all"}
-              </Button>
-              <Button
-                disableRipple={true}
-                disableFocusRipple={true}
-                disableTouchRipple={true}
-                onClick={() => closeUserMenu(true)}
-              >
-                <Done />
-              </Button>
-            </ButtonGroup>
-          </div>
-          <Divider />
-
-          <div style={{ overflowY: "auto", height: 310 }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {Users &&
-                Object.keys(Users).map((userId) => (
-                  <MenuItem
-                    alignItems="center"
-                    key={userId}
-                    onClick={() => {
-                      selectUser(userId);
-                    }}
-                    value={userId}
-                  >
-                    <Checkbox
-                      color="secondary"
-                      checked={UserIsSelected(userId)}
-                      size="small"
-                      disableRipple
-                    />
-                    {Users[userId]}
-                  </MenuItem>
-                ))}
-            </div>
-          </div>
-        </div>
-      </Menu>
-    </div>
-  );
+          {!required && <MenuItem value="">All users</MenuItem>}
+          {Object.keys(Users).map((user) => {
+            return <MenuItem value={user}>{Users[user]}</MenuItem>;
+          })}
+        </Select>
+      </FormControl>
+    );
+  };
+  return render();
 }
-export default React.memo(UserFilter);
+export default React.memo(UserFilterDropdown);

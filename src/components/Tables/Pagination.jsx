@@ -83,4 +83,4 @@ TablePaginationActions.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
 };
 
-export default TablePaginationActions;
+export default React.memo(TablePaginationActions);

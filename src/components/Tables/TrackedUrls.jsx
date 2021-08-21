@@ -1,4 +1,4 @@
-import configStore from "../../store/Config";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Checkbox,
@@ -14,7 +14,6 @@ import {
   TableRow,
   Typography,
 } from "@material-ui/core";
-import uiActions from "../../actions/UI";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { MoreVert, Search } from "@material-ui/icons";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
@@ -22,11 +21,8 @@ import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
 import KeyMirror from "keymirror";
 import { useConfirm } from "material-ui-confirm";
-import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import tableActions from "../../actions/Table";
-
-import ScrapingThreadApi from "../../api/ScrapingThread";
+import uiActions from "../../actions/UI";
 import TrackedUrlsApi from "../../api/TrackedUrls";
 import ActionTypes from "../../constants/ActionTypes";
 import TableNames from "../../constants/Tables";
@@ -37,10 +33,11 @@ import {
   timeSince,
 } from "../../helpers/time";
 import TableData from "../../models/TableData";
+import configStore from "../../store/Config";
 import tableStore from "../../store/Tables";
+import uiStore from "../../store/UI";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
-import uiStore from "../../store/UI";
 
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
@@ -112,17 +109,41 @@ const COLUMNS = [
   },
 ];
 
+const useHasChanged = (val, ignoreUndefined = false) => {
+  const prevVal = usePrevious(val);
+  if (prevVal === undefined && ignoreUndefined === true) {
+    return false;
+  }
+  //console.log("usePrevious ", prevVal, val);
+  return prevVal !== val;
+};
+
+const usePrevious = (value) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
+
 //var Table_Page = 0;
-const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
+const TrackedUrlsTable = ({
+  filter,
+  forceRenderControlVariable: forceRerenderByParent,
+  userFilter,
+}) => {
   const [IsLoading, setIsLoading] = useState(true);
   const [Table_Page, setTable_Page] = useState(0);
   const [Table_LastStep, setTable_LastStep] = useState(1);
+  const [Rerender, setRerender] = useState(new Date());
   const [Table_LastEvaluatedKey_History, setTable_LastEvaluatedKey_History] =
     useState([]);
+
   const [RowsPerPage, setRowsPerPage] = useState(
     uiStore.getDefaultTableRowsPerPage()
   );
 
+  console.log(RowsPerPage);
   const [tableData, setTableData] = useState(
     tableStore.getTableData(THIS_TABLE_NAME)
   );
@@ -134,6 +155,7 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   const [SelectedRows, setSelectedRows] = useState([]);
 
   const rows = (tableData && tableData.Items) || [];
+
   const toggleRowMenuOpen = (event, country) => {
     setRowActionObject(country);
     setRowMenuAnchorRef(event.currentTarget);
@@ -150,22 +172,16 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
     setRowMenuAnchorRef(null);
   };
 
-  const confirm = useConfirm();
-
-  const page = 0;
-
   const IsLoadingResults = IsLoading;
 
   const rowsLength =
     tableData && Array.isArray(tableData.Items) ? tableData.Items.length : 0;
   const classes = useStyles();
 
-  const emptyRows = 0;
-
   const onTableDataReceived = (td) => {
     setIsLoading(false);
     const { LastEvaluatedKey, step, ScanIndexForward, Items } = td;
-
+    console.log("Table_Page old", Table_Page);
     setTable_Page(Table_Page + step);
     console.log("TablePage", Table_Page);
     setTable_LastStep(step);
@@ -191,16 +207,13 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
     }
   };
 
-  const getTableData = () => {
-    return tableStore.getTableData(THIS_TABLE_NAME) || tableData;
-  };
-
   const syncTableData = ({ step }) => {
     setIsLoading(true);
     const limit = RowsPerPage;
     if (step === 1) {
       TrackedUrlsApi.GetTable({
         step,
+        userFilter,
         filter,
         limit,
         LastEvaluatedKey: tableData.LastEvaluatedKey,
@@ -215,11 +228,12 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
       TrackedUrlsApi.GetTable({
         step,
         filter,
+        userFilter,
         limit,
         LastEvaluatedKey: lastEvalKey,
       }).then(onTableDataReceived);
     } else {
-      TrackedUrlsApi.GetTable({ filter, step: 1, limit }).then(
+      TrackedUrlsApi.GetTable({ filter, step: 1, limit, userFilter }).then(
         onTableDataReceived
       );
     }
@@ -231,33 +245,9 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   };
 
   const handleChangeRowsPerPage = (event) => {
+    console.log("Changed rows per page)");
     const newRowsPerPage = parseInt(event.target.value, 10);
     uiActions.changeTableRowsPerPage(newRowsPerPage);
-  };
-
-  /**
-   * @type {Object} obj
-   * @type {TableData} obj.tableData
-   */
-  const onTableRowsDataUpdated = ({ tableData }) => {
-    if (tableData.tableName === THIS_TABLE_NAME) {
-      const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
-      console.log("foundTable", foundTable);
-      //onLoaded && onLoaded();
-      setTableData(foundTable);
-    }
-  };
-
-  // const onScrapingThreadCreated = () => {
-  //   setTimeout(() => {
-  //     syncTableData({ newPage: 0 });
-  //   });
-  // };
-
-  const reSync = () => {
-    setTimeout(() => {
-      syncTableData({});
-    });
   };
 
   const onRowsPerPageChanged = (data) => {
@@ -300,7 +290,7 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
     };
   };
   const onRowSelectionChanged = (id) => {
-    console.log(SelectedRows);
+    //console.log(SelectedRows);
     const alreadySelectedIndex = SelectedRows.findIndex((c) => c === id);
     const alreadySelected =
       alreadySelectedIndex !== -1 && alreadySelectedIndex !== false;
@@ -314,13 +304,37 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
 
   useEffect(() => {
     // Means data has not yet loaded nor requested
+
+    //console.log("Invoking from rerender");
     setTimeout(() => {
       syncTableData({});
     });
 
-    console.log(TrackedUrlsIndex, filter);
     return bindListeners();
-  }, [TrackedUrlsIndex, filter, RowsPerPage]);
+  }, [Rerender]);
+
+  const hasUserFilterChanged = useHasChanged(userFilter);
+  const hasFilterChanged = useHasChanged(filter);
+  const hasForceRerenderByParent = useHasChanged(forceRerenderByParent);
+  const hasRowsPerPageChanged = useHasChanged(RowsPerPage, true);
+
+  useEffect(() => {
+    //console.log("Invoking from usePrevious");
+
+    if (
+      hasUserFilterChanged ||
+      hasFilterChanged ||
+      hasRowsPerPageChanged ||
+      hasForceRerenderByParent
+    ) {
+      setTable_Page(0);
+      setTable_LastEvaluatedKey_History([]);
+      setRowsPerPage(parseInt(RowsPerPage.toString()));
+      setRerender(new Date());
+    }
+  }, [userFilter, filter, forceRerenderByParent, RowsPerPage]);
+
+  // Fire same useEffect as above but only if userFilter is changed
 
   // const handleCountryFilterChanged = (_countryFilter) => {
   //   syncTableData({ newCountryFilter: _countryFilter });
@@ -774,4 +788,4 @@ const TrackedUrlsTable = ({ filter, TrackedUrlsIndex }) => {
   );
 };
 
-export default TrackedUrlsTable;
+export default React.memo(TrackedUrlsTable);

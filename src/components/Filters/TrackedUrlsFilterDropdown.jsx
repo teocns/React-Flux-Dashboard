@@ -104,7 +104,7 @@ function getStyles(name, personName, theme) {
   };
 }
 
-function UserFilterDropdown({ onUserFilterChanged }) {
+function UserFilterDropdown({ onUserFilterChanged, title }) {
   const [Users, setUsers] = useState(userFilterStore.get());
 
   const [SelectedUser, setSelectedUsers] = useState(sessionStore.getUser().id);
@@ -139,22 +139,30 @@ function UserFilterDropdown({ onUserFilterChanged }) {
     onUserFilterChanged && onUserFilterChanged(ev.target.value);
   };
 
+  const Options = [
+    "NOT_YET_CRAWLED",
+    "CRAWLED_WITHOUT_JOBS",
+    "CRAWLED_WITH_JOBS",
+  ];
+
   const render = () => {
     if (!Users) {
       return <CircularProgress />;
     }
     return (
       <FormControl variant="outlined" className={classes.formControl}>
-        <InputLabel id="demo-simple-select-outlined-label">User</InputLabel>
+        <InputLabel id="demo-simple-select-outlined-label">
+          {title ? title : "User"}
+        </InputLabel>
         <Select
           labelId="demo-simple-select-outlined-label"
           id="demo-simple-select-outlined"
           value={SelectedUser}
           onChange={handleChange}
-          label="User"
+          label={title ? title : "User"}
           required
         >
-          {Object.keys(Users).map((user) => {
+          {Object.keys(Options).map((user) => {
             return <MenuItem value={user}>{Users[user]}</MenuItem>;
           })}
         </Select>

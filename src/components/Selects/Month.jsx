@@ -35,7 +35,7 @@ const MonthSelectComponent = ({ onMonthChanged }) => {
   const theme = useTheme();
 
   return (
-    <FormControl variant="outlined" style={{ marginLeft: theme.spacing(1) }}>
+    <FormControl variant="standard" style={{ marginLeft: theme.spacing(1) }}>
       <InputLabel id="hostiayque">Month</InputLabel>
       <Select
         labelId="hostiayque"
