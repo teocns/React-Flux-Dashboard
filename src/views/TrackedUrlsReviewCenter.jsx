@@ -43,7 +43,7 @@ const useStyles = makeStyles({
   tableContainer: {
     overflow: "hidden",
     overflowY: "hidden",
-    display: "flex",]
+    display: "flex",
     flexDirection: "column",
   },
 });
