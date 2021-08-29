@@ -238,7 +238,6 @@ const DomainsManagementTable = ({ filter }) => {
       setTableData(foundTable);
     }
   };
-  console.log("rendering", tableData);
 
   // const onScrapingThreadCreated = () => {
   //   setTimeout(() => {
@@ -386,39 +385,6 @@ const DomainsManagementTable = ({ filter }) => {
     return _createRow();
   };
 
-  const toggleHostParsingRegexDialog = () => {
-    setHostParsingRegexDialogOpen(!HostParsingRegexDialogOpen);
-  };
-
-  const onHostParsingRegexDialogClosed = (regex) => {
-    const hostId = RowActionObject.hostId;
-    setHostParsingRegexDialogOpen(false);
-    setTimeout(() => {
-      setRowActionObject(null);
-    }, 275);
-
-    if (regex && regex !== setRowActionObject.link_parsing_regex) {
-      hostsActions.changeRegex(hostId, regex);
-    }
-
-    // Handle chosenCountry
-  };
-  // const onCountryRenameDialogClosed = (newCountryName) => {
-  //   setCountryRenameDialogOpen(false);
-  //   if (
-  //     typeof newCountryName === "string" &&
-  //     newCountryName &&
-  //     newCountryName.trim().toLowerCase() !== newCountryName
-  //   ) {
-  //     countriesActions.renameCountry(
-  //       RowActionCountryObject.countryId,
-  //       newCountryName.trim()
-  //     );
-  //   }
-  //   setRowActionCountryObject(null);
-  //   // Handle chosenCountry
-  // };
-
   const toggleDomainCrawlingEnabled = ({ domain, previous_is_enabled }) => {
     DomainsApi.ToggleCrawlingEnabled({ domain, previous_is_enabled }).then(
       (data) => {
@@ -520,7 +486,7 @@ const DomainsManagementTable = ({ filter }) => {
           aria-label="custom pagination table"
         >
           <colgroup>
-            <col style={{ width: 64 }} />
+            {/* <col style={{ width: 64 }} /> */}
             <col style={{ width: "40%" }} />
             <col style={{ width: "20%" }} />
             <col style={{ width: "20%" }} />
@@ -528,6 +494,7 @@ const DomainsManagementTable = ({ filter }) => {
             <col style={{ width: 128 }} />
           </colgroup>
           <MultifunctionalHeading
+            hideChecker
             columns={COLUMNS}
             sort={tableData && tableData.sort}
             onSortChanged={onSortChanged}
@@ -579,7 +546,7 @@ const DomainsManagementTable = ({ filter }) => {
               : rows.map((row, index) => {
                   const innerRow = (
                     <React.Fragment>
-                      <TableCell width="64px">
+                      {/* <TableCell width="64px">
                         <Checkbox
                           size="small"
                           checked={SelectedRows.includes(row.threadId)}
@@ -587,7 +554,7 @@ const DomainsManagementTable = ({ filter }) => {
                             onRowSelectionChanged(row.threadId);
                           }}
                         />
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell scope="row">
                         <Box display="inline-flex" alignItems="center">
                           <RouterLink
@@ -605,6 +572,7 @@ const DomainsManagementTable = ({ filter }) => {
                       <TableCell align="right">
                         {number_format(row.cnt_tracked_urls, ".", ",")}
                       </TableCell>
+
                       <TableCell align="right">
                         {number_format(row.cnt_scraped_jobs, ".", ",")}
                       </TableCell>

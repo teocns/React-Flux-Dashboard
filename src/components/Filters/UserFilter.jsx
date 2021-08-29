@@ -146,14 +146,14 @@ function UserFilterDropdown({ onUserFilterChanged, title, required }) {
     return (
       <FormControl variant="standard" className={classes.formControl}>
         <InputLabel id="demo-simple-select-outlined-label">
-          {title ? title : "User"}
+          {title ? title : "User statistics filter"}
         </InputLabel>
         <Select
           labelId="demo-simple-select-outlined-label"
           id="demo-simple-select-outlined"
           value={SelectedUser}
           onChange={handleChange}
-          label={title ? title : "User"}
+          label={title ? title : "User statistics filter"}
           required
         >
           {!required && <MenuItem value="">All users</MenuItem>}

@@ -19,20 +19,23 @@ const EarningsCard = ({ count }) => {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "start",
+            alignItems: "center",
           }}
         >
           <Typography
-            variant="h6"
+            variant="subtitle2"
             style={{
-              marginRight: theme.spacing(2),
               whiteSpace: "nowrap",
+              marginRight: theme.spacing(2),
             }}
           >
             Earnings
           </Typography>
-          <Typography style={{ color: "green" }} variant="h6">
-            <code style={{ background: "transparent" }}>
+          <Typography
+            style={{ color: theme.palette.text.primary }}
+            variant="h6"
+          >
+            <code style={{ background: "transparent", color: "#3e9042" }}>
               €{number_format(count, 0, ",", ".")}
             </code>
           </Typography>

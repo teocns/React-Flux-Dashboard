@@ -70,43 +70,51 @@ export default function ManageUsersView() {
     }, 500);
   };
   return (
-    <TableContainer component={Paper}>
-      <div
-        style={{
-          padding: theme.spacing(2),
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-        }}
-      >
-        <FormControl fullWidth size="small" className={classes.margin}>
-          <OutlinedInput
-            id="standard-adornment-amount"
-            size="small"
-            placeholder="Search users"
-            onChange={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-        <Button
-          variant="contained"
-          color="secondary"
-          disableElevation
-          startIcon={<Search />}
-          style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
+      <TableContainer component={Paper}>
+        <div
+          style={{
+            padding: theme.spacing(2),
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+          }}
         >
-          Search
-        </Button>
-      </div>
-      <Divider />
-      <ManageUsersTable filter={Filter} />
-    </TableContainer>
+          <FormControl fullWidth size="small" className={classes.margin}>
+            <OutlinedInput
+              id="standard-adornment-amount"
+              size="small"
+              placeholder="Search users"
+              onChange={(evt) => {
+                onFilterChanged(evt.target.value);
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+          <Button
+            variant="contained"
+            color="secondary"
+            disableElevation
+            startIcon={<Search />}
+            style={{ whiteSpace: "nowrap", marginLeft: theme.spacing(2) }}
+          >
+            Search
+          </Button>
+        </div>
+        <Divider />
+        <ManageUsersTable filter={Filter} />
+      </TableContainer>
+    </div>
   );
 }

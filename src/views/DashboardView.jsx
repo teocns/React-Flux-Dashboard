@@ -1,4 +1,6 @@
 import Paper from "@material-ui/core/Paper";
+import DetailsIcon from "@material-ui/icons/Details";
+import LanguageIcon from "@material-ui/icons/Language";
 import {
   Collapse,
   Grid,
@@ -23,7 +25,10 @@ import CrawlingPerformance from "../components/Insights/Cards/TrackedUrlsEfficie
 import TrackedUrlsEfficiency from "../components/Insights/Cards/TrackedUrlsEfficiency";
 import TrackedUrlsCard from "../components/Insights/Cards/TrackedUrls";
 import ScrapedJobsCard from "../components/Insights/Cards/ScrapedJobs";
+import PortalsCard from "../components/Insights/Cards/PortalsTracked";
 import EarningsCard from "../components/Insights/Cards/Earnings";
+import DomainsPerformanceTable from "../components/Tables/DomainsPerformance";
+import { FilterList } from "@material-ui/icons";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -119,16 +124,32 @@ export default function DashboardView(props) {
     return <CircularProgress />;
   };
   return (
-    <div style={{ overflow: "hidden" }}>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
       <Paper
+        elevation={0}
+        variant="outlined"
         style={{
           padding: theme.spacing(2),
-          marginBottom: theme.spacing(4),
+
           display: "flex",
           alignItems: "center",
         }}
       >
         <Grid container direction="row" spacing={1} alignItems="center">
+          <Grid item alignItems={"center"}>
+            <FilterList
+              style={{
+                marginRight: 8,
+                marginTop: 8,
+              }}
+            />
+          </Grid>
           <Grid item>
             <UserFilterDropdown
               onUserFilterChanged={(userId) => {
@@ -203,29 +224,53 @@ export default function DashboardView(props) {
       <Grid
         container
         spacing={2}
-        style={{ padding: theme.spacing(0) }}
+        style={{ padding: theme.spacing(0), paddingBottom: theme.spacing(3) }}
         direction="row"
       >
-        <Grid item xs={6} md={3} xl={2}>
+        {/* <Grid item xs={6} md={3} xl={2}>
           <TrackedUrlsEfficiency />
+        </Grid> */}
+
+        <Grid item xs={12}>
+          <TitledDivider
+            title="Summary"
+            subtitle="Insights on tracked portals over the selected timeframe. Click on the portal to view the tracked URLs"
+            icon={<DetailsIcon />}
+          />
         </Grid>
-        <Grid item xs={4} md={3} xl={2}>
-          <Grid container spacing={2} direction="column" style={{ padding: 0 }}>
-            <Grid item xs={12}>
+        <Grid item xs={12}>
+          <Grid container spacing={2} direction="row" style={{ padding: 0 }}>
+            <Grid item xs={12} xl={6}>
               <TrackedUrlsCard count={123214} />
             </Grid>
-            <Grid item xs={12}>
-              <ScrapedJobsCard count={129839} />
+            <Grid item xs={12} xl={6}>
+              <ScrapedJobsCard
+                day={Day}
+                year={Year}
+                month={Month}
+                count={129839}
+              />
             </Grid>
-            <Grid item xs={12}>
-              <EarningsCard count={129839} />
+            <Grid item xs={12} xl={6}>
+              <PortalsCard count={129839} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} xl={6}>
               <EarningsCard count={129839} />
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={12} xl={8}>
+        {/* <Grid item xs={12}>
+          <TitledDivider
+            title="Tracked portals"
+            subtitle="Insights on tracked portals over the selected timeframe. Click on the portal to view the tracked URLs"
+            icon={<LanguageIcon />}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <DomainsPerformanceTable />
+        </Grid> */}
+
+        <Grid item xs={12} xl={12}>
           <div
             style={{
               display: "flex",

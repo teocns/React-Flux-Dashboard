@@ -108,24 +108,13 @@ export default function CrawlerControlCenter() {
       return <CircularProgress />;
     }
     return (
-      <div>
-        {/* <blockquote
-      style={{
-        borderLeft: "5px solid #ffe564",
-        backgroundColor: "rgba(255,229,100,0.2)",
-        margin: "24px 0",
-        padding: "4px 24px",
-      }}
-    >
-      <Typography variant="subtitle1" style={{ margin: theme.spacing(2) }}>
-        All data is fetched from ElastiCache(Redis), which is the central
-        atomic unit that not only controls the crawlers, but also serves as
-        information processing to forecast the required autoscaling capacity
-        or domain crawling speed based on each crawler thread that is Queued
-        or In-Process during a given instance.
-      </Typography>
-    </blockquote> */}
-
+      <div
+        style={{
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: theme.spacing(2),
+        }}
+      >
         <Paper variant={"outlined"} style={{ padding: theme.spacing(2) }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex" }}>

@@ -20,11 +20,11 @@ const TrackedUrlsCard = ({ count }) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "start",
+              alignItems: "center",
             }}
           >
             <Typography
-              variant="h6"
+              variant="subtitle2"
               style={{
                 whiteSpace: "nowrap",
                 marginRight: theme.spacing(2),
@@ -36,7 +36,7 @@ const TrackedUrlsCard = ({ count }) => {
               style={{ color: theme.palette.text.primary }}
               variant="h6"
             >
-              <code style={{ background: "transparent" }}>
+              <code style={{ background: "transparent", color: "#434375" }}>
                 {number_format(count, 0, ",", ".")}
               </code>
             </Typography>

@@ -99,7 +99,13 @@ export default function TrackedUrlsView(props) {
   };
   const onTableDataLoaded = () => {};
   return (
-    <div className={classes.root}>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
       <Paper style={{ marginBottom: theme.spacing(3) }}>
         <div
           style={{

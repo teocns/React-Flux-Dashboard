@@ -52,7 +52,7 @@ const MultifunctionalTableHeading = ({
 }) => {
   const classes = useStyles();
   return (
-    <TableHead>
+    <TableHead style={{ background: "white" }}>
       <TableRow>
         {!hideChecker && (
           <TableCell>
@@ -80,7 +80,14 @@ const MultifunctionalTableHeading = ({
             const isActive = sort && sort.name === name;
 
             return (
-              <TableCell width={width} align={align} colSpan={colspan}>
+              <TableCell
+                style={{
+                  backgroundColor: "white",
+                }}
+                width={width}
+                align={align}
+                colSpan={colspan}
+              >
                 <TableSortLabel
                   active={isActive}
                   direction={thisColumnSort}

@@ -67,7 +67,13 @@ export default function CustomPaginationActionsTable() {
   };
 
   return (
-    <React.Fragment>
+    <div
+      style={{
+        overflowY: "scroll",
+        overflowX: "hidden",
+        padding: theme.spacing(4),
+      }}
+    >
       <Paper style={{ marginBottom: theme.spacing(3) }}>
         <div
           style={{
@@ -125,6 +131,6 @@ export default function CustomPaginationActionsTable() {
         </Typography>
         <AddTrackUrlTable />
       </TableContainer>
-    </React.Fragment>
+    </div>
   );
 }

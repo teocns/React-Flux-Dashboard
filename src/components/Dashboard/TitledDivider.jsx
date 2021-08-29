@@ -7,7 +7,7 @@ const TitledDivider = ({ title, subtitle, icon }) => {
     <div
       style={{ marginTop: theme.spacing(3), marginBottom: theme.spacing(3) }}
     >
-      <Divider style={{ height: 3, marginBottom: theme.spacing(1) }} />
+      <Divider style={{ height: 2, marginBottom: theme.spacing(1) }} />
 
       <div
         style={{
@@ -19,7 +19,10 @@ const TitledDivider = ({ title, subtitle, icon }) => {
       >
         {icon &&
           React.cloneElement(icon, {
-            style: { color: theme.palette.secondary.main },
+            style: {
+              color: theme.palette.secondary.main,
+              marginRight: theme.spacing(1),
+            },
           })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>

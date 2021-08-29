@@ -15,9 +15,7 @@ const ScrapedJobsCard = ({ count, year, month, day }) => {
   const theme = useTheme();
   return (
     <Tooltip
-      title={`Indicates the amount of jobs scraped only from the URLs that have been tracked within ${year}/${month}${
-        day ? "/" + day : ""
-      }`}
+      title={`Amount of websites the tracked URLs come from. Click to view details`}
     >
       <Card style={{ minWidth: 180 }}>
         <CardActionArea>
@@ -36,7 +34,7 @@ const ScrapedJobsCard = ({ count, year, month, day }) => {
                   marginRight: theme.spacing(2),
                 }}
               >
-                Jobs Scraped
+                Websites Tracked
               </Typography>
               <Typography
                 style={{ color: theme.palette.text.primary }}

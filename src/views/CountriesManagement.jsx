@@ -50,43 +50,51 @@ export default function DomainsManagementView() {
   };
 
   return (
-    <TableContainer component={Paper} className={classes.tableContainer}>
-      <div
-        style={{
-          padding: theme.spacing(2),
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-          background: "white",
-        }}
-      >
-        <FormControl fullWidth size="small" className={classes.margin}>
-          <InputBase
-            defaultValue={Filter}
-            variant="standard"
-            style={{ outline: "none" }}
-            id="standard-adornment-amount"
-            size="small"
-            aria-describedby="search-error"
-            placeholder="Search Domains"
-            onChange={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            onKeyPress={(evt) => {
-              onFilterChanged(evt.target.value);
-            }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-      </div>
-      <Divider />
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
+      <TableContainer component={Paper} className={classes.tableContainer}>
+        <div
+          style={{
+            padding: theme.spacing(2),
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "nowrap",
+            background: "white",
+          }}
+        >
+          <FormControl fullWidth size="small" className={classes.margin}>
+            <InputBase
+              defaultValue={Filter}
+              variant="standard"
+              style={{ outline: "none" }}
+              id="standard-adornment-amount"
+              size="small"
+              aria-describedby="search-error"
+              placeholder="Search Domains"
+              onChange={(evt) => {
+                onFilterChanged(evt.target.value);
+              }}
+              onKeyPress={(evt) => {
+                onFilterChanged(evt.target.value);
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+        </div>
+        <Divider />
 
-      <CountriesManagementTable filter={Filter} />
-    </TableContainer>
+        <CountriesManagementTable filter={Filter} />
+      </TableContainer>
+    </div>
   );
 }
