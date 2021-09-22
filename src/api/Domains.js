@@ -16,4 +16,9 @@ export default class DomainsApi {
       previous_is_enabled,
     });
   }
+  static async AutoComplete({ word }) {
+    return await MakeRequest.post(`/domains/autocomplete`, {
+      word: word,
+    });
+  }
 }

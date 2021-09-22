@@ -536,7 +536,7 @@ const CountriesManagementTable = ({ filter }) => {
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
-        {isAdmin && (
+        {isAdmin ? (
           <div
             style={{
               padding: theme.spacing(1),
@@ -554,7 +554,7 @@ const CountriesManagementTable = ({ filter }) => {
               Edit price
             </Button>
           </div>
-        )}
+        ) : null}
         <Table
           stickyHeader
           size="small"

@@ -570,7 +570,7 @@ const DomainsManagementTable = ({ filter }) => {
                       </TableCell>
 
                       <TableCell align="right">
-                        {number_format(row.cnt_tracked_urls, ".", ",")}
+                        {number_format(row.TRACKED_URLS, ".", ",")}
                       </TableCell>
 
                       <TableCell align="right">

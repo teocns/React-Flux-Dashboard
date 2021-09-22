@@ -1,4 +1,5 @@
 // @ts-nocheck
+import RssFeedIcon from "@material-ui/icons/RssFeed";
 import PublicIcon from "@material-ui/icons/Public";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import {
@@ -619,23 +620,22 @@ function AppContents() {
                         </ListItemIcon>
                         <ListItemText
                           disableTypography={true}
-                          primary={"Robot Performance"}
+                          primary={"Crawler Performance"}
                         />
                       </ListItem>
-
                       <ListItem
                         button
-                        key={"URL Crawling Performance"}
-                        selected={location.pathname === "/statistics/daily"}
+                        key={"Proxies"}
+                        selected={location.pathname === "/proxies"}
                         component={Link}
-                        to="/statistics/daily"
+                        to="/proxies"
                       >
                         <ListItemIcon>
-                          <TimelineIcon />
+                          <RssFeedIcon />
                         </ListItemIcon>
                         <ListItemText
                           disableTypography={true}
-                          primary={"URL Crawling Performance"}
+                          primary={"Proxies"}
                         />
                       </ListItem>
                     </List>

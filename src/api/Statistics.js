@@ -9,9 +9,10 @@ export default class StatisticsApi {
     });
   }
 
-  static async GetCrawlerStatistics({ day }) {
+  static async GetCrawlerStatistics({ day, filters }) {
     return await MakeRequest.post(`/statistics/crawler`, {
       day,
+      filters,
     });
   }
 }

@@ -23,8 +23,18 @@ export default class TrackedUrlsApi {
     return await MakeRequest.post(`/tracked-urls/table`, DATA);
   }
 
+  static async RecrawlNow(url) {
+    return await MakeRequest.post(`/tracked-urls/recrawl`, { url });
+  }
+
   static async GetCrawlingEvents(DATA) {
+    // Will return crawler_processes
     return await MakeRequest.post(`/url/crawler-processes`, DATA);
+  }
+
+  static async GetCrawlerEventInfo(DATA) {
+    // Will return crawler_threads
+    return await MakeRequest.post(`/crawler-process-table`, DATA);
   }
 
   static async TrackUrl({ url }) {

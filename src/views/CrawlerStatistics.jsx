@@ -1,71 +1,47 @@
+// @ts-nocheck
 import Paper from "@material-ui/core/Paper";
 import {
   Collapse,
+  Grid,
   Typography,
   TextField,
   List,
   ListItem,
   Divider,
 } from "@material-ui/core";
+import InfoIcon from "@material-ui/icons/Info";
+import DomainsApi from "../api/Domains";
+import AjaxAutocomplete from "../components/Autocompletes/Ajax";
+import GenericSelect from "../components/Selects/Generic";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import React, { useEffect, useState } from "react";
 import InsightsChart from "../components/Insights/Chart";
 import StatisticsApi from "../api/Statistics";
 import UserFilterDropdown from "../components/Filters/UserFilter";
+import ConfigApi from "../api/Config";
 import MonthSelectComponent from "../components/Selects/Month";
 import sessionStore from "../store/session";
 import { CircularProgress } from "@material-ui/core";
-
+import TitledDivider from "../components/Dashboard/TitledDivider";
+import { number_format } from "../helpers/numbers";
 const useStyles = makeStyles((theme) => ({
-  card: {
-    minWidth: 275,
-    maxWidth: 275,
-    marginRight: theme.spacing(4),
-  },
-  bullet: {
-    display: "inline-block",
-    margin: "0 2px",
-    transform: "scale(0.8)",
-  },
-  title: {
-    fontSize: 14,
-  },
-  pos: {
-    marginBottom: 12,
-  },
-  cardIcon: {
-    width: "50%",
-    height: "50%",
-  },
-  circle: {
-    borderRadius: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "2rem",
-    height: "2rem",
-    margin: theme.spacing(2),
-  },
-  circleOrange: {
-    backgroundColor: "orange",
-    color: "white",
-  },
-  circleBlue: {
-    backgroundColor: "blue",
-    color: "white",
+  filters: {
+    "& > *": {
+      marginRight: theme.spacing(2),
+    },
   },
 }));
 var isLoading = true;
 
 export default function StatisticsView(props) {
   const [StatsData, setStatsData] = useState();
-  const [Month, setMonth] = useState(new Date().getMonth() + 1);
-
-  const [AvailableProxies, setAvailableProxies] = useState();
 
   const [Day, setDay] = useState(formatDate());
   const user = sessionStore.getUser();
-  const [SelectedUserFilter, setUserFilter] = useState(user.id);
+
+  const [ProxyFilter, setProxyFilter] = useState();
+  const [CrawlerEngineFilter, setCrawlerEngineFilter] = useState();
+  const [DomainFilter, setDomainFilter] = useState();
 
   const [AnchorElements, setAnchorElements] = useState({
     CHART_VIEW_MODE: null,
@@ -83,6 +59,9 @@ export default function StatisticsView(props) {
   const syncStats = () => {
     StatisticsApi.GetCrawlerStatistics({
       day: Day,
+      filters: [ProxyFilter, CrawlerEngineFilter, DomainFilter].filter(
+        (c) => !!c
+      ),
     }).then(setStatsData);
   };
 
@@ -100,30 +79,72 @@ export default function StatisticsView(props) {
 
   useEffect(() => {
     syncStats();
-  }, [Day]);
+  }, [Day, ProxyFilter, DomainFilter, CrawlerEngineFilter]);
 
   const theme = useTheme();
 
-  const renderGraph = () => {
-    if (StatsData) {
-      return (
-        <InsightsChart
-          chartData={StatsData.graph}
-          style={{ padding: theme.spacing(5), zIndex: 99999 }}
-          name={"Buu"}
-          tooltipCallbacks={{
-            afterLabel: function (tooltipItem, data) {
-              return data.full_date;
-            },
+  const renderGraph = (statisticType) => {
+    return (
+      <InsightsChart
+        chartData={StatsData[statisticType].graph}
+        style={{ padding: theme.spacing(5), zIndex: 99999 }}
+        name={"Buu"}
+        tooltipCallbacks={{
+          afterLabel: function (tooltipItem, data) {
+            return data.full_date;
+          },
+        }}
+      />
+    );
+  };
+
+  /**
+   * Pass statistics summary attributes to render
+   * @param {Array} statistics
+   */
+  const renderSummaryBox = (statistics) => {
+    return (
+      <Grid container spacing={2}>
+        {statistics.map(({ name, value }) => (
+          <Grid item>
+            <Typography variant="overline">
+              {name}: {number_format(value, 0, ".", ",")}
+            </Typography>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
+
+  const renderStatisticType = ({ type, title, statisticMappings }) => {
+    return (
+      <div style={{}}>
+        {title && <TitledDivider title={title} />}
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            padding: theme.spacing(1),
           }}
-        />
-      );
-    }
-    return <CircularProgress />;
+        >
+          {statisticMappings && renderSummaryBox(statisticMappings)}
+          {renderGraph(type)}
+        </div>
+      </div>
+    );
   };
   return (
-    <div style={{ overflow: "hidden" }}>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
       <Paper
+        variant="outlined"
+        className={classes.filters}
         style={{
           padding: theme.spacing(2),
           marginBottom: theme.spacing(4),
@@ -146,6 +167,36 @@ export default function StatisticsView(props) {
             }}
           />
         </form>
+        <GenericSelect
+          label="Proxy"
+          ajaxEndpoint={async () => {
+            return await ConfigApi.GetConfig("PUBLIC_PROXIES");
+          }}
+          onChange={(value) => {
+            setProxyFilter(value);
+          }}
+        />
+        <GenericSelect
+          onChange={(value) => {
+            setCrawlerEngineFilter(value);
+          }}
+          label="Crawler Engine"
+          ajaxEndpoint={() => {
+            return new Promise((resolve) => {
+              resolve(["SCRAPER", "SPIDER"]);
+            });
+          }}
+        />
+        <AjaxAutocomplete
+          label="Website domain"
+          onChange={(value) => {
+            setDomainFilter(value);
+          }}
+          ajaxEndpoint={async (word) => {
+            return await DomainsApi.AutoComplete({ word });
+          }}
+        />
+
         <Divider
           style={{
             marginLeft: theme.spacing(1),
@@ -154,26 +205,92 @@ export default function StatisticsView(props) {
           orientation="vertical"
         />
       </Paper>
+      <TitledDivider
+        icon={<InfoIcon />}
+        title={
+          `Viewing statistics for: ${Day} ` +
+          (ProxyFilter ? `, Proxy ${ProxyFilter}` : "") +
+          (CrawlerEngineFilter
+            ? `, Crawler Engine ${CrawlerEngineFilter}`
+            : "") +
+          (DomainFilter ? `, Domain ${DomainFilter}` : "")
+        }
+      />
       {StatsData && (
-        <div>
-          <Paper>Total Requests: {StatsData.trackedUrlsTotal || 0}</Paper>
-          <Paper>Total Scraped Jobs: {StatsData.jobCntTotal || 0}</Paper>
-          <Paper>Total Errors: {StatsData.jobCntTotal || 0}</Paper>
-        </div>
-      )}
-      <div
-        style={{
-          display: "flex",
-        }}
-      >
-        {renderGraph()}
-      </div>
+        <React.Fragment>
+          {renderStatisticType({
+            type: "overview",
+            statisticMappings: [
+              {
+                name: "Links extraction tasks",
+                value: StatsData.overview.summary.crawler_threads_scrape_links,
+              },
+              {
+                name: "Job scraping tasks",
+                value: StatsData.overview.summary.crawler_threads_scrape_jobs,
+              },
+              {
+                name: "Crawler Threads Failed",
+                value: StatsData.overview.summary.crawler_threads_failed,
+              },
+              {
+                name: "Jobs",
+                value: StatsData.overview.summary.jobs,
+              },
+            ],
+          })}
+          {renderStatisticType({
+            title: "Jobs flow",
+            type: "jobs",
+            statisticMappings: [
+              {
+                name: "Jobs parsed",
+                value: StatsData.jobs.summary.jobs,
+              },
+              {
+                name: "Job schema extracting errors",
+                value: StatsData.jobs.summary.jobs_parsing_errors,
+              },
+              {
+                name: "Jobs pushed to S3",
+                value: StatsData.jobs.summary.jobs_pushed_to_s3,
+              },
+            ],
+          })}
+          {renderStatisticType({
+            title: "Timings averages (ms)",
+            type: "timings",
+            // statisticMappings: [
+            //   {
+            //     name: "AVG Crawler Thread Processing Time",
+            //     value: StatsData.timings.time_needed_execution,
+            //   },
+            //   {
+            //     name: "AVG Request Time",
+            //     value: StatsData.timings.time_needed_requests,
+            //   },
+            // ],
+          })}
+          {renderStatisticType({
+            title: "Requests flow",
+            type: "dynamics",
+          })}
+          {renderStatisticType({
+            title: "Errors",
+            type: "errors",
+          })}
 
-      {/* <Paper style={{ padding: theme.spacing(2), marginTop: theme.spacing(2) }}>
-        <Typography variant="h6">Details</Typography>
-        <List></List>
-        <Collapse></Collapse>
-      </Paper> */}
+          <TitledDivider title={"Bandwith consumption (GB)"} />
+          <Grid container>
+            <Grid item xs={12}>
+              {renderStatisticType({
+                type: "bandwith",
+              })}
+            </Grid>
+            <Grid item xs={12}></Grid>
+          </Grid>
+        </React.Fragment>
+      )}
     </div>
   );
 }

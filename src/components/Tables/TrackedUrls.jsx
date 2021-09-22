@@ -11,11 +11,17 @@ import {
   TableBody,
   TableCell,
   TablePagination,
+  Tooltip,
   TableRow,
   Typography,
 } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
-import { MoreVert, Search } from "@material-ui/icons";
+import {
+  CollectionsBookmarkOutlined,
+  MoreVert,
+  Search,
+  Warning,
+} from "@material-ui/icons";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
@@ -73,6 +79,19 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const renderRowBackground = (row, index) => {
+  const yellow = "rgb(253 255 214)";
+  const red = "rgb(255 204 204)";
+  const green = "#27bf412b";
+  if (row.banned) {
+    return red;
+  }
+  if ((row.cp_done_cnt || 0) >= 2 && !row.jobs) {
+    return yellow;
+  } else if (row.jobs > 0) {
+    return green;
+  }
+};
 const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 const COLUMNS = [
   {
@@ -99,7 +118,7 @@ const COLUMNS = [
 
   {
     name: "Score",
-    label: "Next crawl",
+    label: "Status",
     align: "right",
   },
   {
@@ -239,6 +258,10 @@ const TrackedUrlsTable = ({
     }
   };
 
+  const toBase64 = (string) => {
+    return Buffer.from(string).toString("base64");
+  };
+
   const handleChangePage = (step) => {
     console.log("step: ", step);
     syncTableData({ step });
@@ -302,10 +325,14 @@ const TrackedUrlsTable = ({
     }
   };
 
-  useEffect(() => {
-    // Means data has not yet loaded nor requested
+  const hasUserFilterChanged = useHasChanged(userFilter);
+  const hasFilterChanged = useHasChanged(filter);
+  const hasForceRerenderByParent = useHasChanged(forceRerenderByParent);
+  const hasRowsPerPageChanged = useHasChanged(RowsPerPage, true);
 
-    //console.log("Invoking from rerender");
+  const firstUpdate = useRef(true);
+
+  useEffect(() => {
     setTimeout(() => {
       syncTableData({});
     });
@@ -313,14 +340,12 @@ const TrackedUrlsTable = ({
     return bindListeners();
   }, [Rerender]);
 
-  const hasUserFilterChanged = useHasChanged(userFilter);
-  const hasFilterChanged = useHasChanged(filter);
-  const hasForceRerenderByParent = useHasChanged(forceRerenderByParent);
-  const hasRowsPerPageChanged = useHasChanged(RowsPerPage, true);
-
   useEffect(() => {
-    //console.log("Invoking from usePrevious");
-
+    // Exit function if it's first render
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
     if (
       hasUserFilterChanged ||
       hasFilterChanged ||
@@ -420,6 +445,22 @@ const TrackedUrlsTable = ({
     return _createRow();
   };
 
+  const renderJobsCount = (row) => {
+    // If has ever completed any CP and has no jobs, show an alert
+    if ((row.cp_done_cnt || 0) >= 2 && !row.jobs) {
+      return (
+        <div style={{ display: "inline-flex", alignItems: "center" }}>
+          0
+          <Tooltip title="The URL has not given jobs despite of different crawling efforts">
+            <Warning
+              style={{ color: "red", marginLeft: 8, width: 14, height: 14 }}
+            />
+          </Tooltip>
+        </div>
+      );
+    }
+    return number_format(row.jobs, 0, ".", ",");
+  };
   const CrawlingStatuses = KeyMirror({
     IS_CRAWLING: null,
     HAS_BEEN_CRAWLED: null,
@@ -427,6 +468,11 @@ const TrackedUrlsTable = ({
   });
 
   const calculateCrawlingStatus = (row) => {
+    const currentUnixTimestamp = parseInt(new Date().getTime() / 1000);
+    if (row.ready === 0 && row.next_crawl < currentUnixTimestamp) {
+      return CrawlingStatuses.IS_CRAWLING;
+    }
+
     if (!row.cp_last_done_age) {
       if (!row.cp_cnt) {
         return CrawlingStatuses.NOT_PROCESSED;
@@ -451,26 +497,32 @@ const TrackedUrlsTable = ({
               alignItems: "center",
             }}
           >
-            Scheduled
+            <Typography variant="overline">Scheduled</Typography>
+
             <AccessTimeIcon
               fontSize="small"
               style={{
                 marginLeft: theme.spacing(1),
-                color: theme.palette.text.disabled,
               }}
             />
           </div>
         );
       case CrawlingStatuses.IS_CRAWLING:
         return (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            Crawling now{" "}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="overline">Crawling</Typography>
             <CircularProgress
               style={{
                 width: 14,
                 height: 14,
-                color: theme.palette.text.disabled,
                 marginLeft: theme.spacing(1),
+                color: "#a9b8d2",
               }}
             />
           </div>
@@ -495,7 +547,6 @@ const TrackedUrlsTable = ({
         return (
           <div
             style={{
-              color: theme.palette.text.hint,
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-end",
@@ -538,6 +589,8 @@ const TrackedUrlsTable = ({
   };
 
   const _attachRowActionsMenu = () => {
+    const isAvailableForRecrawl =
+      RowActionObject && RowActionObject.ready === 1;
     return (
       <Menu
         id={`row-actions-menu`}
@@ -551,12 +604,28 @@ const TrackedUrlsTable = ({
           //   handleRowMenuClose();
           //   //toggleCountryRenameDialog();
           // }}
+
           component={RouterLink}
           to={`/tracked-url/${
-            RowActionObject && encodeURIComponent(RowActionObject.url)
+            RowActionObject && toBase64(RowActionObject.url)
           }`}
         >
           View details
+        </MenuItem>
+        <MenuItem
+          onClick={async () => {
+            await TrackedUrlsApi.RecrawlNow(RowActionObject.url);
+            setTimeout(() => {
+              syncTableData({});
+            }, 1000);
+          }}
+          // onClick={() => {
+          //   handleRowMenuClose();
+          //   //toggleCountryRenameDialog();
+          // }}
+          disabled={!isAvailableForRecrawl}
+        >
+          Recrawl now
         </MenuItem>
       </Menu>
     );
@@ -596,7 +665,7 @@ const TrackedUrlsTable = ({
               >
                 Jobs scraped:
               </Typography>
-              {row.crawler_threads_last_jobs_cnt}
+              {row.cp_last_jobs_cnt}
             </div>
 
             <Typography
@@ -672,6 +741,8 @@ const TrackedUrlsTable = ({
                   </TableRow>
                 ))
               : rows.map((row, index) => {
+                  const bg = renderRowBackground(row);
+
                   const innerRow = (
                     <React.Fragment>
                       <TableCell width="64px">
@@ -689,7 +760,10 @@ const TrackedUrlsTable = ({
                         >
                           <Typography
                             variant="caption"
-                            style={{ color: theme.palette.text.hint }}
+                            style={{
+                              color: theme.palette.text.hint,
+                              whiteSpace: "nowrap",
+                            }}
                           >
                             {prettyPrintDate(row.age)}
                           </Typography>
@@ -722,7 +796,7 @@ const TrackedUrlsTable = ({
                       </TableCell>
 
                       <TableCell align="right">
-                        {number_format(row.total_scraped_jobs, 0, ".", ",")}
+                        {renderJobsCount(row)}
                       </TableCell>
                       <TableCell align="right">{row.cp_done_cnt}</TableCell>
 
@@ -741,7 +815,13 @@ const TrackedUrlsTable = ({
                     </React.Fragment>
                   );
                   const wrapComponent = (
-                    <TableRow className={classes.tableRow} key={row.uuid}>
+                    <TableRow
+                      style={{
+                        backgroundColor: bg ? bg : undefined,
+                      }}
+                      className={classes.tableRow}
+                      key={row.uuid}
+                    >
                       {innerRow}
                     </TableRow>
                   );

@@ -1,7 +1,7 @@
-import { TableContainer, Paper, Typography } from "@material-ui/core";
+import { TableContainer, Paper, Typography, useTheme } from "@material-ui/core";
 import React from "react";
 import { useLocation } from "react-router";
-import CrawlerThreadsTable from "../components/Tables/CrawlerProcesses";
+import CrawlerThreadsTable from "../components/Tables/CrawlerThreads";
 
 function getSearchParameters(loc) {
   var prmstr = loc.search.substr(1);
@@ -18,15 +18,28 @@ function transformToAssocArray(prmstr) {
   return params;
 }
 
-const CrawlerThreadsView = (props) => {
+const fromBase64 = (string) => {
+  return atob(string);
+};
+const CrawlerThreadsView = ({ match }) => {
   const loc = useLocation();
   const params = getSearchParameters(loc);
+  const theme = useTheme();
+
+  const raw_crawler_process_id = match.params.crawler_process_id;
+  // URL decode raw_crawler_process_id
+  const crawler_process_id = fromBase64(raw_crawler_process_id);
 
   return (
-    <div>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
       <TableContainer>
-        <Typography variant="h1">Latest crawls</Typography>
-        <CrawlerThreadsTable />
+        <CrawlerThreadsTable crawler_process_id={crawler_process_id} />
       </TableContainer>
     </div>
   );

@@ -106,6 +106,8 @@ export default function DashboardView(props) {
 
   const theme = useTheme();
 
+  const isAdmin = sessionStore.getUser().isAdmin;
+
   const renderGraph = () => {
     if (StatsData) {
       return (
@@ -150,13 +152,15 @@ export default function DashboardView(props) {
               }}
             />
           </Grid>
-          <Grid item>
-            <UserFilterDropdown
-              onUserFilterChanged={(userId) => {
-                setUserFilter(userId);
-              }}
-            />
-          </Grid>
+          {isAdmin ? (
+            <Grid item>
+              <UserFilterDropdown
+                onUserFilterChanged={(userId) => {
+                  setUserFilter(userId);
+                }}
+              />
+            </Grid>
+          ) : null}
 
           <Grid item>
             <YearSelectComponent
@@ -170,119 +174,63 @@ export default function DashboardView(props) {
                 setMonth(month);
               }}
             />
-            <DaySelectComponent
-              month={Month}
-              year={Year}
-              day={Day}
-              onDayChanged={(day) => {
-                setDay(day);
-              }}
-            />
           </Grid>
         </Grid>
       </Paper>
-      {/* <div>
-        <TitledDivider
-          title="Overview"
-          subtitle="Pick a specific day from the filter to view crawling performance reports"
-        />
-      </div> */}
-      {/* {StatsData && (
-        <Paper
-          variant="outlined"
-          style={{ padding: theme.spacing(2), marginBottom: theme.spacing(2) }}
+      {StatsData && (
+        <Grid
+          container
+          spacing={2}
+          style={{ padding: theme.spacing(0), paddingBottom: theme.spacing(3) }}
+          direction="row"
         >
-          <Grid container spacing={2}>
-            <Grid item>
-              <Typography variant="overline">
-                Tracked URLs:{" "}
-                <code>
-                  {number_format(StatsData.trackedUrlsTotal || 0, 0, ".", ",")}
-                </code>
-              </Typography>
-            </Grid>
-            <Grid item>
-              <Typography variant="overline">
-                Scraped Jobs:{" "}
-                <code>
-                  {number_format(StatsData.jobCntTotal || 0, 0, ".", ",")}
-                </code>
-              </Typography>
-            </Grid>
-            <Grid item>
-              <Typography variant="overline">
-                Earnings:{" "}
-                <code style={{ color: "green" }}>
-                  €{number_format(StatsData.earningsTotal || 0, 2, ".", ",")}
-                </code>
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
-      )} */}
-
-      <Grid
-        container
-        spacing={2}
-        style={{ padding: theme.spacing(0), paddingBottom: theme.spacing(3) }}
-        direction="row"
-      >
-        {/* <Grid item xs={6} md={3} xl={2}>
+          {/* <Grid item xs={6} md={3} xl={2}>
           <TrackedUrlsEfficiency />
         </Grid> */}
 
-        <Grid item xs={12}>
-          <TitledDivider
-            title="Summary"
-            subtitle="Insights on tracked portals over the selected timeframe. Click on the portal to view the tracked URLs"
-            icon={<DetailsIcon />}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Grid container spacing={2} direction="row" style={{ padding: 0 }}>
-            <Grid item xs={12} xl={6}>
-              <TrackedUrlsCard count={123214} />
-            </Grid>
-            <Grid item xs={12} xl={6}>
-              <ScrapedJobsCard
-                day={Day}
-                year={Year}
-                month={Month}
-                count={129839}
-              />
-            </Grid>
-            <Grid item xs={12} xl={6}>
-              <PortalsCard count={129839} />
-            </Grid>
-            <Grid item xs={12} xl={6}>
-              <EarningsCard count={129839} />
+          <Grid item xs={12}>
+            <TitledDivider
+              title="Summary"
+              subtitle="Insights on tracked portals over the selected timeframe. Click on the portal to view the tracked URLs"
+              icon={<DetailsIcon />}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container spacing={2} direction="row" style={{ padding: 0 }}>
+              <Grid item xs={12} xl={6}>
+                <TrackedUrlsCard count={StatsData.trackedUrlsTotal} />
+              </Grid>
+              <Grid item xs={12} xl={6}>
+                <ScrapedJobsCard
+                  day={Day}
+                  year={Year}
+                  month={Month}
+                  count={StatsData.jobCntTotal}
+                />
+              </Grid>
+              <Grid item xs={12} xl={6}>
+                <PortalsCard count={StatsData.trackedUrlsByDomain} />
+              </Grid>
+              <Grid item xs={12} xl={6}>
+                <EarningsCard count={StatsData.earningsTotal} />
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
-        {/* <Grid item xs={12}>
-          <TitledDivider
-            title="Tracked portals"
-            subtitle="Insights on tracked portals over the selected timeframe. Click on the portal to view the tracked URLs"
-            icon={<LanguageIcon />}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <DomainsPerformanceTable />
-        </Grid> */}
 
-        <Grid item xs={12} xl={12}>
-          <div
-            style={{
-              display: "flex",
+          <Grid item xs={12} xl={12}>
+            <div
+              style={{
+                display: "flex",
 
-              padding: 2,
-              paddingBottom: theme.spacing(2),
-            }}
-          >
-            {renderGraph()}
-          </div>
+                padding: 2,
+                paddingBottom: theme.spacing(2),
+              }}
+            >
+              {renderGraph()}
+            </div>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
     </div>
   );
 }

@@ -33,10 +33,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const fromBase64 = (string) => {
+  return atob(string);
+};
 const TrackedUrlInsights = (props) => {
   let location = useLocation();
   const theme = useTheme();
-  const requestedUrl = decodeURIComponent(props.match.params.url);
+  const requestedUrl = fromBase64(props.match.params.url);
 
   const classes = useStyles();
 
@@ -56,7 +59,13 @@ const TrackedUrlInsights = (props) => {
 
   useEffect(() => {}, [requestedUrl]);
   return (
-    <React.Fragment>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: theme.spacing(2),
+      }}
+    >
       <ViewHeader
         // @ts-ignore
         title="Recent crawling events"
@@ -67,7 +76,7 @@ const TrackedUrlInsights = (props) => {
       <TableContainer component={Paper} className={classes.tableContainer}>
         <CrawlerProcessesTable url={requestedUrl} />
       </TableContainer>
-    </React.Fragment>
+    </div>
   );
 };
 

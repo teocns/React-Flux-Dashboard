@@ -1,8 +1,10 @@
+import configStore from "../../store/Config";
 import {
   Box,
   Checkbox,
   CircularProgress,
   IconButton,
+  Link,
   Menu,
   MenuItem,
   Table,
@@ -12,32 +14,33 @@ import {
   TableRow,
   Typography,
 } from "@material-ui/core";
+import uiActions from "../../actions/UI";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { MoreVert, Search } from "@material-ui/icons";
+import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import { Skeleton } from "@material-ui/lab";
 import clsx from "clsx";
+import KeyMirror from "keymirror";
 import { useConfirm } from "material-ui-confirm";
 import React, { useEffect, useState } from "react";
-import { Link, Link as RouterLink } from "react-router-dom";
-import uiActions from "../../actions/UI";
+import { Link as RouterLink } from "react-router-dom";
+import tableActions from "../../actions/Table";
+
 import TrackedUrlsApi from "../../api/TrackedUrls";
 import ActionTypes from "../../constants/ActionTypes";
 import TableNames from "../../constants/Tables";
 import { number_format } from "../../helpers/numbers";
-import { prettyPrintDate, timeSince } from "../../helpers/time";
+import {
+  getTimeRemaining,
+  prettyPrintDate,
+  timeSince,
+} from "../../helpers/time";
 import TableData from "../../models/TableData";
 import tableStore from "../../store/Tables";
-import uiStore from "../../store/UI";
 import MultifunctionalHeading from "../Table/MultifunctionalHeading";
 import TablePaginationActions from "./Pagination";
+import uiStore from "../../store/UI";
 
-const toBase64 = (string) => {
-  return Buffer.from(string).toString("base64");
-};
-
-const minZero = (num) => {
-  return num < 0 ? 0 : num;
-};
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     overflowY: "scroll",
@@ -75,16 +78,11 @@ const useStyles = makeStyles((theme) => ({
 const THIS_TABLE_NAME = TableNames.MANAGE_URLS;
 const COLUMNS = [
   {
-    name: "age",
-    label: "Initiated at",
+    name: "row",
+    label: "URL",
     align: "left",
   },
 
-  {
-    name: "crawler_engine",
-    label: "Crawler Engine",
-    align: "right",
-  },
   {
     name: "total_scraped_jobs",
     label: "Jobs Extracted",
@@ -92,7 +90,7 @@ const COLUMNS = [
   },
   {
     name: "crawler_threads_cnt",
-    label: "Crawled links",
+    label: "Sub-Links Crawled",
     align: "right",
   },
   {
@@ -116,7 +114,7 @@ const COLUMNS = [
 var Table_LastEvaluatedKey_History = [];
 var Table_LastStep = 1;
 var Table_Page = 0;
-const CrawlerProcessesTable = ({ url }) => {
+const CrawlerThreadsTable = ({ crawler_process_id }) => {
   const [IsLoading, setIsLoading] = useState(true);
   const [RowsPerPage, setRowsPerPage] = useState(
     uiStore.getDefaultTableRowsPerPage()
@@ -149,17 +147,11 @@ const CrawlerProcessesTable = ({ url }) => {
     setRowMenuAnchorRef(null);
   };
 
-  const confirm = useConfirm();
-
-  const page = 0;
-
   const IsLoadingResults = IsLoading;
 
   const rowsLength =
     tableData && Array.isArray(tableData.Items) ? tableData.Items.length : 0;
   const classes = useStyles();
-
-  const emptyRows = 0;
 
   const onTableDataReceived = (td) => {
     setIsLoading(false);
@@ -179,9 +171,9 @@ const CrawlerProcessesTable = ({ url }) => {
     setIsLoading(true);
     const limit = RowsPerPage;
     if (step === 1) {
-      TrackedUrlsApi.GetCrawlingEvents({
+      TrackedUrlsApi.GetCrawlerEventInfo({
         step,
-        url,
+        crawler_process_id,
         limit,
         LastEvaluatedKey: tableData.LastEvaluatedKey,
       }).then(onTableDataReceived);
@@ -189,16 +181,18 @@ const CrawlerProcessesTable = ({ url }) => {
       if (Table_LastStep === 1) {
         Table_LastEvaluatedKey_History.pop();
       }
-      TrackedUrlsApi.GetCrawlingEvents({
+      TrackedUrlsApi.GetCrawlerEventInfo({
         step,
-        url,
+        crawler_process_id,
         limit,
         LastEvaluatedKey: Table_LastEvaluatedKey_History.pop(),
       }).then(onTableDataReceived);
     } else {
-      TrackedUrlsApi.GetCrawlingEvents({ step: 1, limit, url }).then(
-        onTableDataReceived
-      );
+      TrackedUrlsApi.GetCrawlerEventInfo({
+        step: 1,
+        limit,
+        crawler_process_id,
+      }).then(onTableDataReceived);
     }
   };
 
@@ -211,25 +205,6 @@ const CrawlerProcessesTable = ({ url }) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     uiActions.changeTableRowsPerPage(newRowsPerPage);
   };
-
-  /**
-   * @type {Object} obj
-   * @type {TableData} obj.tableData
-   */
-  const onTableRowsDataUpdated = ({ tableData }) => {
-    if (tableData.tableName === THIS_TABLE_NAME) {
-      const foundTable = tableStore.getByTableName(THIS_TABLE_NAME);
-      console.log("foundTable", foundTable);
-      //onLoaded && onLoaded();
-      setTableData(foundTable);
-    }
-  };
-
-  // const onScrapingThreadCreated = () => {
-  //   setTimeout(() => {
-  //     syncTableData({ newPage: 0 });
-  //   });
-  // };
 
   const reSync = () => {
     setTimeout(() => {
@@ -260,18 +235,6 @@ const CrawlerProcessesTable = ({ url }) => {
         ActionTypes.Table.ROWS_PER_PAGE_CHANGED,
         onRowsPerPageChanged
       );
-      //   tableStore.removeChangeListener(
-      //     ActionTypes.Table.DATA_CREATED,
-      //     onTableRowsDataUpdated
-      //   );
-      //   tableStore.removeChangeListener(
-      //     ActionTypes.CountryFilter.COUNTRY_FILTER_SYNC,
-      //     reSync
-      //   );
-      //   tableStore.removeChangeListener(
-      //     ActionTypes.Table.DATA_UPDATED,
-      //     onTableRowsDataUpdated
-      //   );
     };
   };
   const onRowSelectionChanged = (id) => {
@@ -347,7 +310,7 @@ const CrawlerProcessesTable = ({ url }) => {
                   : theme.palette.text.primary,
               }}
             >
-              No{rowsLength > 0 ? " more" : ""} crawling events
+              No links scraped yet
             </Typography>
           </Box>
           {_renderHint()}
@@ -416,55 +379,6 @@ const CrawlerProcessesTable = ({ url }) => {
     return done_threads >= real_threads_count;
   };
 
-  const makeLatestCrawl = (row, colNum) => {
-    if (!row.cp_cnt || (row.cp_cnt === 1 && !row.cp_last_done_age)) {
-      if (colNum === 2) {
-        return "Never";
-      }
-    } else {
-      if (colNum === 1) {
-        return (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              transform: "translateY(-8px)",
-            }}
-          >
-            <Typography
-              variant="caption"
-              style={{ color: theme.palette.text.hint }}
-            >
-              Links found:
-            </Typography>
-            {row.crawler_threads_last_links_cnt}
-          </div>
-        );
-      } else {
-        return (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography
-                variant="caption"
-                style={{ color: theme.palette.text.hint }}
-              >
-                Jobs scraped:
-              </Typography>
-              {row.crawler_threads_last_jobs_cnt}
-            </div>
-
-            <Typography
-              variant="caption"
-              style={{ color: theme.palette.text.disabled }}
-            >
-              {timeSince(row.crawler_threads_last_completed_age)}
-            </Typography>
-          </div>
-        );
-      }
-    }
-  };
-
   return (
     <React.Fragment>
       <div className={classes.tableContainer}>
@@ -475,19 +389,16 @@ const CrawlerProcessesTable = ({ url }) => {
           aria-label="custom pagination table"
         >
           <colgroup>
-            <col style={{ width: 54 }} />
             <col style={{ width: "100%" }} />
             <col style={{ width: 128 }} />
-            <col style={{ width: 128 }} />
-            <col style={{ width: 132 }} />
-            <col style={{ width: 132 }} />
             <col style={{ width: 132 }} />
             <col style={{ width: 132 }} />
           </colgroup>
           <MultifunctionalHeading
             columns={COLUMNS}
             sort={tableData && tableData.sort}
-            onCheckedChanged={() => {}}
+            disableChecker={true}
+            hideChecker={true}
             onSortChanged={() => {}}
           />
           <TableBody>
@@ -526,15 +437,15 @@ const CrawlerProcessesTable = ({ url }) => {
               : rows.map((row, index) => {
                   const innerRow = (
                     <React.Fragment>
-                      <TableCell width="64px">
+                      {/* <TableCell width="64px">
                         <Checkbox
                           size="small"
-                          checked={SelectedRows.includes(row.url_id)}
+                          checked={SelectedRows.includes(row.thread_id)}
                           onChange={(evt) => {
-                            onRowSelectionChanged(row.url_id);
+                            onRowSelectionChanged(row.thread_id);
                           }}
                         />
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell align="right">
                         <div
                           style={{
@@ -544,35 +455,21 @@ const CrawlerProcessesTable = ({ url }) => {
                           }}
                         >
                           <Typography
-                            variant="overline"
+                            component={Link}
+                            href={row.url}
                             style={{ fontSize: 13, whiteSpace: "no-wrap" }}
-                            component={RouterLink}
-                            to={`/crawling-event/${toBase64(
-                              row["url_md5#cp_cnt"]
-                            )}`}
                           >
-                            {prettyPrintDate(row.age)}{" "}
-                          </Typography>
-
-                          <Typography
-                            variant="body2"
-                            style={{ color: "rgb(132 132 132)", marginLeft: 6 }}
-                          >
-                            ({timeSince(row.age)})
+                            {row.url}
                           </Typography>
                         </div>
                       </TableCell>
-                      <TableCell align="right">
-                        {row.crawler_engine === "SCRAPER"
-                          ? "Scraper"
-                          : "Browser"}
-                      </TableCell>
+
                       <TableCell align="right">
                         {number_format(row.jobs || 0, 0, ".", ",")}
                       </TableCell>
                       <TableCell align="right">
                         {number_format(
-                          minZero((row.threads_done_cnt || 0) - 1),
+                          (row.threads_done_cnt || 0) - 1,
                           0,
                           ".",
                           ","
@@ -598,10 +495,9 @@ const CrawlerProcessesTable = ({ url }) => {
                         ) : (
                           <CircularProgress
                             style={{
-                              width: 14,
-                              height: 14,
-                              color: "#a9b8d2",
-                              marginLeft: theme.spacing(1),
+                              width: 16,
+                              height: 16,
+                              color: theme.palette.text.disabled,
                             }}
                           />
                         )}
@@ -662,15 +558,4 @@ const CrawlerProcessesTable = ({ url }) => {
   );
 };
 
-export default CrawlerProcessesTable;
-
-(function () {
-  let iSum = 0;
-  const allElements = document.querySelectorAll("td:nth-child(2)");
-
-  for (let i = 0; i < allElements.length; i++) {
-    console.log(allElements[i]);
-    iSum += parseInt(allElements[i].innerText);
-  }
-  console.log(iSum);
-})();
+export default CrawlerThreadsTable;

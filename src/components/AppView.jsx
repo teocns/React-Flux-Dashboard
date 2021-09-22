@@ -58,6 +58,11 @@ const AppView = () => {
         <Route exact path="/tracked-urls" component={TrackedUrlsReviewCenter} />
         <Route exact path="/countries" component={CountriesManagementView} />
         <Route path="/tracked-url/:url" component={TrackedUrlInsights} />
+        <Route
+          path="/crawling-event/:crawler_process_id"
+          component={CrawlerThreadsView}
+        />
+        
         <Route exact path="/add-user" component={AddUsersView} />
 
         <Route path="/statistics/crawlers" component={CrawlerStatisticsView} />

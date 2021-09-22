@@ -26,7 +26,9 @@ const TitledDivider = ({ title, subtitle, icon }) => {
           })}
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <Typography variant="h6">{title}</Typography>
+          <Typography variant="h6" style={{ color: "#6b6b6b" }}>
+            {title}
+          </Typography>
           {subtitle && (
             <Typography
               variant="subtitle2"
